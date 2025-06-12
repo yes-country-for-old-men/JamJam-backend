@@ -1,4 +1,10 @@
 package com.jamjam.global.exception;
 
-public class ErrorCode {
+import org.springframework.http.HttpStatus;
+
+public interface ErrorCode {
+    HttpStatus getHttpStatus();
+    String getMessage();
+    String getErrorCode();
 }
+
