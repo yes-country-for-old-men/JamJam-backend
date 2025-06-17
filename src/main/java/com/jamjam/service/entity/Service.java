@@ -1,4 +1,4 @@
-package com.jamjam.service;
+package com.jamjam.service.entity;
 
 import com.jamjam.user.User;
 import jakarta.persistence.*;
@@ -12,7 +12,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="service")
+@Table(name="services")
 @Builder
 public class Service {
     @Id
@@ -22,8 +22,9 @@ public class Service {
 
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String thumbnailUrl;
+    @Lob
+    @Column(name = "thumbnail", columnDefinition = "BYTEA")
+    private byte[] thumbnail;
 
     @Column(columnDefinition = "TEXT")
     private String description;
