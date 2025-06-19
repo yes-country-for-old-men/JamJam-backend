@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.global.exception.CommonErrorCode;
+import com.jamjam.service.dto.AiImageRequest;
+import com.jamjam.service.dto.AiImageResponse;
 import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.OpenAiClient;
@@ -22,7 +24,7 @@ public class AiGenerationService {
         this.openAiClient = openAiClient;
         this.objectMapper = objectMapper;
     }
-    /*GPT로부터 서비스명, 서비스 설명, 카테고리 요청*/
+    /*Gpt로부터 서비스명, 서비스 설명, 카테고리 요청 후 결과 반환*/
     public AiServiceResponse generateService(AiServiceRequest request) {
         /*gpt api 요청*/
         String content = openAiClient.requestGptForServiceElements(request);
@@ -51,20 +53,41 @@ public class AiGenerationService {
         int category = node.path("category").asInt();
 
         AiServiceResponse response = new AiServiceResponse();
-        response.setServiceName(serviceNames);
+        response.setServiceNames(serviceNames);
         response.setDescription(description);
         response.setCategory(category);
 
         return response;
     }
-    //        /*이미지 프롬프트 생성
-//        * TODO: 프롬프트에 서비스 설명 추가 */
-//        String imagePrompt = String.format(
-//                "%s. 이미지 중앙에는 \"%s\"라는 문구가 %s 스타일의 한글 타이포그래피로 선명하고 정확하게 배치되어 있으며, %s 분위기의 정사각형 썸네일입니다. 전체 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
-//                visualElements, serviceName, typographyStyle, toneStyle
-//        );
-//        /*프론트에 ai 생성 결과를 보낼 때는 base64
-//        * 확정 후 DB에 저장 시 BLOB*/
-//        String b64Image = openAiClient.requestImageFromGptImage(imagePrompt, 1, "1024x1024");
-//        String thumbnailInfo = "data:image/png;base64," + b64Image;
+    /*이미지 프롬프트 생성 후
+    * Gpt-image-1에 이미지 생성 요청*/
+    public AiImageResponse generateImage(AiImageRequest request) {
+        String imagePrompt;
+        if (request.isTypography()) {
+            imagePrompt = String.format(
+                    "이 이미지는 정사각형 썸네일로, 중앙에는 \"%s\"라는 문구가 선명한 한글 타이포그래피로 배치되어 있습니다. " +
+                            "전체 구도는 시각적으로 조화롭고 시선을 끌 수 있도록 구성되어야 합니다. " +
+                            "이 서비스는 \"%s\"와 같은 특징을 가지고 있으므로, 이미지 분위기나 색감, 스타일은 이를 반영해야 합니다.",
+                    request.getServiceName(),
+                    request.getDescription()
+            );
+        } else {
+            imagePrompt = String.format(
+                    "이 이미지는 정사각형 썸네일입니다. 문구는 없어야 합니다." +
+                            "전체 구도는 시각적으로 조화롭고 시선을 끌 수 있도록 구성되어야 합니다. " +
+                            "이 서비스는 \"%s\"와 같은 특징을 가지고 있으므로, 이미지 분위기나 색감, 스타일은 이를 반영해야 합니다.",
+                    request.getDescription()
+            );
+        }
+        /*프론트에 ai 생성 결과를 보낼 때는 base64
+        * 확정 후 DB에 저장 시 BLOB*/
+        String b64Image = openAiClient.requestImageFromGptImage(imagePrompt, 1, "1024x1024");
+        String thumbnailInfo = "data:image/png;base64," + b64Image;
+
+        AiImageResponse response = new AiImageResponse();
+        response.setImageBase64(thumbnailInfo);
+
+        return response;
+    }
+
 }

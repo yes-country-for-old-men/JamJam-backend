@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class AiServiceResponse {
-    private List<String> serviceName;
+    private List<String> serviceNames;
     private String Description;
     private int category;
 }
