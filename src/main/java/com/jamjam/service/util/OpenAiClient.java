@@ -28,27 +28,41 @@ public class OpenAiClient {
         this.restTemplate = restTemplate;
         this.objectMapper = new ObjectMapper();
     }
-
+    /*최초 입력에 대한 1차 출력
+    * 서비스명 3개, 서비스 설명, 카테고리 추출*/
     public String requestGptForServiceElements(AiServiceRequest request) {
-        //TODO: 카테고리 확정 시 적용해야함
         String prompt = String.format(
-                "다음 정보를 기반으로 서비스명, 설명 요약, 적절한 카테고리, 이미지 생성용 프롬프트 요소를 생성해줘:\n" +
-                        "상세 설명: %s\n보유 기술: %s\n경력: %s\n학력 및 자격증: %s\n\n" +
+                "다음 정보를 기반으로 아래 조건에 맞는 항목들을 생성해줘:\n" +
+                        "- 서비스명 3가지 제안\n" +
+                        "- 서비스 소개글 (설명 요약이 아니라 실제 소개 페이지에 들어갈 수 있는 풍부한 소개글로 작성. 입력된 정보를 기반으로 살을 붙여도 좋아.)\n" +
+                        "- 아래 리스트 중 하나의 카테고리 지정\n" +
+                        "상세 설명: %s\n보유 기술: %s\n경력: %s\n학력 및 자격증: %s\n" +
+                        "카테고리는 아래 중에서 하나만 골라줘 (그 외의 값은 넣지 마. 오른쪽의 ID 값으로 반환해줘):\n" +
+                        "- BUSINESS: 1\n" +
+                        "- CONSULTING: 2\n" +
+                        "- MARKETING: 3\n" +
+                        "- DEVELOPMENT: 4\n" +
+                        "- DESIGN: 5\n" +
+                        "- WRITE: 6\n" +
+                        "- TRANSLATION: 7\n" +
+                        "- PHOTOGRAPH: 8\n" +
+                        "- EDUCATION: 9\n" +
+                        "- CRAFT: 10\n" +
+                        "- HOBBY: 11\n" +
+                        "- LIVING: 12\n" +
                         "\"JSON 형식으로만 응답해줘. 코드 블록 없이 말야.\"\n" +
-                        "JSON 형식 예시:\n" +
+                        "JSON 응답 예시:\n" +
                         "{\n" +
-                        "  \"service_name\": \"감성 캘리그라피\",\n" +
-                        "  \"category\": \"디자인\",\n" +
-                        "  \"summary\": \"손글씨로 마음을 전하는 캘리그라피 서비스\",\n" +
-                        "  \"visual_elements\": \"따뜻한 우드톤 배경에 손글씨를 쓰는 장면\",\n" +
-                        "  \"tone_style\": \"부드럽고 감성적인 분위기\",\n" +
-                        "  \"typography_style\": \"손글씨\"\n" +
+                        "  \"service_names\": [\"감성 캘리그라피\", \"손글씨 엽서 제작\", \"따뜻한 문구 디자인\"],\n" +
+                        "  \"description\": \"감성적인 손글씨를 활용한 맞춤형 디자인 서비스를 제공합니다.\",\n" +
+                        "  \"category\": 5\n" +
                         "}",
                 request.getDescription(),
                 request.getSkills(),
                 request.getCareer(),
                 request.getEducation()
         );
+
 
         Map<String, Object> body = new HashMap<>();
         body.put("model", "gpt-4o");
@@ -62,7 +76,7 @@ public class OpenAiClient {
 
         return callOpenAI(GPT_URL, body);
     }
-
+    /*썸네일 이미지 생성*/
     public String requestImageFromGptImage(String prompt, int n, String size) {
         Map<String, Object> body = new HashMap<>();
         body.put("model", "gpt-image-1");

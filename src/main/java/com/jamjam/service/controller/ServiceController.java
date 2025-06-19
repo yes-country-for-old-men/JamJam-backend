@@ -20,13 +20,11 @@ public class ServiceController {
     public ServiceController(AiGenerationService aiGenerationService, ObjectMapper objectMapper) {
         this.aiGenerationService = aiGenerationService;
     }
-    /*OpenAI API 요청 후 생성 내용, 썸네일 프론트에 반환*/
+    /*GPT에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
     @PostMapping("/generate")
     public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(@RequestBody AiServiceRequest request) {
         AiServiceResponse response = aiGenerationService.generateService(request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
-
-
 }
