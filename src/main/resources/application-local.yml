@@ -1,0 +1,12 @@
+spring:
+  config:
+    import:
+      - optional:file:./application-secret.yml
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
