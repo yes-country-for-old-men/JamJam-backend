@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.springframework.scheduling.config.TaskExecutionOutcome.Status.SUCCESS;
+import com.jamjam.global.dto.ResponseDto;
+import com.jamjam.global.dto.SuccessMessage;
 
 public class CustomLogoutFilter extends GenericFilterBean {
 
@@ -90,9 +92,10 @@ public class CustomLogoutFilter extends GenericFilterBean {
         responseBody.put("message", "요청이 성공적으로 처리되었습니다.");
         responseBody.put("content", innerResponse);
 
+        ResponseDto<Void> responseDto = ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS);
         response.setContentType("application/json");
         PrintWriter writer = response.getWriter();
-        writer.print(new ObjectMapper().writeValueAsString(responseBody));
+        writer.print(new ObjectMapper().writeValueAsString(responseDto));
 
         response.addCookie(cookie);
         response.setStatus(HttpServletResponse.SC_OK);

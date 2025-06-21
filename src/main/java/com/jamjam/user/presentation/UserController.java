@@ -17,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -57,7 +58,7 @@ public class UserController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<ResponseDto<Map<String, String>>> reissue(HttpServletRequest request, HttpServletResponse response) throws IOException {
         return reissueService.reissueToken(request, response);
     }
 

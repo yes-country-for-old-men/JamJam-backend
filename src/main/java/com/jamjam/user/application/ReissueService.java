@@ -22,6 +22,9 @@ import java.util.Map;
 
 import static org.springframework.scheduling.config.TaskExecutionOutcome.Status.SUCCESS;
 
+import com.jamjam.global.dto.ResponseDto;
+import com.jamjam.global.dto.SuccessMessage;
+
 @Service
 public class ReissueService {
 
@@ -33,7 +36,7 @@ public class ReissueService {
         this.refreshRepository = refreshRepository;
     }
 
-    public ResponseEntity<?> reissueToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<ResponseDto<Map<String, String>>> reissueToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String refresh = extractRefreshTokenFromCookie(request);
 
         try {
@@ -74,12 +77,8 @@ public class ReissueService {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        Map<String, Object> body = Map.of(
-                "code", SUCCESS,
-                "message", "요청이 성공적으로 처리되었습니다.",
-                "content", Map.of("accessToken", newAccess)
-        );
-
+        Map<String, String> content = Map.of("accessToken", newAccess);
+        ResponseDto<Map<String, String>> body = ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, content);
         return ResponseEntity.ok(body);
     }
 

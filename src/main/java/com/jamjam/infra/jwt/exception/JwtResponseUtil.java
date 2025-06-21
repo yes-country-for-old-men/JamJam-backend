@@ -5,8 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import com.jamjam.global.dto.ResponseDto;
 
 public class JwtResponseUtil {
 
@@ -17,10 +16,7 @@ public class JwtResponseUtil {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("errorCode", errorCode.getCode());
-        errorResponse.put("message", errorCode.getMessage());
-
+        ResponseDto<Void> errorResponse = ResponseDto.ofFailure(errorCode.getCode(), errorCode.getMessage());
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
