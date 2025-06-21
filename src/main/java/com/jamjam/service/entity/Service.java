@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -21,16 +22,13 @@ public class Service {
     private UUID id;
 
     private String title;
+    private String thumbnail;
 
-    @Lob
-    @Column(name = "thumbnail", columnDefinition = "BYTEA")
-    private byte[] thumbnail;
+    @ElementCollection
+    private List<String> infoImages;
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
-    @Column(columnDefinition = "TEXT")
-    private String skills;
 
     private Integer salary;
 
