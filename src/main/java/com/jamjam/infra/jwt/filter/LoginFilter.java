@@ -7,6 +7,7 @@ import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.exception.UserError;
+import com.jamjam.global.dto.ResponseDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -112,12 +113,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
-
-        Map<String, Object> errorBody = Map.of(
-                "code",    "LOGIN_FAILED",
-                "message", failed.getMessage()
-        );
-
+        ResponseDto<Void> errorBody = ResponseDto.ofFailure("LOGIN_FAILED", failed.getMessage());
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json;charset=UTF-8");
         objectMapper.writeValue(response.getWriter(), errorBody);

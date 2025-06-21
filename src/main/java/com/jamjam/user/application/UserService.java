@@ -166,8 +166,8 @@ public class UserService {
         response.addHeader(HttpHeaders.SET_COOKIE,
                 ResponseCookie.from("refresh", refreshToken)
                         .httpOnly(true)
-//                        .secure(true)
-//                        .sameSite("None")
+                        .secure(true)
+                        .sameSite("None")
                         .path("/")
                         .maxAge(Duration.ofDays(1))
                         .build()
