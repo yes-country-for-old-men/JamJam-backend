@@ -55,7 +55,6 @@ public class UserService {
                 .name(userEntity.getName())
                 .loginId(userEntity.getLoginId())
                 .phoneNumber(userEntity.getPhoneNumber())
-                .isPhoneVerified(userEntity.isPhoneVerified())
                 .nickname(userEntity.getNickname())
                 .birth(userEntity.getBirth())
                 .gender(userEntity.getGender())
@@ -129,6 +128,9 @@ public class UserService {
     }
 
     protected UserEntity saveClient(ClientJoinRequest request) {
+        if (userRepository.existsByPhoneNumberAndRole(request.phoneNumber(), UserRole.CLIENT)){
+            throw new ApiException(UserError.PHONE_ALREADY_REGISTERED);
+        }
         return userRepository.save(
                 UserEntity.builder()
                         .name(request.name())
@@ -146,6 +148,9 @@ public class UserService {
     }
 
     protected UserEntity saveProvider(ProviderJoinRequest request) {
+        if (userRepository.existsByPhoneNumberAndRole(request.phoneNumber(), UserRole.PROVIDER)){
+            throw new ApiException(UserError.PHONE_ALREADY_REGISTERED);
+        }
         return userRepository.save(
                 UserEntity.builder()
                         .name(request.name())
@@ -183,5 +188,12 @@ public class UserService {
                         .expires(jwtUtil.getExpiration(refreshToken))
                         .build()
         );
+    }
+
+    public Boolean checkDuplicateLoginId(String loginId) {
+        return userRepository.existsByLoginId(loginId);
+    }
+    public Boolean checkDuplicateNickName(String nickName) {
+        return userRepository.existsByNickname(nickName);
     }
 }
