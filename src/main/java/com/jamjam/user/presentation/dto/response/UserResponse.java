@@ -12,7 +12,6 @@ public record UserResponse(
         String nickname,
         String phoneNumber,
         String loginId,
-        boolean isPhoneVerified,
         LocalDate birth,
         UserRole role,
         Gender gender

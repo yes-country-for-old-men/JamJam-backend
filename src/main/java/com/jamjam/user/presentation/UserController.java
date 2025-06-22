@@ -17,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -58,19 +59,40 @@ public class UserController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<ResponseDto<Map<String, String>>> reissue(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<ResponseDto<Map<String, String>>> reissue(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
         return reissueService.reissueToken(request, response);
     }
 
     @PostMapping("/join/provider")
-    public ResponseEntity<ResponseDto<LoginResponse>> joinProvider(@RequestBody ProviderJoinRequest request, HttpServletResponse response) {
+    public ResponseEntity<ResponseDto<LoginResponse>> joinProvider(
+            @RequestBody ProviderJoinRequest request,
+            HttpServletResponse response
+    ) {
         LoginResponse accessToken = userService.joinProvider(request, response);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
     }
 
     @PostMapping("/join/client")
-    public ResponseEntity<ResponseDto<LoginResponse>> joinClient(@RequestBody ClientJoinRequest request, HttpServletResponse response) {
+    public ResponseEntity<ResponseDto<LoginResponse>> joinClient(
+            @RequestBody ClientJoinRequest request,
+            HttpServletResponse response
+    ) {
         LoginResponse accessToken = userService.joinClient(request, response);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
+    }
+
+    @GetMapping("/check-loginId")
+    public ResponseEntity<ResponseDto<Boolean>> checkDuplicateLoginId(@RequestParam String loginId) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS
+                , userService.checkDuplicateLoginId(loginId)));
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<ResponseDto<Boolean>> checkDuplicateNickname(@RequestParam String nickName) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS
+                , userService.checkDuplicateNickName(nickName)));
     }
 }

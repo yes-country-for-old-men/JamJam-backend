@@ -34,8 +34,11 @@ public class SecurityConfig {
             "/api/user/join/**",
             "/favicon.ico",
             "/error",
+            "/v3/api-docs",
             "/v3/api-docs/**",
+            "/swagger-ui.html",
             "/swagger-ui/**",
+            "/webjars/**"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {
