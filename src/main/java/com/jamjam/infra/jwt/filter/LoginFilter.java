@@ -101,11 +101,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 "tokenType",   "Bearer"
         );
 
-        logger.info("🚀 응답 헤더 출력 시작");
-        response.getHeaderNames().forEach(header -> {
-            logger.info("📤 header : " + header+ " content : "+ response.getHeader(header));
-        });
-
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json;charset=UTF-8");
         objectMapper.writeValue(response.getWriter(), body);

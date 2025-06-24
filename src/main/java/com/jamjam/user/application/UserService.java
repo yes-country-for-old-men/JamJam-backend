@@ -69,18 +69,9 @@ public class UserService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
-        if (request.loginId() != null && !request.loginId().equals(user.getLoginId())) {
-            if (userRepository.existsByLoginId(request.loginId())) {
-                throw new ApiException(UserError.ID_ALREADY_EXISTS);
-            }
-            user.changeLoginId(request.loginId());
-        }
-
         if (request.name()            != null) user.changeName(request.name());
         if (request.nickname()        != null) user.changeNickname(request.nickname());
         if (request.phoneNumber()     != null) user.changePhone(request.phoneNumber());
-        if (request.password()        != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
-        if (request.isPhoneVerified() != null) user.changeVerifyPhone(request.isPhoneVerified());
         if (request.birth()           != null) user.changeBirth(request.birth());
         if (request.profileUrl()      != null) user.changeProfileUrl(request.profileUrl());
         if (request.gender()          != null) user.changeGender(request.gender());
