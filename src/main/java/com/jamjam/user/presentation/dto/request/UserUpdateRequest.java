@@ -14,6 +14,7 @@ public record UserUpdateRequest(
         String password,
         Boolean isPhoneVerified,
         LocalDate birth,
-        Gender gender
+        Gender gender,
+        String profileUrl
 ) {
 }

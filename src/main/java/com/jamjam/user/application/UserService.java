@@ -12,6 +12,7 @@ import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ClientJoinRequest;
 import com.jamjam.user.presentation.dto.request.ProviderJoinRequest;
 import com.jamjam.user.presentation.dto.request.UserUpdateRequest;
+import com.jamjam.user.presentation.dto.response.CheckResponse;
 import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -57,6 +58,7 @@ public class UserService {
                 .phoneNumber(userEntity.getPhoneNumber())
                 .nickname(userEntity.getNickname())
                 .birth(userEntity.getBirth())
+                .profileUrl(userEntity.getProfileUrl())
                 .gender(userEntity.getGender())
                 .role(UserRole.CLIENT)
                 .build();
@@ -74,13 +76,14 @@ public class UserService {
             user.changeLoginId(request.loginId());
         }
 
-        if (request.name()          != null) user.changeName(request.name());
-        if (request.nickname()      != null) user.changeNickname(request.nickname());
-        if (request.phoneNumber()   != null) user.changePhone(request.phoneNumber());
-        if (request.password()      != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
-        if (request.isPhoneVerified()!= null) user.changeVerifyPhone(request.isPhoneVerified());
-        if (request.birth()         != null) user.changeBirth(request.birth());
-        if (request.gender()        != null) user.changeGender(request.gender());
+        if (request.name()            != null) user.changeName(request.name());
+        if (request.nickname()        != null) user.changeNickname(request.nickname());
+        if (request.phoneNumber()     != null) user.changePhone(request.phoneNumber());
+        if (request.password()        != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
+        if (request.isPhoneVerified() != null) user.changeVerifyPhone(request.isPhoneVerified());
+        if (request.birth()           != null) user.changeBirth(request.birth());
+        if (request.profileUrl()      != null) user.changeProfileUrl(request.profileUrl());
+        if (request.gender()          != null) user.changeGender(request.gender());
     }
 
     @Transactional
@@ -135,7 +138,6 @@ public class UserService {
                 UserEntity.builder()
                         .name(request.name())
                         .phoneNumber(request.phoneNumber())
-                        .isPhoneVerified(request.isPhoneVerified())
                         .nickname(request.nickname())
                         .loginId(request.loginId())
                         .password(bCryptPasswordEncoder.encode(request.password()))
@@ -155,7 +157,6 @@ public class UserService {
                 UserEntity.builder()
                         .name(request.name())
                         .phoneNumber(request.phoneNumber())
-                        .isPhoneVerified(request.isPhoneVerified())
                         .nickname(request.nickname())
                         .loginId(request.loginId())
                         .password(bCryptPasswordEncoder.encode(request.password()))
@@ -190,10 +191,10 @@ public class UserService {
         );
     }
 
-    public Boolean checkDuplicateLoginId(String loginId) {
-        return userRepository.existsByLoginId(loginId);
+    public CheckResponse checkDuplicateLoginId(String loginId) {
+        return new CheckResponse(!userRepository.existsByLoginId(loginId));
     }
-    public Boolean checkDuplicateNickName(String nickName) {
-        return userRepository.existsByNickname(nickName);
+    public CheckResponse checkDuplicateNickName(String nickname) {
+        return new CheckResponse(!userRepository.existsByNickname(nickname));
     }
 }

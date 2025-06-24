@@ -38,7 +38,9 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui.html",
             "/swagger-ui/**",
-            "/webjars/**"
+            "/webjars/**",
+            "/api/user/sms/**",
+            "/api/user/check/**"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {
@@ -90,7 +92,7 @@ public class SecurityConfig {
                 .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                 .anyRequest().authenticated());
 
-        http.addFilterAt(new LoginFilter(authenticationManager(), jwtUtil, refreshRepository),
+        http.addFilterAt(new LoginFilter(authenticationManager(), jwtUtil, refreshRepository, allowedOrigins),
                 UsernamePasswordAuthenticationFilter.class);
 
         http.addFilterAt(new CustomLogoutFilter(jwtUtil, refreshRepository),

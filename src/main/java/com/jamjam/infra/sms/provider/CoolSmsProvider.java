@@ -27,7 +27,7 @@ public class CoolSmsProvider {
         Message message = new Message();
         message.setFrom(callerNumber);
         message.setTo(phoneNumber);
-        message.setText("[퐁당] 인증번호 [" + verificationCode + "]를 입력해주세요.");
+        message.setText("[잼잼] 인증번호 [" + verificationCode + "]를 입력해주세요.");
 
         try {
             messageService.send(message);

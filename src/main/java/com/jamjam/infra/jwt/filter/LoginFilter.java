@@ -7,11 +7,10 @@ import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.exception.UserError;
-import com.jamjam.global.dto.ResponseDto;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -24,11 +23,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.Map;
 
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -37,9 +34,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RefreshRepository refreshRepository;
+    private final String[] allowedOrigins;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshRepository refreshRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshRepository refreshRepository, String allowedOrigins) {
         RequestMatcher requestMatcher = request -> {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    logger.info("🍪 Cookie - :"+ Arrays.toString(request.getCookies()));
+                }
+            }
             String uri = request.getRequestURI();
             String method = request.getMethod();
             return "/api/user/login".equals(uri) && "POST".equals(method);
@@ -48,10 +52,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
+        this.allowedOrigins = allowedOrigins.split(",");
     }
-
-    @Value("${spring.cors.allowed_origins}")
-    private String allowedOrigins;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -85,14 +87,24 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         addRefreshEntity(userId, refreshToken);
 
         response.addHeader(HttpHeaders.SET_COOKIE, toCookie(refreshToken).toString());
+        String requestOrigin = request.getHeader("Origin");
 
-        response.setHeader("Access-Control-Allow-Origin", allowedOrigins);
-        response.setHeader("Access-Control-Allow-Credentials", "true");
+        logger.info("request origin: " + requestOrigin);
+
+        if (requestOrigin != null && Arrays.asList(allowedOrigins).contains(requestOrigin)) {
+            response.setHeader("Access-Control-Allow-Origin", requestOrigin);
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+        }
 
         Map<String, Object> body = Map.of(
                 "accessToken", accessToken,
                 "tokenType",   "Bearer"
         );
+
+        logger.info("🚀 응답 헤더 출력 시작");
+        response.getHeaderNames().forEach(header -> {
+            logger.info("📤 header : " + header+ " content : "+ response.getHeader(header));
+        });
 
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json;charset=UTF-8");
@@ -113,7 +125,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
-        ResponseDto<Void> errorBody = ResponseDto.ofFailure("LOGIN_FAILED", failed.getMessage());
+
+        Map<String, Object> errorBody = Map.of(
+                "code",    "LOGIN_FAILED",
+                "message", failed.getMessage()
+        );
+
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json;charset=UTF-8");
         objectMapper.writeValue(response.getWriter(), errorBody);
