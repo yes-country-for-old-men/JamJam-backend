@@ -8,6 +8,8 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
@@ -52,9 +54,11 @@ public class CustomLogoutFilter extends GenericFilterBean {
         String refresh = null;
         Cookie[] cookies = request.getCookies();
 
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("refresh")) {
-                refresh = cookie.getValue();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refresh".equals(cookie.getName())) {
+                    refresh = cookie.getValue();
+                }
             }
         }
 
@@ -81,23 +85,23 @@ public class CustomLogoutFilter extends GenericFilterBean {
 
         refreshRepository.deleteByRefresh(refresh);
 
-        Cookie cookie = new Cookie("refresh", null);
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
+        ResponseCookie deleteCookie = ResponseCookie
+                .from("refresh", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(0)
+                .build();
 
-        Map<String, Object> responseBody = new HashMap<>();
-        Map<String, Object> innerResponse = new HashMap<>();
-
-        responseBody.put("code", SUCCESS);
-        responseBody.put("message", "요청이 성공적으로 처리되었습니다.");
-        responseBody.put("content", innerResponse);
+        response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
 
         ResponseDto<Void> responseDto = ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS);
+        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setContentType("application/json");
         PrintWriter writer = response.getWriter();
         writer.print(new ObjectMapper().writeValueAsString(responseDto));
-
-        response.addCookie(cookie);
         response.setStatus(HttpServletResponse.SC_OK);
     }
 }

@@ -1,6 +1,7 @@
 package com.jamjam.user.domain.repository;
 
 import com.jamjam.user.domain.entity.UserEntity;
+import com.jamjam.user.domain.entity.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -9,11 +9,9 @@ import java.time.LocalDate;
 public record UserUpdateRequest(
         String name,
         String nickname,
-        String loginId,
         String phoneNumber,
-        String password,
-        Boolean isPhoneVerified,
         LocalDate birth,
-        Gender gender
+        Gender gender,
+        String profileUrl
 ) {
 }

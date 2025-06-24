@@ -10,7 +10,6 @@ public record ProviderJoinRequest(
         String loginId,
         String phoneNumber,
         String password,
-        boolean isPhoneVerified,
         LocalDate birth,
         Gender gender
 ) {

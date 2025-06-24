@@ -47,7 +47,7 @@ public class SmsVerificationService {
         SmsVerificationEntity entity = SmsVerificationEntity.builder()
                 .phoneNumber(purePhoneNumber)
                 .createdAt(now)
-                .expiresAt(now.plusMinutes(3))
+                .expiresAt(now.plusMinutes(1))
                 .verificationCode(String.valueOf(randomNumber))
                 .build();
 

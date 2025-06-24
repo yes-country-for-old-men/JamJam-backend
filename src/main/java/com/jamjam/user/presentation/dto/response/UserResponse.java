@@ -14,6 +14,7 @@ public record UserResponse(
         String loginId,
         LocalDate birth,
         UserRole role,
-        Gender gender
+        Gender gender,
+        String profileUrl
 ){
 }
