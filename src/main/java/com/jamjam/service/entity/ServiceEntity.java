@@ -8,14 +8,14 @@ import org.hibernate.annotations.UuidGenerator;
 import java.util.List;
 import java.util.UUID;
 
+@Builder
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="services")
-@Builder
-public class Service {
+public class ServiceEntity {
     @Id
     @GeneratedValue
     @UuidGenerator
@@ -25,6 +25,7 @@ public class Service {
     private String thumbnail;
 
     @ElementCollection
+    @CollectionTable(name = "service_info_images")
     private List<String> infoImages;
 
     @Column(columnDefinition = "TEXT")
@@ -32,7 +33,7 @@ public class Service {
 
     private Integer salary;
 
-    private String category;
+    private Integer category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

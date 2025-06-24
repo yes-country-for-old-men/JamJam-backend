@@ -7,13 +7,18 @@ import com.jamjam.config.GptConfig;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.global.exception.CommonErrorCode;
 import com.jamjam.service.dto.AiServiceRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
+@Slf4j
 @Component
 public class OpenAiClient {
     private final GptConfig gptConfig;
@@ -63,7 +68,6 @@ public class OpenAiClient {
                 request.getEducation()
         );
 
-
         Map<String, Object> body = new HashMap<>();
         body.put("model", "gpt-4o");
         body.put("temperature", 0.9);
@@ -92,7 +96,44 @@ public class OpenAiClient {
             throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
         }
     }
+    /*서비스 상세 설명 받아 마크다운 문법 적용하여 반환*/
+    public String applyMarkdown(String description) {
+        //TODO: 프롬프트 개선 필요
+        String prompt = String.format(
+                "다음은 서비스 상세 설명 텍스트야. %s" +
+                        "이 내용을 사용자가 보기 좋도록 마크다운 문법을 적용해줘." +
+                        "JSON 형식으로만 응답해줘. 코드 블록 없이 말야.\n" +
+                        "반환 예시: \n" +
+                        "{\n \"appliedDescription\": \"여기에 마크다운 적용된 설명\"\n}",
+                description
+        );
 
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", "gpt-4o");
+        body.put("temperature", 0.9);
+        body.put("max_tokens", 600);
+
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "system", "content", "너는 콘텐츠 마크다운 에디터야. 내가 제공하는 서비스 설명 텍스트를 마크다운 문법을 적용해서 사용자들이 읽기 쉽게 재작성해줘."));
+        messages.add(Map.of("role", "user", "content", prompt));
+        body.put("messages", messages);
+
+        String response = callOpenAI(GPT_URL, body);
+
+        JsonNode node;
+        try {
+            // 전체 GPT 응답 파싱
+            JsonNode full = objectMapper.readTree(response);
+            // message.content 안에 실제 JSON 문자열이 있음
+            String innerJsonString = full.path("choices").get(0).path("message").path("content").asText();
+            // 다시 파싱 (중첩 JSON 구조이기 때문)
+            node = objectMapper.readTree(innerJsonString);
+        } catch (JsonProcessingException e) {
+            throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+        }
+        /*마크다운 적용된 상세 설명 반환*/
+        return node.path("appliedDescription").asText();
+    }
     private String callOpenAI(String url, Map<String, Object> requestBody) {
         try {
             String requestJson = objectMapper.writeValueAsString(requestBody);
@@ -100,9 +141,16 @@ public class OpenAiClient {
             HttpEntity<String> entity = new HttpEntity<>(requestJson, gptConfig.httpHeaders());
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
+            System.out.println("Open API 요청 성공");
             return response.getBody();
         } catch (JsonProcessingException e) {
+            log.error("JSON 직렬화 실패: {}", e.getMessage(), e);
             throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            // OpenAI에서 에러 반환 시
+            log.error("OpenAI API 에러 - 상태 코드: {}, 응답 바디: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new ApiException(CommonErrorCode.OPENAI_API_ERROR); // 커스텀 에러코드 사용
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.jamjam.user;
 
-import com.jamjam.service.entity.Service;
+import com.jamjam.service.entity.ServiceEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -42,5 +42,5 @@ public class User {
     private String intro;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Service> services;
+    private List<ServiceEntity> services;
 }
