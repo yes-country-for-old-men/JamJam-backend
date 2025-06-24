@@ -36,14 +36,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final RefreshRepository refreshRepository;
     private final String[] allowedOrigins;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshRepository refreshRepository, String allowedOrigins) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+                       RefreshRepository refreshRepository, String allowedOriginsCsv) {
         RequestMatcher requestMatcher = request -> {
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    logger.info("🍪 Cookie - :"+ Arrays.toString(request.getCookies()));
-                }
-            }
             String uri = request.getRequestURI();
             String method = request.getMethod();
             return "/api/user/login".equals(uri) && "POST".equals(method);
@@ -52,7 +47,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
-        this.allowedOrigins = allowedOrigins.split(",");
+        this.allowedOrigins = allowedOriginsCsv.split(",");
     }
 
     @Override
@@ -90,11 +85,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String requestOrigin = request.getHeader("Origin");
 
         logger.info("request origin: " + requestOrigin);
-
-        if (requestOrigin != null && Arrays.asList(allowedOrigins).contains(requestOrigin)) {
-            response.setHeader("Access-Control-Allow-Origin", requestOrigin);
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-        }
 
         Map<String, Object> body = Map.of(
                 "accessToken", accessToken,

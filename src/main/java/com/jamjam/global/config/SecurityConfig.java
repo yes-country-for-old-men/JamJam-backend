@@ -6,6 +6,7 @@ import com.jamjam.infra.jwt.exception.CustomAuthenticationEntryPoint;
 import com.jamjam.infra.jwt.filter.CustomLogoutFilter;
 import com.jamjam.infra.jwt.filter.JwtFilter;
 import com.jamjam.infra.jwt.filter.LoginFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +21,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,8 +56,8 @@ public class SecurityConfig {
     private final RefreshRepository refreshRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Value("${spring.cors.allowed_origins}")
-    private String allowedOrigins;
+    @Value("${spring.cors.allowed-origins}")
+    private String allowedOriginsCsv;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -69,16 +73,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(req -> {
-                    CorsConfiguration cfg = new CorsConfiguration();
-                    cfg.setAllowedOrigins(Collections.singletonList(allowedOrigins));
-                    cfg.setAllowedMethods(Collections.singletonList("*"));
-                    cfg.setAllowedHeaders(Collections.singletonList("*"));
-                    cfg.setAllowCredentials(true);
-                    cfg.setMaxAge(3600L);
-                    cfg.setExposedHeaders(Collections.singletonList("Authorization"));
-                    return cfg;
-                }));
+                .cors(cors -> cors.configurationSource(this::buildCorsConfig));
 
         http.sessionManagement(sm ->
                 sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -92,7 +87,7 @@ public class SecurityConfig {
                 .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                 .anyRequest().authenticated());
 
-        http.addFilterAt(new LoginFilter(authenticationManager(), jwtUtil, refreshRepository, allowedOrigins),
+        http.addFilterAt(new LoginFilter(authenticationManager(), jwtUtil, refreshRepository, allowedOriginsCsv),
                 UsernamePasswordAuthenticationFilter.class);
 
         http.addFilterAt(new CustomLogoutFilter(jwtUtil, refreshRepository),
@@ -102,5 +97,16 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private CorsConfiguration buildCorsConfig(HttpServletRequest req) {
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOriginPatterns(Arrays.asList(allowedOriginsCsv.split(",")));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedHeaders(List.of("*"));
+        cfg.setExposedHeaders(List.of("Authorization","Set-Cookie"));
+        cfg.setAllowCredentials(true);
+        cfg.setMaxAge(3600L);
+        return cfg;
     }
 }
