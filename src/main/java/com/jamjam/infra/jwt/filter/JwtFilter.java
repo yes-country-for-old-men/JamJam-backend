@@ -11,6 +11,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
+@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -84,9 +88,11 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            logger.error("ACCESS TOKEN이 만료되었습니다.", e);
+            log.error("⏰ ACCESS TOKEN 만료: exp={}, uri={}",
+                    e.getClaims().getExpiration(), request.getRequestURI(), e);
             JwtResponseUtil.sendErrorResponse(response, JwtErrorCode.ACCESS_EXPIRED);
         } catch (IllegalArgumentException e) {
+            log.error("🚫 ACCESS TOKEN 파싱 오류: {}", accessToken, e);
             logger.error("ACCESS TOKEN의 인자가 잘못되었습니다.", e);
             JwtResponseUtil.sendErrorResponse(response, JwtErrorCode.ACCESS_INVALID);
         } catch (Exception e) {
