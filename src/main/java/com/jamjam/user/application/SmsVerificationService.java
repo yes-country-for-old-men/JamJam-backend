@@ -47,7 +47,7 @@ public class SmsVerificationService {
         SmsVerificationEntity entity = SmsVerificationEntity.builder()
                 .phoneNumber(purePhoneNumber)
                 .createdAt(now)
-                .expiresAt(now.plusMinutes(1))
+                .expiresAt(now.plusMinutes(5))
                 .verificationCode(String.valueOf(randomNumber))
                 .build();
 
@@ -69,14 +69,6 @@ public class SmsVerificationService {
         if (!isEqual(verificationEntity, code)) {
             throw new ApiException(UserError.VERIFICATION_NOT_MATCH);
         }
-
-        userRepository.findByPhoneNumber(purePhoneNumber)
-                .ifPresent(user -> {
-                    UserEntity updatedUser = user.toBuilder()
-                            .isPhoneVerified(true)
-                            .build();
-                    userRepository.save(updatedUser);
-                });
 
         smsVerificationRepository.delete(verificationEntity);
     }
