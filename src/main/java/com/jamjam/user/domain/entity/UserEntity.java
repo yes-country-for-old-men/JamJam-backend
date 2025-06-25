@@ -109,10 +109,6 @@ public class UserEntity {
         this.phoneNumber = newPhoneNumber;
     }
 
-    public void changeVerifyPhone(boolean verified) {
-        this.isPhoneVerified = verified;
-    }
-
     public void changeBirth(LocalDate newBirth) {
         this.birth = newBirth;
     }
