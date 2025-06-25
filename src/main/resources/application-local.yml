@@ -1,5 +1,6 @@
 spring:
   config:
+
     import: optional:file:./application-secret.yml
 
   datasource:
