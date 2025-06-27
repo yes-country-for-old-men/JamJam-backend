@@ -43,7 +43,8 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/webjars/**",
             "/api/user/sms/**",
-            "/api/user/check/**"
+            "/api/user/check/**",
+            "/api/service/service-list"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {

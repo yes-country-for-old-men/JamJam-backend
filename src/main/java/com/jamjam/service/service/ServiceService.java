@@ -1,8 +1,8 @@
 package com.jamjam.service.service;
 
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.global.exception.CommonErrorCode;
-import com.jamjam.service.dto.ServiceListResponse;
+import com.jamjam.service.dto.ServiceSummaryDTO;
+import com.jamjam.service.exception.CommonErrorCode;
 import com.jamjam.service.dto.ServiceRegisterRequest;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
@@ -10,14 +10,19 @@ import com.jamjam.service.util.OpenAiClient;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+@Slf4j
 @Service
 public class ServiceService {
     private final OpenAiClient openAiClient;
@@ -53,7 +58,7 @@ public class ServiceService {
                 System.out.println("포트폴리오 이미지 저장 완료");
             }
             ServiceEntity service = ServiceEntity.builder()
-                    .title(request.getServiceName())
+                    .serviceName(request.getServiceName())
                     .description(description)
                     .category(request.getCategory())
                     .salary(request.getSalary())
@@ -68,15 +73,18 @@ public class ServiceService {
         }
     }
     /*분류 별 서비스 리스트 반환 (카테고리, 제공자)*/
-//    public List<ServiceListResponse> getFilteredServices(Integer category, Long userId, String providerName) {
-//        if (category != null && providerName != null) {
-//
-//        } else if (category != null) {
-//
-//        } else if (providerName != null) {
-//
-//        } else {
-//
-//        }
-//    }
+    @Transactional
+    public Page<ServiceSummaryDTO> getFilteredServices(Integer category, String providerName, Pageable pageable) {
+        Page<ServiceEntity> entities;
+
+        if (category != null) {
+            entities = serviceRepository.findByCategory(category, pageable);
+        } else if (providerName != null) {
+            entities = serviceRepository.findByUserNickname(providerName, pageable);
+        } else {
+            entities = serviceRepository.findAll(pageable);
+        }
+
+        return entities.map(ServiceSummaryDTO::from);
+    }
 }

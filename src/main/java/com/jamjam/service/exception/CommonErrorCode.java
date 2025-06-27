@@ -1,8 +1,9 @@
-package com.jamjam.global.exception;
+package com.jamjam.service.exception;
 
+import com.jamjam.global.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
-public enum CommonErrorCode implements ErrorCode{
+public enum CommonErrorCode implements ErrorCode {
     JSON_PROCESSING_ERROR(HttpStatus.BAD_REQUEST, "JSON 처리 중 오류가 발생했습니다.", "JSON_PROCESSING_ERROR"),
     OPENAI_API_ERROR(HttpStatus.BAD_GATEWAY, "OpenAI API 요청 중 오류가 발생했습니다.", "OPENAI_API_ERROR"),
     IMAGE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 실패", "IMAGE_UPLOAD_ERROR"),
