@@ -21,5 +21,18 @@ spring:
   jwt:
     secret: ${JWT_SECRET}
 
+  openai:
+    secret-key: ${OPENAI_SECRET}
+  cloud:
+    aws:
+      credentials:
+        access-Key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+
+aws:
+  s3:
+    bucket: jamjam2025
 server:
   forward-headers-strategy: native
