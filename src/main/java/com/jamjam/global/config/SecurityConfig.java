@@ -44,7 +44,8 @@ public class SecurityConfig {
             "/webjars/**",
             "/api/user/sms/**",
             "/api/user/check/**",
-            "/api/service/service-list"
+            "/api/service/service-list",
+            "/api/service/detail"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {

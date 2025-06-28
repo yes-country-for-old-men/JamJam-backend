@@ -12,12 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Provider;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -69,5 +72,14 @@ public class ServiceController {
         log.info("Service list response generated: totalElements={}, totalPages={}",
                 responses.getTotalElements(), responses.getTotalPages());
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, responses));
+    }
+    /*서비스 상세 페이지 조회*/
+    @GetMapping("/detail")
+    @Operation(summary = "서비스 상세 페이지 조회")
+    public ResponseEntity<ResponseDto<ServiceInfoDTO>> getServiceDetail(
+            @RequestParam UUID serviceId) {
+        ServiceInfoDTO response = serviceService.getServiceDetail(serviceId);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 }
