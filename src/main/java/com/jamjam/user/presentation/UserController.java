@@ -8,6 +8,7 @@ import com.jamjam.user.application.SmsVerificationService;
 import com.jamjam.user.application.UserService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.presentation.dto.request.*;
+import com.jamjam.user.presentation.dto.response.CheckResponse;
 import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +44,7 @@ public class UserController {
     @PostMapping("/sms/verify")
     public ResponseEntity<ResponseDto<Void>> verifyOne(@RequestBody SmsVerifyRequest request) {
         smsVerificationService.verifyCode(request.phoneNumber(), request.code());
+
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 
@@ -84,15 +86,15 @@ public class UserController {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
     }
 
-    @GetMapping("/check-loginId")
-    public ResponseEntity<ResponseDto<Boolean>> checkDuplicateLoginId(@RequestParam String loginId) {
+    @GetMapping("/check/loginId")
+    public ResponseEntity<ResponseDto<CheckResponse>> checkDuplicateLoginId(@RequestParam String loginId) {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS
                 , userService.checkDuplicateLoginId(loginId)));
     }
 
-    @GetMapping("/check-nickname")
-    public ResponseEntity<ResponseDto<Boolean>> checkDuplicateNickname(@RequestParam String nickName) {
+    @GetMapping("/check/nickname")
+    public ResponseEntity<ResponseDto<CheckResponse>> checkDuplicateNickname(@RequestParam String nickname) {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS
-                , userService.checkDuplicateNickName(nickName)));
+                , userService.checkDuplicateNickName(nickname)));
     }
 }

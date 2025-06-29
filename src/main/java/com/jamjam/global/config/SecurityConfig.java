@@ -48,7 +48,9 @@ public class SecurityConfig {
             "/api/user/sms/**",
             "/api/user/check/**",
             "/ws-chat/**",
-            "/ws-chat"
+            "/ws-chat",
+            "/api/service/service-list",
+            "/api/service/detail"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {
@@ -61,6 +63,9 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CorsProperties corsProps;
     private final WebSocketProperties webSocketProps;
+
+    @Value("${spring.cors.allowed-origins}")
+    private String allowedOriginsCsv;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -92,7 +97,7 @@ public class SecurityConfig {
                 .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                 .anyRequest().authenticated());
 
-        http.addFilterAt(new LoginFilter(authenticationManager(), jwtUtil, refreshRepository),
+        http.addFilterAt(new LoginFilter(authenticationManager(), jwtUtil, refreshRepository, allowedOriginsCsv),
                 UsernamePasswordAuthenticationFilter.class);
 
         http.addFilterAt(new CustomLogoutFilter(jwtUtil, refreshRepository),
@@ -106,7 +111,7 @@ public class SecurityConfig {
 
     private CorsConfiguration buildCorsConfig(HttpServletRequest req) {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOriginPatterns(corsProps.getAllowedOrigins());
+        cfg.setAllowedOriginPatterns(Arrays.asList(allowedOriginsCsv.split(",")));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setExposedHeaders(List.of("Authorization","Set-Cookie"));
