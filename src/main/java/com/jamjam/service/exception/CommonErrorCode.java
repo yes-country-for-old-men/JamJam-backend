@@ -11,6 +11,7 @@ public enum CommonErrorCode implements ErrorCode {
     SERVICE_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 서비스를 찾을 수 없습니다.", "SERVICE_NOT_FOUND"),
     S3_IMAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 이미지를 S3에서 찾을 수 없습니다.", "S3_IMAGE_NOT_FOUND"),
     FORBIDDEN_DELETE(HttpStatus.FORBIDDEN, "삭제 권한이 없습니다.", "FORBIDDEN_DELETE"),
+    FORBIDDEN_MODIFY(HttpStatus.FORBIDDEN, "수정 권한이 없습니다.", "FORBIDDEN_MODIFY"),
     NO_AUTH_WRITE(HttpStatus.FORBIDDEN, "서비스 등록 권한이 없습니다.", "NO_AUTH_WRITE");
 
     private final HttpStatus httpStatus;

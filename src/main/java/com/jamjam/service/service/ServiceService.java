@@ -1,6 +1,7 @@
 package com.jamjam.service.service;
 
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.service.dto.ServiceEditRequest;
 import com.jamjam.service.dto.ServiceInfoDTO;
 import com.jamjam.service.dto.ServiceSummaryDTO;
 import com.jamjam.service.exception.CommonErrorCode;
@@ -44,7 +45,7 @@ public class ServiceService {
     * 썸네일, 포트폴리오 이미지들은 S3에 저장
     * 그 후 서비스 DB에 저장*/
     @Transactional
-    public void registerService(ServiceRegisterRequest request, Long userId, MultipartFile thumbnail, List<MultipartFile> infoImages) {
+    public void registerService(ServiceRegisterRequest request, Long userId, MultipartFile thumbnail, List<MultipartFile> portfolioImages) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(CommonErrorCode.USER_NOT_FOUND));
         if (user.getRole() != UserRole.PROVIDER) throw new ApiException(CommonErrorCode.NO_AUTH_WRITE);
@@ -56,10 +57,10 @@ public class ServiceService {
             String thumbnailUrl = s3Uploader.upload(thumbnail, "thumbnails");
             log.info("썸네일 저장 완료: " + thumbnailUrl);
             List<String> infoImageUrls = new ArrayList<>();
-            if (infoImages != null) {
-                for (MultipartFile image : infoImages) {
+            if (portfolioImages != null) {
+                for (MultipartFile image : portfolioImages) {
                     if (!image.isEmpty()) {
-                        String imageUrl = s3Uploader.upload(image, "info-images");
+                        String imageUrl = s3Uploader.upload(image, "portfolio-images");
                         infoImageUrls.add(imageUrl);
                     }
                 }
@@ -71,7 +72,7 @@ public class ServiceService {
                     .categoryId(request.getCategoryId())
                     .salary(request.getSalary())
                     .thumbnail(thumbnailUrl)
-                    .infoImages(infoImageUrls)
+                    .portfolioImages(infoImageUrls)
                     .user(user)
                     .build();
             log.info(String.valueOf(service.getUser().getId()));
@@ -117,13 +118,12 @@ public class ServiceService {
             throw new ApiException(CommonErrorCode.FORBIDDEN_DELETE);
         }
         log.info("삭제 권한 확인 완료");
-        log.info(service.getThumbnail());
         /*썸네일 S3에서 삭제*/
         s3Uploader.delete(service.getThumbnail());
         log.info("썸네일 삭제 완료");
         /*포트폴리오 이미지 S3에서 삭제*/
-        if (service.getInfoImages() != null) {
-            for (String imageUrl : service.getInfoImages()) {
+        if (service.getPortfolioImages() != null) {
+            for (String imageUrl : service.getPortfolioImages()) {
                 s3Uploader.delete(imageUrl);
             }
             log.info("포트폴리오 이미지 삭제 완료");
@@ -131,5 +131,69 @@ public class ServiceService {
         }
         serviceRepository.deleteById(serviceId);
         log.info("서비스 삭제 완료");
+    }
+    /*서비스 정보 수정
+    * 수정 가능 필드: 서비스 명, 서비스 썸네일(ai생성 제외),
+    * 포트폴리오 이미지, 상세 설명, 카테고리, 급여, 경력*/
+    @Transactional
+    public void editService(CustomUserDetails customUserDetails, UUID serviceId,
+                            ServiceEditRequest request, MultipartFile thumbnail,
+                            List<MultipartFile> portfolioImages) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new ApiException(CommonErrorCode.SERVICE_NOT_FOUND));
+        Long servicePublisherId = service.getUser().getId();
+        Long currentUserId = customUserDetails.getUserId();
+
+        if (!servicePublisherId.equals(currentUserId)) {
+            throw new ApiException(CommonErrorCode.FORBIDDEN_MODIFY);
+        }
+        log.info("수정 권한 확인 완료");
+
+        List<String> currentImages = service.getPortfolioImages();
+        /*텍스트 필드 수정*/
+        if (request != null) {
+            if (request.getServiceName() != null) {
+                service.setServiceName(request.getServiceName());
+            }
+            if (request.getDescription() != null) {
+                service.setDescription(request.getDescription());
+            }
+            if (request.getSalary() != null) {
+                service.setSalary(request.getSalary());
+            }
+            if (request.getCategoryId() != null) {
+                service.setCategoryId(request.getCategoryId());
+            }
+
+            if (request.getDeleteImages() != null) {
+                for (String deleteUrl : request.getDeleteImages()) {
+                    s3Uploader.delete(deleteUrl);
+                    currentImages.remove(deleteUrl);
+                }
+                log.info("선택 포트폴리오 이미지 삭제 완료");
+            }
+        }
+        try {
+            if (portfolioImages != null) {
+                for (MultipartFile newFile : portfolioImages) {
+                    if (!newFile.isEmpty()) {
+                        String uploadUrl = s3Uploader.upload(newFile, "portfolio-images");
+                        currentImages.add(uploadUrl);
+                    }
+                }
+                log.info("포트폴리오 이미지 수정 완료");
+            }
+            if (thumbnail != null && !thumbnail.isEmpty()) {
+                s3Uploader.delete(service.getThumbnail());
+                String thumbnailUrl = s3Uploader.upload(thumbnail, "thumbnails");
+                service.setThumbnail(thumbnailUrl);
+                log.info("썸네일 이미지 수정 완료");
+            }
+        } catch (IOException e) {
+            throw new ApiException(CommonErrorCode.IMAGE_UPLOAD_ERROR);
+        }
+        service.setPortfolioImages(currentImages);
+
+        serviceRepository.save(service);
     }
 }

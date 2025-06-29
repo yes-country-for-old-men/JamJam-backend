@@ -93,4 +93,17 @@ public class ServiceController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.DELETE_SUCCESS));
     }
+    /*서비스 수정*/
+    @PatchMapping("/edit")
+    @Operation(summary = "서비스 정보 수정")
+    public ResponseEntity<ResponseDto<Void>> editService(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestParam UUID serviceId,
+            @RequestPart(value = "request", required = false) ServiceEditRequest request,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
+            @RequestPart(value = "portfolioImages", required = false) List<MultipartFile> portfolioImages) {
+        serviceService.editService(customUserDetails, serviceId, request, thumbnail, portfolioImages);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
+    }
 }
