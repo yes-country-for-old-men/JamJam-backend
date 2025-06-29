@@ -43,7 +43,7 @@ public class OpenAiClient {
                         "- 서비스명 3가지 제안\n" +
                         "- 서비스 소개글 (설명 요약이 아니라 실제 소개 페이지에 들어갈 수 있는 풍부한 소개글로 작성. 입력된 정보를 기반으로 살을 붙여도 좋아.)\n" +
                         "- 아래 리스트 중 하나의 카테고리 지정\n" +
-                        "상세 설명: %s\n보유 기술: %s\n경력: %s\n학력 및 자격증: %s\n" +
+                        "상세 설명: %s\n보유 기술: %s\n경력: %s\n" +
                         "카테고리는 아래 중에서 하나만 골라줘 (그 외의 값은 넣지 마. 오른쪽의 ID 값으로 반환해줘):\n" +
                         "- BUSINESS: 1\n" +
                         "- CONSULTING: 2\n" +
@@ -66,8 +66,7 @@ public class OpenAiClient {
                         "}",
                 request.getDescription(),
                 request.getSkills(),
-                request.getCareer(),
-                request.getEducation()
+                request.getCareer()
         );
 
         Map<String, Object> body = new HashMap<>();
