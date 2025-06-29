@@ -21,5 +21,14 @@ spring:
   jwt:
     secret: ${JWT_SECRET}
 
+  logging:
+    level:
+      root: INFO
+      com.jamjam: INFO
+
+jamjam:
+  websocket:
+    endpoint: /ws-chat
+
 server:
   forward-headers-strategy: native

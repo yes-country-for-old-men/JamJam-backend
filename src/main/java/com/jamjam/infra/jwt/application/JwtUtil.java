@@ -1,7 +1,14 @@
 package com.jamjam.infra.jwt.application;
 
+import com.jamjam.global.exception.ApiException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -11,13 +18,20 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import static io.jsonwebtoken.Jwts.claims;
+
 @Component
 public class JwtUtil {
 
     private final SecretKey secretKey;
+    private final JwtParser verifier;
 
-    public JwtUtil(@Value("${spring.jwt.secret}")String secret) {
-        this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
+    public JwtUtil(@Value("${spring.jwt.secret}") String secret) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
+        this.verifier = Jwts.parser()
+                .verifyWith(secretKey)
+                .build();
     }
 
     public Long getUserIdFromToken(String token) {
@@ -57,5 +71,22 @@ public class JwtUtil {
                 .expiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Claims c = claims(token);
+            
+            if (c.getExpiration().before(new Date())) return false;
+            if (!"access".equals(c.get("type", String.class))) return false;
+
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private Claims claims(String token) {
+        return verifier.parseSignedClaims(token).getPayload();
     }
 }

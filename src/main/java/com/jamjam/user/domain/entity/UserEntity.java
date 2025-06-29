@@ -55,6 +55,8 @@ public class UserEntity {
     @NotNull
     private UserRole role;
 
+    private String profileUrl;
+
     @OneToMany(mappedBy = "user",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
@@ -83,6 +85,7 @@ public class UserEntity {
         this.createAt = createAt;
         this.role = role;
         this.nickname = nickname;
+        this.profileUrl = "";
         this.careers = new ArrayList<>();
     }
 
@@ -106,15 +109,18 @@ public class UserEntity {
         this.phoneNumber = newPhoneNumber;
     }
 
-    public void changeVerifyPhone(boolean verified) {
-        this.isPhoneVerified = verified;
-    }
-
     public void changeBirth(LocalDate newBirth) {
         this.birth = newBirth;
     }
 
     public void changeGender(Gender newGender) {
         this.gender = newGender;
+    }
+
+    public void changeProfileUrl(String newProfileUrl) {
+        this.profileUrl = newProfileUrl;
+    }
+
+    public void changeVerifyPhone(Boolean phoneVerified) {
     }
 }

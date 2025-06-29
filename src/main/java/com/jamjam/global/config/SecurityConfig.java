@@ -1,11 +1,14 @@
 package com.jamjam.global.config;
 
+import com.jamjam.global.properties.CorsProperties;
+import com.jamjam.global.properties.WebSocketProperties;
 import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.infra.jwt.exception.CustomAuthenticationEntryPoint;
 import com.jamjam.infra.jwt.filter.CustomLogoutFilter;
 import com.jamjam.infra.jwt.filter.JwtFilter;
 import com.jamjam.infra.jwt.filter.LoginFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +23,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,7 +44,11 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui.html",
             "/swagger-ui/**",
-            "/webjars/**"
+            "/webjars/**",
+            "/api/user/sms/**",
+            "/api/user/check/**",
+            "/ws-chat/**",
+            "/ws-chat"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {
@@ -49,9 +59,8 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final RefreshRepository refreshRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-    @Value("${spring.cors.allowed_origins}")
-    private String allowedOrigins;
+    private final CorsProperties corsProps;
+    private final WebSocketProperties webSocketProps;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -67,16 +76,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(req -> {
-                    CorsConfiguration cfg = new CorsConfiguration();
-                    cfg.setAllowedOrigins(Collections.singletonList(allowedOrigins));
-                    cfg.setAllowedMethods(Collections.singletonList("*"));
-                    cfg.setAllowedHeaders(Collections.singletonList("*"));
-                    cfg.setAllowCredentials(true);
-                    cfg.setMaxAge(3600L);
-                    cfg.setExposedHeaders(Collections.singletonList("Authorization"));
-                    return cfg;
-                }));
+                .cors(cors -> cors.configurationSource(this::buildCorsConfig));
 
         http.sessionManagement(sm ->
                 sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -87,6 +87,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(webSocketProps.getEndpoint(),
+                        webSocketProps.getEndpoint() + "/**").permitAll()
                 .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                 .anyRequest().authenticated());
 
@@ -100,5 +102,16 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private CorsConfiguration buildCorsConfig(HttpServletRequest req) {
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOriginPatterns(corsProps.getAllowedOrigins());
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedHeaders(List.of("*"));
+        cfg.setExposedHeaders(List.of("Authorization","Set-Cookie"));
+        cfg.setAllowCredentials(true);
+        cfg.setMaxAge(3600L);
+        return cfg;
     }
 }

@@ -24,11 +24,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -38,7 +36,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RefreshRepository refreshRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshRepository refreshRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+                       RefreshRepository refreshRepository) {
         RequestMatcher requestMatcher = request -> {
             String uri = request.getRequestURI();
             String method = request.getMethod();
@@ -49,9 +48,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
     }
-
-    @Value("${spring.cors.allowed_origins}")
-    private String allowedOrigins;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -85,9 +81,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         addRefreshEntity(userId, refreshToken);
 
         response.addHeader(HttpHeaders.SET_COOKIE, toCookie(refreshToken).toString());
-
-        response.setHeader("Access-Control-Allow-Origin", allowedOrigins);
-        response.setHeader("Access-Control-Allow-Credentials", "true");
 
         Map<String, Object> body = Map.of(
                 "accessToken", accessToken,
