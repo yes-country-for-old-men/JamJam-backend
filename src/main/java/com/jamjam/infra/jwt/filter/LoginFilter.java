@@ -25,6 +25,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -85,7 +86,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String requestOrigin = request.getHeader("Origin");
 
         logger.info("request origin: " + requestOrigin);
-
+      
         Map<String, Object> body = Map.of(
                 "accessToken", accessToken,
                 "tokenType",   "Bearer"

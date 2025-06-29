@@ -121,4 +121,5 @@ public class UserEntity {
     public void changeProfileUrl(String newProfileUrl) {
         this.profileUrl = newProfileUrl;
     }
+
 }

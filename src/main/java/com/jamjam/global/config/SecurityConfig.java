@@ -1,5 +1,7 @@
 package com.jamjam.global.config;
 
+import com.jamjam.global.properties.CorsProperties;
+import com.jamjam.global.properties.WebSocketProperties;
 import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.infra.jwt.exception.CustomAuthenticationEntryPoint;
@@ -23,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -44,6 +47,8 @@ public class SecurityConfig {
             "/webjars/**",
             "/api/user/sms/**",
             "/api/user/check/**",
+            "/ws-chat/**",
+            "/ws-chat",
             "/api/service/service-list",
             "/api/service/detail"
     };
@@ -56,6 +61,8 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final RefreshRepository refreshRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CorsProperties corsProps;
+    private final WebSocketProperties webSocketProps;
 
     @Value("${spring.cors.allowed-origins}")
     private String allowedOriginsCsv;
@@ -85,6 +92,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(webSocketProps.getEndpoint(),
+                        webSocketProps.getEndpoint() + "/**").permitAll()
                 .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                 .anyRequest().authenticated());
 

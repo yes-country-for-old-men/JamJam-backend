@@ -20,6 +20,15 @@ spring:
 
   jwt:
     secret: ${JWT_SECRET}
+    
+  logging:
+    level:
+      root: INFO
+      com.jamjam: INFO
+
+jamjam:
+  websocket:
+    endpoint: /ws-chat
 
   openai:
     secret-key: ${OPENAI_SECRET}
@@ -34,5 +43,6 @@ spring:
 aws:
   s3:
     bucket: jamjam2025
+    
 server:
   forward-headers-strategy: native
