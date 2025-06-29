@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,14 +51,14 @@ public class ServiceController {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
     /*서비스 등록*/
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary ="서비스 등록")
     public ResponseEntity<ResponseDto<Void>> registerService(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestPart("request") ServiceRegisterRequest request,
-            @RequestPart("thumbnail")MultipartFile thumbnail,
-            @RequestPart(value = "infoImages", required = false) List<MultipartFile> infoImages) {
-        serviceService.registerService(request, customUserDetails.getUserId(), thumbnail, infoImages);
+            @RequestPart("thumbnail") MultipartFile thumbnail,
+            @RequestPart(value = "portfolioImages", required = false) List<MultipartFile> portfolioImages) {
+        serviceService.registerService(request, customUserDetails.getUserId(), thumbnail, portfolioImages);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.CREATE_SUCCESS));
     }
@@ -81,5 +82,15 @@ public class ServiceController {
         ServiceInfoDTO response = serviceService.getServiceDetail(serviceId);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+    /*서비스 삭제*/
+    @DeleteMapping("/delete")
+    @Operation(summary = "서비스 삭제")
+    public ResponseEntity<ResponseDto<Void>> deleteService(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestParam UUID serviceId) {
+        serviceService.deleteService(customUserDetails, serviceId);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.DELETE_SUCCESS));
     }
 }

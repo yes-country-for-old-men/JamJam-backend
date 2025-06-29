@@ -22,7 +22,7 @@ public record ServiceInfoDTO(
                 entity.getServiceName(),
                 entity.getDescription(),
                 entity.getSalary(),
-                entity.getCategory(),
+                entity.getCategoryId(),
                 entity.getUser().getCareers()
         );
     }

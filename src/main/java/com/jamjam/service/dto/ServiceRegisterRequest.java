@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ServiceRegisterRequest {
     private String serviceName;
-    private String Description;
-    private int category;
+    private String description;
+    private int categoryId;
     private int salary;
 }

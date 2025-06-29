@@ -1,6 +1,7 @@
 package com.jamjam.service.domain.repository;
 
 import com.jamjam.service.domain.entity.ServiceEntity;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -13,8 +14,8 @@ import java.util.UUID;
 
 @Repository
 public interface ServiceRepository extends JpaRepository<ServiceEntity, UUID> {
-    @Query("SELECT s FROM ServiceEntity s LEFT JOIN s.user u WHERE s.category = :category")
-    Page<ServiceEntity> findByCategory(Integer category, Pageable pageable);
+    @Query("SELECT s FROM ServiceEntity s LEFT JOIN s.user u WHERE s.categoryId = :category")
+    Page<ServiceEntity> findByCategoryId(Integer category, Pageable pageable);
 
     @Query("SELECT s FROM ServiceEntity s Left JOIN s.user u WHERE u.nickname = :nickname")
     Page<ServiceEntity> findByUserNickname(String nickname, Pageable pageable);

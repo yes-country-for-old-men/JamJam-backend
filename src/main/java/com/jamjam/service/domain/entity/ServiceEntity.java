@@ -29,11 +29,12 @@ public class ServiceEntity {
     @NotNull
     private String serviceName;
     @NotNull
+    @Column(columnDefinition = "TEXT")
     private String thumbnail;
     @NotNull
     private Integer salary;
     @NotNull
-    private Integer category;
+    private Integer categoryId;
 
     @ElementCollection
     @CollectionTable(name = "service_info_images")
@@ -43,7 +44,6 @@ public class ServiceEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @NotNull
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
