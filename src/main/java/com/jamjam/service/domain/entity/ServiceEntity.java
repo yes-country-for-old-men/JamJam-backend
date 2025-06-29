@@ -38,7 +38,7 @@ public class ServiceEntity {
 
     @ElementCollection
     @CollectionTable(name = "service_info_images")
-    private List<String> infoImages;
+    private List<String> portfolioImages;
 
     @NotNull
     @Column(columnDefinition = "TEXT")

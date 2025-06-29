@@ -18,7 +18,7 @@ public record ServiceInfoDTO(
     public static ServiceInfoDTO from(ServiceEntity entity) {
         return new ServiceInfoDTO(
                 entity.getThumbnail(),
-                entity.getInfoImages(),
+                entity.getPortfolioImages(),
                 entity.getServiceName(),
                 entity.getDescription(),
                 entity.getSalary(),
