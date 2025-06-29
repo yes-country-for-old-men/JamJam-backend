@@ -1,5 +1,6 @@
 package com.jamjam.user.domain.entity;
 
+import com.jamjam.service.domain.entity.ServiceEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -17,8 +18,8 @@ import java.util.List;
 @Getter
 public class UserEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="user_id")
     @Getter
+    @Column(name="user_id")
     private Long id;
 
     @NotNull

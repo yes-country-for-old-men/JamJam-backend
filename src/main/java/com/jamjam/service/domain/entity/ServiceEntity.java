@@ -2,9 +2,11 @@ package com.jamjam.service.domain.entity;
 
 import com.jamjam.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.UUID;
 
 @Builder
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,23 +26,27 @@ public class ServiceEntity {
     @UuidGenerator
     private UUID id;
 
-    private String title;
+    @NotNull
+    private String serviceName;
+    @NotNull
+    @Column(columnDefinition = "TEXT")
     private String thumbnail;
+    @NotNull
+    private Integer salary;
+    @NotNull
+    private Integer categoryId;
 
     @ElementCollection
     @CollectionTable(name = "service_info_images")
     private List<String> infoImages;
 
+    @NotNull
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
-
-    private Integer salary;
-
-    private Integer category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
