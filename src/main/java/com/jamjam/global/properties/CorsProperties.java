@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.List;
 
 @Data
-@ConfigurationProperties(prefix = "jamjam.cors")
+@ConfigurationProperties(prefix = "spring.cors")
 public class CorsProperties {
     private List<String> allowedOrigins = List.of("*");
 }
