@@ -2,6 +2,7 @@ package com.jamjam.chat.interceptor;
 
 import com.jamjam.infra.jwt.application.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -16,14 +17,16 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     private final JwtUtil jwtUtil;
 
     @Override
-    public Message<?> preSend(Message<?> msg, MessageChannel ch) {
+    public Message<?> preSend(@NotNull Message<?> msg, @NotNull MessageChannel ch) {
 
         StompHeaderAccessor acc = StompHeaderAccessor.wrap(msg);
 
         if (StompCommand.CONNECT.equals(acc.getCommand())) {
 
             String auth = acc.getFirstNativeHeader("Authorization");
-            if (auth == null || !auth.startsWith("Bearer "))
+            if (auth == null)
+                auth = (String) acc.getHeader("Authorization");
+            if (!auth.startsWith("Bearer "))
                 throw new IllegalArgumentException("No Authorization header");
 
             String token = auth.substring(7);

@@ -12,6 +12,7 @@ import com.jamjam.chat.presentation.dto.res.ChatHistoryRes;
 import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
 import com.jamjam.chat.presentation.dto.res.CreateRoomRes;
 import com.jamjam.global.dto.SliceInfo;
+import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class ChatService {
     private final ChatMessageRepository msgRepo;
     private final ChatRoomReadStatusRepository readStatusRepo;
     private final UserRepository userRepo;
-//    private final ServiceService serviceService;
+    private final ServiceService serviceService;
 
     @Transactional
     public void sendMessage(Long roomId, String senderId, String content) {
@@ -101,11 +102,6 @@ public class ChatService {
                 .build();
     }
 
-    public String getUserIdFromService(Long serviceId) {
-        // serviceService.getUserId(serviceId);
-        return "3";
-    }
-
     @Transactional
     public void markRoomAsRead(Long roomId, String userId, Long lastReadMessageId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
@@ -159,12 +155,10 @@ public class ChatService {
         ChatRoomEntity room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
-        // 참가자에서 삭제
         ChatRoomParticipantEntity participant = partRepo.findByRoomIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("참가자가 아닙니다"));
         partRepo.delete(participant);
 
-        // 읽음 상태도 함께 삭제
         readStatusRepo.findByChatRoomAndUserId(room, userId)
                 .ifPresent(readStatusRepo::delete);
     }

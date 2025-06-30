@@ -75,15 +75,14 @@ public class JwtUtil {
 
     public boolean validateToken(String token) {
         try {
-            Claims c = claims(token);
-            
-            if (c.getExpiration().before(new Date())) return false;
-            if (!"access".equals(c.get("type", String.class))) return false;
+            Claims claims = verifier.parseSignedClaims(token).getPayload();
+            if (!"access".equals(claims.get("type", String.class))) return false;
+
+            return true;
 
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
-        return true;
     }
 
     private Claims claims(String token) {

@@ -44,9 +44,8 @@
     public class ChatController {
     
         private final ChatService chatService;
-        private final SimpMessagingTemplate messagingTemplate;
         private final EventBroadcaster eventBroadcaster;
-        private ObjectMapper objectMapper;
+        private final ObjectMapper objectMapper;
 
         @MessageMapping("/chat")
         public void handleChatEvent(@Payload SocketEvent<?> event, SimpMessageHeaderAccessor accessor) {
@@ -69,11 +68,10 @@
         @PostMapping("/room")
         public ResponseEntity<ResponseDto<CreateRoomRes>> makeRoom(
                 @CurrentUser CustomUserDetails user,
-                @RequestParam Long serviceId
+                @RequestParam Long otherId
         ){
-            String userIdStr = chatService.getUserIdFromService(serviceId);
             List<String> userIds = new ArrayList<>();
-            userIds.add(userIdStr);
+            userIds.add(Long.toString(otherId));
             userIds.add(String.valueOf(user.getUserId()));
     
             return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
