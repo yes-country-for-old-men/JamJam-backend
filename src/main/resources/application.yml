@@ -26,10 +26,6 @@ spring:
       root: INFO
       com.jamjam: INFO
 
-jamjam:
-  websocket:
-    endpoint: /ws-chat
-
   openai:
     secret-key: ${OPENAI_SECRET}
   cloud:
@@ -40,6 +36,15 @@ jamjam:
       region:
         static: ap-northeast-2
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+jamjam:
+  websocket:
+    endpoint: /ws-chat
+      
 aws:
   s3:
     bucket: jamjam2025
