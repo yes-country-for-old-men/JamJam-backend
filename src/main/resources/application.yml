@@ -30,9 +30,6 @@ spring:
     secret-key: ${OPENAI_SECRET}
   cloud:
     aws:
-      credentials:
-        access-Key: ${AWS_ACCESS_KEY}
-        secret-key: ${AWS_SECRET_KEY}
       region:
         static: ap-northeast-2
 
