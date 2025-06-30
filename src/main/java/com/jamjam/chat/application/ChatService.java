@@ -1,4 +1,4 @@
-package com.jamjam.chat.service;
+package com.jamjam.chat.application;
 
 import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.ChatRoomEntity;
@@ -36,7 +36,6 @@ public class ChatService {
     private final ChatMessageRepository msgRepo;
     private final ChatRoomReadStatusRepository readStatusRepo;
     private final UserRepository userRepo;
-    private final ServiceService serviceService;
 
     @Transactional
     public void sendMessage(Long roomId, String senderId, String content) {

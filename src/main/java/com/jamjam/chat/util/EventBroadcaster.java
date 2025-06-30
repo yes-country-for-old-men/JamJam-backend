@@ -5,7 +5,7 @@ import com.jamjam.chat.domain.entity.SocketEventType;
 import com.jamjam.chat.domain.repository.ChatRoomParticipantRepository;
 import com.jamjam.chat.presentation.dto.SocketEvent;
 import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
-import com.jamjam.chat.service.ChatService;
+import com.jamjam.chat.application.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;

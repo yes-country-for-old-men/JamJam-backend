@@ -77,24 +77,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Long userId = extractUserId(authentication);
         String role = extractUserRole(authentication);
 
-        String accessToken = jwtUtil.generateToken("access", userId, role, 60 * 60 * 1000L);
-        String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
-
-        addRefreshEntity(userId, refreshToken);
-
-        response.addHeader(HttpHeaders.SET_COOKIE, toCookie(refreshToken).toString());
-        String requestOrigin = request.getHeader("Origin");
-
-        logger.info("request origin: " + requestOrigin);
-      
-        Map<String, Object> body = Map.of(
-                "accessToken", accessToken,
-                "tokenType",   "Bearer"
-        );
-
-        response.setStatus(HttpStatus.OK.value());
-        response.setContentType("application/json;charset=UTF-8");
-        objectMapper.writeValue(response.getWriter(), body);
+        String clientType = request.getHeader("X-Client-Type");
+        if ("APP".equalsIgnoreCase(clientType)) {
+            issueAppTokens(response, userId, role);
+        } else {
+            issueTokens(response, userId, role);
+        }
     }
 
     private void addRefreshEntity(Long userId, String refresh) {
@@ -120,6 +108,41 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json;charset=UTF-8");
         objectMapper.writeValue(response.getWriter(), errorBody);
+    }
+
+    private void issueTokens(HttpServletResponse response,
+                             Long userId, String role) throws IOException {
+
+        String accessToken = jwtUtil.generateToken("access", userId, role, 60 * 60 * 1000L);
+        String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
+
+        addRefreshEntity(userId, refreshToken);
+
+        response.addHeader(HttpHeaders.SET_COOKIE, toCookie(refreshToken).toString());
+
+        Map<String, Object> body = Map.of(
+                "accessToken", accessToken,
+                "tokenType", "Bearer"
+        );
+
+        response.setStatus(HttpStatus.OK.value());
+        response.setContentType("application/json;charset=UTF-8");
+        objectMapper.writeValue(response.getWriter(), body);
+    }
+
+    private void issueAppTokens(HttpServletResponse response,
+                                Long userId, String role) throws IOException {
+
+        String accessToken = jwtUtil.generateToken("access", userId, role, 60 * 60 * 24 * 7 * 1000L);
+
+        Map<String, Object> body = Map.of(
+                "accessToken", accessToken,
+                "tokenType", "Bearer"
+        );
+
+        response.setStatus(HttpStatus.OK.value());
+        response.setContentType("application/json;charset=UTF-8");
+        objectMapper.writeValue(response.getWriter(), body);
     }
 
     protected ResponseCookie toCookie(String refreshToken) {

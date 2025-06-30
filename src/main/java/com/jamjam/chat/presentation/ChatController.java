@@ -8,7 +8,7 @@
     import com.jamjam.chat.presentation.dto.res.ChatHistoryRes;
     import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
     import com.jamjam.chat.presentation.dto.res.CreateRoomRes;
-    import com.jamjam.chat.service.ChatService;
+    import com.jamjam.chat.application.ChatService;
     import com.jamjam.global.annotation.CurrentUser;
     import com.jamjam.global.dto.ResponseDto;
     import com.jamjam.global.dto.SuccessMessage;
@@ -18,11 +18,9 @@
     import org.springframework.data.domain.Pageable;
     import org.springframework.data.web.PageableDefault;
     import org.springframework.http.ResponseEntity;
-    import org.springframework.messaging.handler.annotation.DestinationVariable;
     import org.springframework.messaging.handler.annotation.MessageMapping;
     import org.springframework.messaging.handler.annotation.Payload;
     import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-    import org.springframework.messaging.simp.SimpMessagingTemplate;
     import org.springframework.stereotype.Controller;
     import org.springframework.web.bind.annotation.DeleteMapping;
     import org.springframework.web.bind.annotation.GetMapping;
@@ -35,8 +33,6 @@
     
     import java.util.ArrayList;
     import java.util.List;
-
-    import static com.jamjam.chat.domain.entity.SocketEventType.SEND_MESSAGE;
 
     @RequiredArgsConstructor
     @Controller

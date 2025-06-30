@@ -71,18 +71,20 @@ public class UserController {
     @PostMapping("/join/provider")
     public ResponseEntity<ResponseDto<LoginResponse>> joinProvider(
             @RequestBody ProviderJoinRequest request,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
             HttpServletResponse response
     ) {
-        LoginResponse accessToken = userService.joinProvider(request, response);
+        LoginResponse accessToken = userService.joinProvider(request, response, clientType);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
     }
 
     @PostMapping("/join/client")
     public ResponseEntity<ResponseDto<LoginResponse>> joinClient(
             @RequestBody ClientJoinRequest request,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
             HttpServletResponse response
     ) {
-        LoginResponse accessToken = userService.joinClient(request, response);
+        LoginResponse accessToken = userService.joinClient(request, response, clientType);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
     }
 

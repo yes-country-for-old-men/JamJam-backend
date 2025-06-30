@@ -78,7 +78,7 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponse joinProvider(ProviderJoinRequest request, HttpServletResponse response) {
+    public LoginResponse joinProvider(ProviderJoinRequest request, HttpServletResponse response, String clientType) {
 
         if (validateDuplicateLoginId(request.loginId())) throw new ApiException(UserError.ID_ALREADY_EXISTS);
 
@@ -87,18 +87,25 @@ public class UserService {
         String role = savedUser.getRole().toString();
         Long userId = savedUser.getId();
 
-        String accessToken  = jwtUtil.generateToken("access",  userId, role, 60 * 60 * 1000L);
-        String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
+        String accessToken;
 
-        saveRefreshEntity(userId, refreshToken);
+        if ("APP".equalsIgnoreCase(clientType)) {
+            accessToken  = jwtUtil.generateToken("access",  userId, role, 60 * 60 * 24 * 7 * 1000L);
 
-        addHeader(response, refreshToken);
+        } else {
+            accessToken  = jwtUtil.generateToken("access",  userId, role, 60 * 60 * 1000L);
+            String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
 
+            saveRefreshEntity(userId, refreshToken);
+
+            addHeader(response, refreshToken);
+
+        }
         return new LoginResponse(accessToken, "Bearer", 60 * 60 * 24);
     }
 
     @Transactional
-    public LoginResponse joinClient(ClientJoinRequest request, HttpServletResponse response) {
+    public LoginResponse joinClient(ClientJoinRequest request, HttpServletResponse response, String clientType) {
 
         if (validateDuplicateLoginId(request.loginId())) throw new ApiException(UserError.ID_ALREADY_EXISTS);
 
@@ -107,13 +114,20 @@ public class UserService {
         String role = savedUser.getRole().toString();
         Long userId = savedUser.getId();
 
-        String accessToken  = jwtUtil.generateToken("access",  userId, role, 60 * 60 * 1000L);
-        String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
+        String accessToken;
 
-        saveRefreshEntity(userId, refreshToken);
+        if ("APP".equalsIgnoreCase(clientType)) {
+            accessToken  = jwtUtil.generateToken("access",  userId, role, 60 * 60 * 24 * 7 * 1000L);
 
-        addHeader(response, refreshToken);
+        } else {
+            accessToken  = jwtUtil.generateToken("access",  userId, role, 60 * 60 * 1000L);
+            String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
 
+            saveRefreshEntity(userId, refreshToken);
+
+            addHeader(response, refreshToken);
+
+        }
         return new LoginResponse(accessToken, "Bearer", 60 * 60 * 24);
     }
 
