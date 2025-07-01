@@ -4,6 +4,7 @@ import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.search.service.SearchService;
 import com.jamjam.service.dto.ServiceSummaryDTO;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,6 +27,7 @@ public class SearchController {
     }
 
     @GetMapping("/service")
+    @Operation(summary = "서비스 검색")
     public ResponseEntity<ResponseDto<Page<ServiceSummaryDTO>>> getServiceByKeyword(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String nickname,

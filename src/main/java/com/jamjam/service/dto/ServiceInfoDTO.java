@@ -5,8 +5,10 @@ import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.user.domain.entity.CareerEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 public record ServiceInfoDTO(
+        UUID serviceId,
         String thumbnail,
         List<String> portfolioImages,
         String serviceName,
@@ -17,6 +19,7 @@ public record ServiceInfoDTO(
 ) {
     public static ServiceInfoDTO from(ServiceEntity entity) {
         return new ServiceInfoDTO(
+                entity.getId(),
                 entity.getThumbnail(),
                 entity.getPortfolioImages(),
                 entity.getServiceName(),
