@@ -9,8 +9,8 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-@Profile("prod")
-public class S3ProdConfig {
+@Profile("dev")
+public class S3DevConfig {
     @Value("${spring.cloud.aws.region.static}")
     private String region;
 
