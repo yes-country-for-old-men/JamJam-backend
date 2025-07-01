@@ -61,7 +61,7 @@ public class ReissueService {
         Long userId = jwtUtil.getUserIdFromToken(refresh);
         String role = jwtUtil.getUserRoleFromToken(refresh);
 
-        String newAccess = jwtUtil.generateToken("access", userId, role, 60 * 10 * 1000L);
+        String newAccess = jwtUtil.generateToken("access", userId, role, 60 * 60 * 1000L);
         String newRefresh = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
 
         refreshRepository.deleteByRefresh(refresh);
@@ -107,5 +107,26 @@ public class ReissueService {
                 .build();
 
         refreshRepository.save(refreshEntity);
+    }
+
+    public String reissueAppToken(String access) {
+
+        try {
+            jwtUtil.isTokenExpired(access);
+        } catch (ExpiredJwtException e) {
+            throw new ApiException(UserError.ACCESS_EXPIRED);
+        }
+
+        String type = jwtUtil.getType(access);
+
+        if (type == null || !type.equals("access")) {
+            System.out.println("not a access token:" + access);
+            throw new ApiException(UserError.ACCESS_INVALID);
+        }
+
+        Long userId = jwtUtil.getUserIdFromToken(access);
+        String role = jwtUtil.getUserRoleFromToken(access);
+
+        return jwtUtil.generateToken("access", userId, role, 60 * 60 * 1000L);
     }
 }

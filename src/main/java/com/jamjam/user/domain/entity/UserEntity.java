@@ -58,6 +58,10 @@ public class UserEntity {
 
     private String profileUrl;
 
+    private Boolean isAlarmAgreed;
+
+    private String fcmToken;
+
     @OneToMany(mappedBy = "user",
             cascade = CascadeType.ALL,
             orphanRemoval = true,

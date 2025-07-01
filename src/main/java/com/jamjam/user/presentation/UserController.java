@@ -8,6 +8,7 @@ import com.jamjam.user.application.SmsVerificationService;
 import com.jamjam.user.application.UserService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.presentation.dto.request.*;
+import com.jamjam.user.presentation.dto.response.AppReissueResponse;
 import com.jamjam.user.presentation.dto.response.CheckResponse;
 import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
@@ -66,6 +67,15 @@ public class UserController {
             HttpServletResponse response
     ) throws IOException {
         return reissueService.reissueToken(request, response);
+    }
+
+    @PostMapping("/reissue/app")
+    public ResponseEntity<ResponseDto<AppReissueResponse>> reissueApp(
+            @RequestParam String accessToken
+    ) {
+        String newAccess = reissueService.reissueAppToken(accessToken);
+        AppReissueResponse response = new AppReissueResponse(newAccess);
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 
     @PostMapping("/join/provider")
