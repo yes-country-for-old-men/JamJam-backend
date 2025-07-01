@@ -74,7 +74,7 @@ public class UserController {
             @RequestParam String accessToken
     ) {
         String newAccess = reissueService.reissueAppToken(accessToken);
-        AppReissueResponse response = new AppReissueResponse(newAccess);
+        AppReissueResponse response = new AppReissueResponse(newAccess, "Bearer");
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 
