@@ -38,6 +38,10 @@ spring:
       max-file-size: 10MB
       max-request-size: 20MB
 
+  portone:
+    api-key: ${PORTONE_API_KEY}
+    secret-key: ${PORTONE_API_SECRET}
+
 jamjam:
   websocket:
     endpoint: /ws-chat
