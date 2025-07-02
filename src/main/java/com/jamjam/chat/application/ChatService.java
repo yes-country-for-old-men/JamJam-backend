@@ -8,10 +8,12 @@ import com.jamjam.chat.domain.repository.ChatMessageRepository;
 import com.jamjam.chat.domain.repository.ChatRoomParticipantRepository;
 import com.jamjam.chat.domain.repository.ChatRoomRepository;
 import com.jamjam.chat.domain.repository.ChatRoomReadStatusRepository;
+import com.jamjam.chat.exception.ChatError;
 import com.jamjam.chat.presentation.dto.res.ChatHistoryRes;
 import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
 import com.jamjam.chat.presentation.dto.res.CreateRoomRes;
 import com.jamjam.global.dto.SliceInfo;
+import com.jamjam.global.exception.ApiException;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
@@ -25,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,34 +43,37 @@ public class ChatService {
     private final UserRepository userRepo;
 
     @Transactional
-    public void sendMessage(Long roomId, String senderId, String content) {
-
+    public ChatMessageEntity sendMessage(Long roomId, String senderId, String content) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
 
-        log.info("sending message to room {} from {} to {}", room, senderId, content);
+        ChatMessageEntity msg = ChatMessageEntity.builder()
+                .room(room)
+                .senderId(senderId)
+                .content(content)
+                .sentAt(LocalDateTime.now())
+                .build();
 
-        if (!partRepo.existsByRoomIdAndUserId(roomId, senderId))
-            throw new SecurityException("당신은 이 방의 멤버가 아닙니다");
-
-        msgRepo.save(
-                ChatMessageEntity.builder()
-                        .room(room)
-                        .senderId(senderId)
-                        .content(content)
-                        .sentAt(LocalDateTime.now())
-                        .build()
-        );
+        return msgRepo.save(msg);
     }
 
     @Transactional(readOnly = true)
-    public ChatHistoryRes getHistory(Long roomId, Pageable pageable) {
+    public ChatHistoryRes getHistory(Long roomId, Pageable pageable, String userId) {
         Slice<ChatMessageEntity> chatSlice = msgRepo.findByRoomIdOrderBySentAtDesc(roomId, pageable);
-
         List<ChatMessageEntity> chats = chatSlice.getContent();
 
+        Map<String, String> userIdToNickname = userRepo.findAllById(
+                chats.stream()
+                        .map(ChatMessageEntity::getSenderId)
+                        .map(Long::valueOf)
+                        .collect(Collectors.toSet())
+        ).stream().collect(Collectors.toMap(
+                u -> u.getId().toString(),
+                UserEntity::getNickname
+        ));
+
         SliceInfo sliceInfo = SliceInfo.of(chatSlice.hasNext());
-        return ChatHistoryRes.of(chats, sliceInfo);
+        return ChatHistoryRes.of(chats, sliceInfo, userId, userIdToNickname);
     }
 
     @Transactional
@@ -116,6 +124,7 @@ public class ChatService {
         readStatusRepo.save(status);
     }
 
+    @Transactional(readOnly = true)
     public ChatRoomListRes.ChatRoomSummary getChatRoomSummary(Long roomId, String userId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
@@ -137,7 +146,8 @@ public class ChatService {
 
         Long lastReadMessageId = readStatus != null ? readStatus.getLastReadMessageId() : 0L;
 
-        int unreadCount = msgRepo.countByRoomIdAndIdGreaterThan(room.getId(), lastReadMessageId);
+        int unreadCount = msgRepo.countByRoomIdAndIdGreaterThanAndSenderIdNot(
+                room.getId(), lastReadMessageId, userId);
 
         return ChatRoomListRes.ChatRoomSummary.builder()
                 .id(room.getId())

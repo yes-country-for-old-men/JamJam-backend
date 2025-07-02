@@ -122,7 +122,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         Map<String, Object> body = Map.of(
                 "accessToken", accessToken,
-                "tokenType", "Bearer"
+                "tokenType", "Bearer",
+                "message", "로그인에 성공하였습니다."
         );
 
         response.setStatus(HttpStatus.OK.value());
@@ -137,7 +138,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         Map<String, Object> body = Map.of(
                 "accessToken", accessToken,
-                "tokenType", "Bearer"
+                "tokenType", "Bearer",
+                "message", "로그인에 성공하였습니다."
         );
 
         response.setStatus(HttpStatus.OK.value());

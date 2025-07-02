@@ -25,6 +25,7 @@ public class ChatRoomEntity {
 
     private LocalDateTime createdAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY)
     private List<ChatRoomParticipantEntity> participants = new ArrayList<>();
 }

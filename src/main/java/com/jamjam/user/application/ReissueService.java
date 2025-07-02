@@ -109,7 +109,8 @@ public class ReissueService {
         refreshRepository.save(refreshEntity);
     }
 
-    public String reissueAppToken(String access) {
+    public String reissueAppToken(HttpServletRequest request) {
+        String access = extractAccessTokenFromHeader(request);
 
         try {
             jwtUtil.isTokenExpired(access);
@@ -120,13 +121,21 @@ public class ReissueService {
         String type = jwtUtil.getType(access);
 
         if (type == null || !type.equals("access")) {
-            System.out.println("not a access token:" + access);
+            System.out.println("not an access token: " + access);
             throw new ApiException(UserError.ACCESS_INVALID);
         }
 
         Long userId = jwtUtil.getUserIdFromToken(access);
         String role = jwtUtil.getUserRoleFromToken(access);
 
-        return jwtUtil.generateToken("access", userId, role, 60 * 60 * 1000L);
+        return jwtUtil.generateToken("access", userId, role, 60 * 60 * 24 * 7 * 1000L);
+    }
+
+    private String extractAccessTokenFromHeader(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            throw new ApiException(UserError.ACCESS_INVALID);
+        }
+        return header.substring(7);
     }
 }

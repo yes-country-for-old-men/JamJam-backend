@@ -27,8 +27,22 @@ public class CustomUserDetailsService implements UserDetailsService {
         JwtUserDto userData = userRepository.findByLoginId(loginId)
                 .map(user -> JwtUserDto.builder()
                         .userId(user.getId())
-                        .userEmail(user.getLoginId())
+                        .loginId(user.getLoginId())
                         .password(user.getPassword())
+                        .role(user.getRole().name())
+                        .build()
+                ).orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        return new CustomUserDetails(userData);
+    }
+
+    public UserDetails loadUserByUserId(Long userId) throws UsernameNotFoundException{
+
+        JwtUserDto userData = userRepository.findById(userId)
+                .map(user -> JwtUserDto.builder()
+                        .userId(user.getId())
+                        .loginId(user.getLoginId())
+                        .password(null)
                         .role(user.getRole().name())
                         .build()
                 ).orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));

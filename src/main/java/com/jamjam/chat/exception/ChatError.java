@@ -5,7 +5,8 @@ import com.jamjam.global.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum ChatError implements ErrorCode {
-    ACCESS_EXPIRED(HttpStatus.BAD_REQUEST,"ACCESS_EXPIRED", "토큰이 만료되었습니다.");
+    ACCESS_EXPIRED(HttpStatus.BAD_REQUEST,"토큰이 만료되었습니다.", "ACCESS_EXPIRED"),
+    ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방이 존재하지 않습니다." ,"ROOM_NOT_FOUND");
 
     private final HttpStatus httpStatus;
     private final String message;

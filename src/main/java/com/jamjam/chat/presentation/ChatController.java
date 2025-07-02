@@ -1,6 +1,7 @@
     package com.jamjam.chat.presentation;
 
     import com.fasterxml.jackson.databind.ObjectMapper;
+    import com.jamjam.chat.domain.entity.ChatMessageEntity;
     import com.jamjam.chat.presentation.dto.SocketEvent;
     import com.jamjam.chat.presentation.dto.req.MarkAsReadReq;
     import com.jamjam.chat.presentation.dto.req.MessageReadReq;
@@ -15,27 +16,23 @@
     import com.jamjam.user.application.dto.CustomUserDetails;
     import com.jamjam.chat.util.EventBroadcaster;
     import lombok.RequiredArgsConstructor;
+    import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.Pageable;
     import org.springframework.data.web.PageableDefault;
     import org.springframework.http.ResponseEntity;
     import org.springframework.messaging.handler.annotation.MessageMapping;
     import org.springframework.messaging.handler.annotation.Payload;
     import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-    import org.springframework.stereotype.Controller;
-    import org.springframework.web.bind.annotation.DeleteMapping;
-    import org.springframework.web.bind.annotation.GetMapping;
-    import org.springframework.web.bind.annotation.PostMapping;
-    import org.springframework.web.bind.annotation.PutMapping;
-    import org.springframework.web.bind.annotation.RequestBody;
-    import org.springframework.web.bind.annotation.RequestMapping;
-    import org.springframework.web.bind.annotation.RequestParam;
-    import org.springframework.web.bind.annotation.PathVariable;
-    
+    import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+    import org.springframework.web.bind.annotation.*;
+
+    import java.security.Principal;
     import java.util.ArrayList;
     import java.util.List;
 
+    @Slf4j
     @RequiredArgsConstructor
-    @Controller
+    @RestController
     @RequestMapping("/api/chat")
     public class ChatController {
     
@@ -45,13 +42,14 @@
 
         @MessageMapping("/chat")
         public void handleChatEvent(@Payload SocketEvent<?> event, SimpMessageHeaderAccessor accessor) {
-            String userId = accessor.getSessionAttributes().get("userId").toString();
+            String userId = (String) accessor.getSessionAttributes().get("userId");
+            log.info("convertAndSend userId: {}", userId);
 
             switch (event.type()) {
                 case SEND_MESSAGE -> {
                     SendMessageReq req = convert(event.content(), SendMessageReq.class);
-                    chatService.sendMessage(req.roomId(), userId, req.message());
-                    eventBroadcaster.broadcastNewMessage(req.roomId(), userId, req.message());
+                    ChatMessageEntity savedMsg = chatService.sendMessage(req.roomId(), userId, req.message());
+                    eventBroadcaster.broadcastNewMessage(savedMsg, userId);
                 }
                 case MESSAGE_READ -> {
                     MessageReadReq req = convert(event.content(), MessageReadReq.class);
@@ -76,22 +74,22 @@
 
         @GetMapping("/rooms/{chatRoomId}/messages")
         public ResponseEntity<ResponseDto<ChatHistoryRes>> getMessages(
+                @CurrentUser CustomUserDetails user,
                 @PathVariable Long chatRoomId,
                 @PageableDefault Pageable pageable
         ) {
-            ChatHistoryRes slice = chatService.getHistory(chatRoomId, pageable);
+            ChatHistoryRes slice = chatService.getHistory(chatRoomId, pageable, String.valueOf(user.getUserId()));
             return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, slice));
         }
-
         @PutMapping("/rooms/{chatRoomId}/read")
-        public ResponseEntity<?> markRoomAsRead(
+        public ResponseEntity<ResponseDto<Void>> markRoomAsRead(
                 @CurrentUser CustomUserDetails user,
                 @PathVariable Long chatRoomId,
                 @RequestBody MarkAsReadReq request
         ) {
             chatService.markRoomAsRead(chatRoomId, String.valueOf(user.getUserId()), request.lastReadMessageId());
             eventBroadcaster.broadcastMessageRead(chatRoomId, request.lastReadMessageId());
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
         }
 
         @GetMapping("/rooms")
@@ -104,12 +102,12 @@
         }
 
         @DeleteMapping("/rooms/{chatRoomId}")
-        public ResponseEntity<?> leaveRoom(
+        public ResponseEntity<ResponseDto<Void>> leaveRoom(
                 @CurrentUser CustomUserDetails user,
                 @PathVariable Long chatRoomId
         ) {
             chatService.leaveRoom(chatRoomId, String.valueOf(user.getUserId()));
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
         }
 
         private <T> T convert(Object content, Class<T> clazz) {

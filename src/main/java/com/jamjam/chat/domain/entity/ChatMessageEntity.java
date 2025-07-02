@@ -18,16 +18,19 @@ public class ChatMessageEntity {
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "room_id")
     private ChatRoomEntity room;
     private String senderId;
+    private String senderName;
     private String content;
     private LocalDateTime sentAt;
 
     public static ChatMessageEntity of(ChatRoomEntity room,
                                        String senderId,
                                        String content,
+                                       String senderName,
                                        LocalDateTime sentAt) {
         return ChatMessageEntity.builder()
                 .room(room)
                 .senderId(senderId)
+                .senderName(senderName)
                 .content(content)
                 .sentAt(sentAt)
                 .build();

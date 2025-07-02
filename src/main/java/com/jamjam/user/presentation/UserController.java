@@ -71,9 +71,9 @@ public class UserController {
 
     @PostMapping("/reissue/app")
     public ResponseEntity<ResponseDto<AppReissueResponse>> reissueApp(
-            @RequestParam String accessToken
+            HttpServletRequest request
     ) {
-        String newAccess = reissueService.reissueAppToken(accessToken);
+        String newAccess = reissueService.reissueAppToken(request);
         AppReissueResponse response = new AppReissueResponse(newAccess, "Bearer");
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
