@@ -38,10 +38,6 @@ spring:
       max-file-size: 10MB
       max-request-size: 20MB
 
-  portone:
-    api-key: ${PORTONE_API_KEY}
-    secret-key: ${PORTONE_API_SECRET}
-
 jamjam:
   websocket:
     endpoint: /ws-chat
@@ -49,6 +45,12 @@ jamjam:
 aws:
   s3:
     bucket: jamjam2025
-    
+
+
+port-one:
+  api:
+    base-url: https://api.portone.io/payments/
+    secret-key: ${PORTONE_SECRET_KEY}
+
 server:
   forward-headers-strategy: native

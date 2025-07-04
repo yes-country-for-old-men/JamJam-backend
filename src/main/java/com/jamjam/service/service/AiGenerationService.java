@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.service.exception.CommonErrorCode;
+import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.AiImageRequest;
 import com.jamjam.service.dto.AiImageResponse;
 import com.jamjam.service.dto.AiServiceRequest;
@@ -38,7 +38,7 @@ public class AiGenerationService {
             // 다시 파싱 (중첩 JSON 구조이기 때문)
             node = objectMapper.readTree(innerJsonString);
         } catch (JsonProcessingException e) {
-            throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
         }
 
         List<String> serviceNames = new ArrayList<>();

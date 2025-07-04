@@ -29,6 +29,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework:spring-messaging'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 	// TEST CONFIGURATION
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -70,8 +71,8 @@ dependencies {
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.0.1'
 	compileOnly 'org.projectlombok:lombok'
 
-	//PORTONE
-	implementation 'com.github.iamport:iamport-rest-client-java:0.2.23'
+	//macos netty-resolver-dns
+	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.109.Final:osx-aarch_64'
 }
 
 tasks.named('test') {
