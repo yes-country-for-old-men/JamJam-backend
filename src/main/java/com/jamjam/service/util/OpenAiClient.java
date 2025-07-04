@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.config.GptConfig;
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.service.exception.CommonErrorCode;
+import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.AiServiceRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -94,7 +94,7 @@ public class OpenAiClient {
             JsonNode root = objectMapper.readTree(response);
             return root.path("data").get(0).path("b64_json").asText();
         } catch (Exception e) {
-            throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
         }
     }
     /*서비스 상세 설명 받아 마크다운 문법 적용하여 반환*/
@@ -130,7 +130,7 @@ public class OpenAiClient {
             // 다시 파싱 (중첩 JSON 구조이기 때문)
             node = objectMapper.readTree(innerJsonString);
         } catch (JsonProcessingException e) {
-            throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
         }
         /*마크다운 적용된 상세 설명 반환*/
         return node.path("appliedDescription").asText();
@@ -146,12 +146,12 @@ public class OpenAiClient {
             return response.getBody();
         } catch (JsonProcessingException e) {
             log.error("JSON 직렬화 실패: {}", e.getMessage(), e);
-            throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             // OpenAI에서 에러 반환 시
             log.error("OpenAI API 에러 - 상태 코드: {}, 응답 바디: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new ApiException(CommonErrorCode.OPENAI_API_ERROR); // 커스텀 에러코드 사용
+            throw new ApiException(ServiceError.OPENAI_API_ERROR); // 커스텀 에러코드 사용
         }
     }
 }

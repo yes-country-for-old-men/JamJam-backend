@@ -1,7 +1,7 @@
 package com.jamjam.service.util;
 
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.service.exception.CommonErrorCode;
+import com.jamjam.service.exception.ServiceError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -63,7 +63,7 @@ public class S3Uploader {
                     .build();
             s3Client.deleteObject(request);
         } catch (Exception e) {
-            throw new ApiException(CommonErrorCode.S3_IMAGE_NOT_FOUND);
+            throw new ApiException(ServiceError.S3_IMAGE_NOT_FOUND);
         }
     }
 }
