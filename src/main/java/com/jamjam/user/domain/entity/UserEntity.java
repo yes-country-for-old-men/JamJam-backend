@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,8 @@ public class UserEntity {
 
     private String profileUrl;
 
+    private BigDecimal credit;
+
     @OneToMany(mappedBy = "user",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
@@ -86,6 +89,7 @@ public class UserEntity {
         this.createAt = createAt;
         this.role = role;
         this.nickname = nickname;
+        this.credit = BigDecimal.ZERO;
         this.profileUrl = "";
         this.careers = new ArrayList<>();
     }
@@ -122,4 +126,5 @@ public class UserEntity {
         this.profileUrl = newProfileUrl;
     }
 
+    public void changeCredit(BigDecimal newCredit) { this.credit = newCredit; }
 }

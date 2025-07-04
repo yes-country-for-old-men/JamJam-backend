@@ -39,9 +39,9 @@ public class PaymentController {
     @PostMapping("/complete")
     @Operation(summary = "결제 정보 검증 후 처리")
     public ResponseEntity<ResponseDto<?>> completePayment(
-//            @CurrentUser CustomUserDetails customUserDetails,
+            @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody CompletePaymentRequest request) throws Exception {
-        boolean result = portOneService.completePayment(request);
+        boolean result = portOneService.completePayment(customUserDetails, request);
 
         if (result) {
             return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.PAYMENT_COMPLETED));

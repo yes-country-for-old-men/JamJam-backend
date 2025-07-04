@@ -51,8 +51,7 @@ public class SecurityConfig {
             "/ws-chat",
             "/api/service/service-list",
             "/api/service/detail",
-            "/api/search/**",
-            "/api/payment/complete"
+            "/api/search/**"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {

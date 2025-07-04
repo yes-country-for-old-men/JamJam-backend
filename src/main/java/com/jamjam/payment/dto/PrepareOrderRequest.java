@@ -9,7 +9,6 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 public class PrepareOrderRequest {
-    private String merchantUid;
+    private String paymentUid;
     private BigDecimal price;
-    private UUID serviceId;
 }

@@ -7,5 +7,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CompletePaymentRequest {
     private String paymentUid;
-    private String merchantUid;
 }

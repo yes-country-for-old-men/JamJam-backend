@@ -19,23 +19,21 @@ public class PaymentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private BigDecimal price;
     private PaymentStatus status;
-    private String paymentId;
+    private String paymentUid;
     private LocalDateTime paidAt;
 
     @Builder
-    public PaymentEntity(BigDecimal price, PaymentStatus status,
-                         String paymentId, LocalDateTime paidAt) {
-        this.price = price;
+    public PaymentEntity(PaymentStatus status, String paymentUid,
+                         LocalDateTime paidAt) {
         this.status = status;
-        this.paymentId = paymentId;
+        this.paymentUid = paymentUid;
         this.paidAt = paidAt;
     }
 
-    public void changePaymentBySuccess(PaymentStatus status, String paymentId) {
+    public void changePaymentBySuccess(PaymentStatus status, String paymentUid) {
         this.status = status;
-        this.paymentId = paymentId;
+        this.paymentUid = paymentUid;
         this.paidAt = LocalDateTime.now();
     }
 }
