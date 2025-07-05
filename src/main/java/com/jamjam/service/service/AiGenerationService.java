@@ -10,11 +10,13 @@ import com.jamjam.service.dto.AiImageResponse;
 import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.OpenAiClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class AiGenerationService {
     private final OpenAiClient openAiClient;
@@ -43,6 +45,7 @@ public class AiGenerationService {
 
         List<String> serviceNames = new ArrayList<>();
         JsonNode namesNode = node.path("service_names");
+        log.info("service names 받아오기 성공");
         if (namesNode.isArray()) {
             for (JsonNode name : namesNode) {
                 serviceNames.add(name.asText());
@@ -50,7 +53,9 @@ public class AiGenerationService {
         }
 
         String description = node.path("description").asText();
+        log.info("description 받아오기 성공");
         int category = node.path("category").asInt();
+        log.info("category 받아오기 성공");
 
         AiServiceResponse response = new AiServiceResponse();
         response.setServiceNames(serviceNames);

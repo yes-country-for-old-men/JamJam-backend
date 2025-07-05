@@ -41,7 +41,7 @@ public class ServiceService {
         this.s3Uploader = s3Uploader;
         this.userRepository = userRepository;
     }
-    /*서비스 상세 설명은 Gpt로 마크다운 문법 적용
+    /*서비스 등록
     * 썸네일, 포트폴리오 이미지들은 S3에 저장
     * 그 후 서비스 DB에 저장*/
     @Transactional
@@ -50,9 +50,6 @@ public class ServiceService {
                 .orElseThrow(() -> new ApiException(ServiceError.USER_NOT_FOUND));
         if (user.getRole() != UserRole.PROVIDER) throw new ApiException(ServiceError.NO_AUTH_WRITE);
 
-        log.info("openAI 호출");
-        String description = openAiClient.applyMarkdown(request.getDescription());
-        log.info("마크다운 적용");
         try {
             String thumbnailUrl = s3Uploader.upload(thumbnail, "thumbnails");
             log.info("썸네일 저장 완료: " + thumbnailUrl);
@@ -68,7 +65,7 @@ public class ServiceService {
             }
             ServiceEntity service = ServiceEntity.builder()
                     .serviceName(request.getServiceName())
-                    .description(description)
+                    .description(request.getDescription())
                     .categoryId(request.getCategoryId())
                     .salary(request.getSalary())
                     .thumbnail(thumbnailUrl)
