@@ -4,17 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.service.exception.CommonErrorCode;
+import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.AiImageRequest;
 import com.jamjam.service.dto.AiImageResponse;
 import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.OpenAiClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class AiGenerationService {
     private final OpenAiClient openAiClient;
@@ -38,11 +40,12 @@ public class AiGenerationService {
             // 다시 파싱 (중첩 JSON 구조이기 때문)
             node = objectMapper.readTree(innerJsonString);
         } catch (JsonProcessingException e) {
-            throw new ApiException(CommonErrorCode.JSON_PROCESSING_ERROR);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
         }
 
         List<String> serviceNames = new ArrayList<>();
         JsonNode namesNode = node.path("service_names");
+        log.info("service names 받아오기 성공");
         if (namesNode.isArray()) {
             for (JsonNode name : namesNode) {
                 serviceNames.add(name.asText());
@@ -50,7 +53,9 @@ public class AiGenerationService {
         }
 
         String description = node.path("description").asText();
+        log.info("description 받아오기 성공");
         int category = node.path("category").asInt();
+        log.info("category 받아오기 성공");
 
         AiServiceResponse response = new AiServiceResponse();
         response.setServiceNames(serviceNames);

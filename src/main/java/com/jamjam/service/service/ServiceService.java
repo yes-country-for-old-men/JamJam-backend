@@ -4,7 +4,7 @@ import com.jamjam.global.exception.ApiException;
 import com.jamjam.service.dto.ServiceEditRequest;
 import com.jamjam.service.dto.ServiceInfoDTO;
 import com.jamjam.service.dto.ServiceSummaryDTO;
-import com.jamjam.service.exception.CommonErrorCode;
+import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.ServiceRegisterRequest;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
@@ -41,18 +41,15 @@ public class ServiceService {
         this.s3Uploader = s3Uploader;
         this.userRepository = userRepository;
     }
-    /*서비스 상세 설명은 Gpt로 마크다운 문법 적용
+    /*서비스 등록
     * 썸네일, 포트폴리오 이미지들은 S3에 저장
     * 그 후 서비스 DB에 저장*/
     @Transactional
     public void registerService(ServiceRegisterRequest request, Long userId, MultipartFile thumbnail, List<MultipartFile> portfolioImages) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(CommonErrorCode.USER_NOT_FOUND));
-        if (user.getRole() != UserRole.PROVIDER) throw new ApiException(CommonErrorCode.NO_AUTH_WRITE);
+                .orElseThrow(() -> new ApiException(ServiceError.USER_NOT_FOUND));
+        if (user.getRole() != UserRole.PROVIDER) throw new ApiException(ServiceError.NO_AUTH_WRITE);
 
-        log.info("openAI 호출");
-        String description = openAiClient.applyMarkdown(request.getDescription());
-        log.info("마크다운 적용");
         try {
             String thumbnailUrl = s3Uploader.upload(thumbnail, "thumbnails");
             log.info("썸네일 저장 완료: " + thumbnailUrl);
@@ -68,7 +65,7 @@ public class ServiceService {
             }
             ServiceEntity service = ServiceEntity.builder()
                     .serviceName(request.getServiceName())
-                    .description(description)
+                    .description(request.getDescription())
                     .categoryId(request.getCategoryId())
                     .salary(request.getSalary())
                     .thumbnail(thumbnailUrl)
@@ -80,7 +77,7 @@ public class ServiceService {
             serviceRepository.save(service);
             log.info("서비스 등록 완료");
         } catch(IOException e) {
-            throw new ApiException(CommonErrorCode.IMAGE_UPLOAD_ERROR);
+            throw new ApiException(ServiceError.IMAGE_UPLOAD_ERROR);
         }
     }
     /*분류 별 서비스 리스트 반환 (카테고리, 제공자)*/
@@ -102,7 +99,7 @@ public class ServiceService {
     @Transactional
     public ServiceInfoDTO getServiceDetail(UUID serviceId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ApiException(CommonErrorCode.SERVICE_NOT_FOUND));
+                .orElseThrow(() -> new ApiException(ServiceError.SERVICE_NOT_FOUND));
 
         return ServiceInfoDTO.from(service);
     }
@@ -110,12 +107,12 @@ public class ServiceService {
     @Transactional
     public void deleteService(CustomUserDetails customUserDetails, UUID serviceId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ApiException(CommonErrorCode.SERVICE_NOT_FOUND));
+                .orElseThrow(() -> new ApiException(ServiceError.SERVICE_NOT_FOUND));
         Long servicePublisherId = service.getUser().getId();
         Long currentUserId = customUserDetails.getUserId();
 
         if (!servicePublisherId.equals(currentUserId)) {
-            throw new ApiException(CommonErrorCode.FORBIDDEN_DELETE);
+            throw new ApiException(ServiceError.FORBIDDEN_DELETE);
         }
         log.info("삭제 권한 확인 완료");
         /*썸네일 S3에서 삭제*/
@@ -140,12 +137,12 @@ public class ServiceService {
                             ServiceEditRequest request, MultipartFile thumbnail,
                             List<MultipartFile> portfolioImages) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ApiException(CommonErrorCode.SERVICE_NOT_FOUND));
+                .orElseThrow(() -> new ApiException(ServiceError.SERVICE_NOT_FOUND));
         Long servicePublisherId = service.getUser().getId();
         Long currentUserId = customUserDetails.getUserId();
 
         if (!servicePublisherId.equals(currentUserId)) {
-            throw new ApiException(CommonErrorCode.FORBIDDEN_MODIFY);
+            throw new ApiException(ServiceError.FORBIDDEN_MODIFY);
         }
         log.info("수정 권한 확인 완료");
 
@@ -190,7 +187,7 @@ public class ServiceService {
                 log.info("썸네일 이미지 수정 완료");
             }
         } catch (IOException e) {
-            throw new ApiException(CommonErrorCode.IMAGE_UPLOAD_ERROR);
+            throw new ApiException(ServiceError.IMAGE_UPLOAD_ERROR);
         }
         service.setPortfolioImages(currentImages);
 

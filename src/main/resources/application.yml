@@ -57,5 +57,11 @@ logging:
     com.jamjam.chat.interceptor: DEBUG
     org.springframework.messaging: DEBUG
 
+
+port-one:
+  api:
+    base-url: https://api.portone.io/payments/
+    secret-key: ${PORTONE_SECRET_KEY}
+
 server:
   forward-headers-strategy: native

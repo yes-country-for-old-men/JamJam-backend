@@ -1,5 +1,6 @@
 package com.jamjam.user.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class CareerEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private UserEntity user;
 
     @Column(name = "company_name")

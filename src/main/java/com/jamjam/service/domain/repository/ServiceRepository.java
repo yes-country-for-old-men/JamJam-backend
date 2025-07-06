@@ -1,6 +1,7 @@
 package com.jamjam.service.domain.repository;
 
 import com.jamjam.service.domain.entity.ServiceEntity;
+import com.jamjam.service.dto.ServiceSummaryDTO;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,4 +22,10 @@ public interface ServiceRepository extends JpaRepository<ServiceEntity, UUID> {
     Page<ServiceEntity> findByUserNickname(String nickname, Pageable pageable);
 
     Page<ServiceEntity> findAll(Pageable pageable);
+
+    @Query("SELECT s FROM ServiceEntity s WHERE s.serviceName LIKE %:keyword% OR s.description LIKE %:keyword%")
+    Page<ServiceEntity> findByKeyword(String keyword, Pageable pageable);
+
+    @Query("SELECT s FROM ServiceEntity s Left JOIN s.user u WHERE u.nickname LIKE %:nickname%")
+    Page<ServiceEntity> findByProvider(String nickname, Pageable pageable);
 }
