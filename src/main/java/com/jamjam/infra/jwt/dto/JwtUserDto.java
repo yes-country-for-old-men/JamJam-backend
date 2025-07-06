@@ -4,9 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record JwtUserDto(
-        String userEmail,
+        Long   userId,
+        String loginId,
         String password,
-        Long userId,
         String role
-) {
-}
+) {}

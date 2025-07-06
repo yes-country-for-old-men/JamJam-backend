@@ -8,17 +8,16 @@ import com.jamjam.user.application.SmsVerificationService;
 import com.jamjam.user.application.UserService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.presentation.dto.request.*;
+import com.jamjam.user.presentation.dto.response.AppReissueResponse;
 import com.jamjam.user.presentation.dto.response.CheckResponse;
 import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -68,21 +67,32 @@ public class UserController {
         return reissueService.reissueToken(request, response);
     }
 
+    @PostMapping("/reissue/app")
+    public ResponseEntity<ResponseDto<AppReissueResponse>> reissueApp(
+            HttpServletRequest request
+    ) {
+        String newAccess = reissueService.reissueAppToken(request);
+        AppReissueResponse response = new AppReissueResponse(newAccess, "Bearer");
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+
     @PostMapping("/join/provider")
     public ResponseEntity<ResponseDto<LoginResponse>> joinProvider(
             @RequestBody ProviderJoinRequest request,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
             HttpServletResponse response
     ) {
-        LoginResponse accessToken = userService.joinProvider(request, response);
+        LoginResponse accessToken = userService.joinProvider(request, response, clientType);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
     }
 
     @PostMapping("/join/client")
     public ResponseEntity<ResponseDto<LoginResponse>> joinClient(
             @RequestBody ClientJoinRequest request,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
             HttpServletResponse response
     ) {
-        LoginResponse accessToken = userService.joinClient(request, response);
+        LoginResponse accessToken = userService.joinClient(request, response, clientType);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, accessToken));
     }
 

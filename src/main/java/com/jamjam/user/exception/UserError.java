@@ -15,7 +15,9 @@ public enum UserError implements ErrorCode {
     LOGIN_INPUT_EMPTY(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 입력되지 않았습니다.", "LOGIN_INPUT_EMPTY"),
     ID_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디 입니다.", "ID_ALREADY_EXISTS"),
     NICKNAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임 입니다.", "NICKNAME_ALREADY_EXISTS"),
-    PHONE_ALREADY_REGISTERED(HttpStatus.CONFLICT, "같은 역할로 등록된 휴대폰 번호가 이미 존재합니다.", "PHONE_ALREADY_REGISTERED");
+    PHONE_ALREADY_REGISTERED(HttpStatus.CONFLICT, "같은 역할로 등록된 휴대폰 번호가 이미 존재합니다.", "PHONE_ALREADY_REGISTERED"),
+    ACCESS_EXPIRED(HttpStatus.UNAUTHORIZED, "액세스 토큰이 만료되었습니다.", "ACCESS_EXPIRED"),
+    ACCESS_INVALID(HttpStatus.BAD_REQUEST,  "액세스 토큰이 유효하지 않습니다.", "ACCESS_INVALID");
 
     private final HttpStatus httpStatus;
     private final String message;

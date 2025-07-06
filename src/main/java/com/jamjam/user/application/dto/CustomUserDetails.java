@@ -33,8 +33,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.userEmail();
-    }
+        return Long.toString(user.userId());
+    } // WebSocket 때문에 수정함
 
     @Override
     public boolean isAccountNonExpired() {
