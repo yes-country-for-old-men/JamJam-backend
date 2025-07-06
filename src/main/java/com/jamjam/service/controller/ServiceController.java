@@ -8,22 +8,18 @@ import com.jamjam.service.service.AiGenerationService;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.Param;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Provider;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/service")
 public class ServiceController {
@@ -70,8 +66,7 @@ public class ServiceController {
             @RequestParam(required = false) String provider,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<ServiceSummaryDTO> responses = serviceService.getFilteredServices(category, provider, pageable);
-        log.info("Service list response generated: totalElements={}, totalPages={}",
-                responses.getTotalElements(), responses.getTotalPages());
+
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, responses));
     }
     /*서비스 상세 페이지 조회*/

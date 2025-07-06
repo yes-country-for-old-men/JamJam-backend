@@ -14,7 +14,7 @@ public record ServiceSummaryDTO(
         return new ServiceSummaryDTO(
                 entity.getThumbnail(),
                 entity.getServiceName(),
-                entity.getUser().getNickname(),
+                nickname,
                 entity.getSalary()
         );
     }

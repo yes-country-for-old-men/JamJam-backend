@@ -54,6 +54,11 @@ logging:
     org.springframework.messaging.simp: DEBUG
     org.springframework.web.socket: DEBUG
     com.jamjam: DEBUG
+
+port-one:
+  api:
+    base-url: https://api.portone.io/payments/
+    secret-key: ${PORTONE_SECRET_KEY}
     
 server:
   forward-headers-strategy: native
