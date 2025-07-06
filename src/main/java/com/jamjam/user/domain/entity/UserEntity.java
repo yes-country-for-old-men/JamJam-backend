@@ -56,6 +56,7 @@ public class UserEntity {
     @NotNull
     private UserRole role;
 
+    @Column(name = "profile_url", length = 2048)
     private String profileUrl;
 
     private Boolean isAlarmAgreed;

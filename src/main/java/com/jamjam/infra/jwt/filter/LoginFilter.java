@@ -1,6 +1,8 @@
 package com.jamjam.infra.jwt.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jamjam.global.dto.ResponseDto;
+import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
@@ -126,9 +128,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 "message", "로그인에 성공하였습니다."
         );
 
+        ResponseDto<?> dto = ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, body);
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json;charset=UTF-8");
-        objectMapper.writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), dto);
     }
 
     private void issueAppTokens(HttpServletResponse response,
@@ -142,9 +145,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 "message", "로그인에 성공하였습니다."
         );
 
+        ResponseDto<?> dto = ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, body);
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json;charset=UTF-8");
-        objectMapper.writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), dto);
     }
 
     protected ResponseCookie toCookie(String refreshToken) {

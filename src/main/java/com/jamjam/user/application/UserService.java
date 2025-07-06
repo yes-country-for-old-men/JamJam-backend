@@ -4,7 +4,6 @@ import com.jamjam.global.exception.ApiException;
 import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
-import com.jamjam.user.domain.entity.AccountEntity;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
@@ -60,7 +59,7 @@ public class UserService {
                 .birth(userEntity.getBirth())
                 .profileUrl(userEntity.getProfileUrl())
                 .gender(userEntity.getGender())
-                .role(UserRole.CLIENT)
+                .role(userEntity.getRole())
                 .build();
     }
 

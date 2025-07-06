@@ -54,6 +54,8 @@ logging:
     org.springframework.messaging.simp: DEBUG
     org.springframework.web.socket: DEBUG
     com.jamjam: DEBUG
-    
+    com.jamjam.chat.interceptor: DEBUG
+    org.springframework.messaging: DEBUG
+
 server:
   forward-headers-strategy: native
