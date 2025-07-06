@@ -5,6 +5,7 @@ import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.order.dto.OrderRegisterRequest;
 import com.jamjam.order.dto.OrderStatusRequest;
+import com.jamjam.order.scheduler.OrderStatusScheduler;
 import com.jamjam.order.service.OrderService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,4 +47,5 @@ public class OrderController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
+
 }

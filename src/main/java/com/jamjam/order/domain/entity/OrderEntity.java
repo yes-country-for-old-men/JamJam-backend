@@ -50,10 +50,10 @@ public class OrderEntity {
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime orderedAt;
-    /*주문 완료 시점 or 주문 확정 시점*/
-    private LocalDateTime finishedAt;
-
+    private LocalDateTime serviceCompletedAt;
+    private LocalDateTime purchaseConfirmedAt;
     private LocalDateTime canceledAt;
+
     private String cancelReason;
 
     @NotNull
@@ -70,15 +70,16 @@ public class OrderEntity {
     @Builder
     public OrderEntity(String title, LocalDate deadline, List<String> orderImages,
                        String description, String additionalRequest, BigDecimal price,
-                       LocalDateTime finishedAt, OrderStatus orderStatus, UserEntity client,
-                       ServiceEntity service) {
+                       LocalDateTime serviceCompletedAt, LocalDateTime purchaseConfirmedAt,
+                       OrderStatus orderStatus, UserEntity client, ServiceEntity service) {
         this.title = title;
         this.deadline = deadline;
         this.orderImages = orderImages;
         this.description = description;
         this.additionalRequest = additionalRequest;
         this.price = price;
-        this.finishedAt = finishedAt;
+        this.serviceCompletedAt = serviceCompletedAt;
+        this.purchaseConfirmedAt = purchaseConfirmedAt;
         this.orderStatus = orderStatus;
         this.client = client;
         this.service = service;
@@ -95,12 +96,19 @@ public class OrderEntity {
                 this.orderStatus = request.getOrderStatus();
                 break;
             case WAITING_CONFIRM:
+                this.orderStatus = request.getOrderStatus();
+                this.serviceCompletedAt = LocalDateTime.now();
+                break;
             case COMPLETED:
                 this.orderStatus = request.getOrderStatus();
-                this.finishedAt = LocalDateTime.now();
+                this.purchaseConfirmedAt = LocalDateTime.now();
                 break;
             default:
                 throw new ApiException(OrderError.UNKNOWN_STATUS);
         }
+    }
+    public void forceComplete() {
+        this.orderStatus = OrderStatus.COMPLETED;
+        this.purchaseConfirmedAt = LocalDateTime.now();
     }
 }

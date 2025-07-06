@@ -72,6 +72,7 @@ public class OrderService {
         log.info("서비스 신청 완료");
     }
     /*제공자의 주문 상태 변경*/
+    @Transactional
     public void changeStatusOrder(Long providerId, OrderStatusRequest request) {
         OrderEntity order = verifyProvider(providerId, request.getOrderId());
 
@@ -101,6 +102,7 @@ public class OrderService {
         return order;
     }
     /*구매자 크레딧 제공자에게 전달*/
+    @Transactional
     public void transferCreditOnConfirmation(Long clientId, Long providerId, BigDecimal price) {
         UserEntity client = userRepository.findById(clientId)
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
@@ -110,7 +112,7 @@ public class OrderService {
 
         client.changeCredit(price.negate());
         provider.changeCredit(price);
-
+        log.info("client credit: {}, provider credit: {}", client.getCredit(), provider.getCredit());
         userRepository.save(client);
         userRepository.save(provider);
         log.info("크레딧 정산 완료");
