@@ -5,6 +5,7 @@ import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.domain.repository.OrderRepository;
 import com.jamjam.order.dto.OrderRegisterRequest;
+import com.jamjam.order.dto.OrderStatusRequest;
 import com.jamjam.order.exception.OrderError;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.IIOException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,4 +70,26 @@ public class OrderService {
         orderRepository.save(order);
         log.info("서비스 신청 완료");
     }
+    /*제공자의 주문 상태 변경*/
+    public void changeStatusOrder(Long userId, OrderStatusRequest request) {
+        OrderEntity order = verifyProvider(userId, request.getOrderId());
+
+        order.changeStatus(request);
+
+        orderRepository.save(order);
+    }
+    /*수락하는 user의 권한 확인 메서드*/
+    public OrderEntity verifyProvider(Long userId, Long orderId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
+        Long orderProviderId = order.getService().getUser().getId();
+        /*수락하는 user의 권한 확인*/
+        if (!user.getId().equals(orderProviderId)) {
+            throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
+        }
+        return order;
+    }
 }
+

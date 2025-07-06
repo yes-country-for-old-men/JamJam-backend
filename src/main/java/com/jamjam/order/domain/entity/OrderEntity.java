@@ -1,6 +1,10 @@
 package com.jamjam.order.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.jamjam.global.exception.ApiException;
+import com.jamjam.global.exception.ErrorCode;
+import com.jamjam.order.dto.OrderStatusRequest;
+import com.jamjam.order.exception.OrderError;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
@@ -44,8 +48,11 @@ public class OrderEntity {
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime orderedAt;
-
+    /*주문 완료 시점 or 주문 확정 시점*/
     private LocalDateTime finishedAt;
+
+    private LocalDateTime canceledAt;
+    private String cancelReason;
 
     @NotNull
     private OrderStatus orderStatus;
@@ -71,5 +78,25 @@ public class OrderEntity {
         this.orderStatus = orderStatus;
         this.client = client;
         this.service = service;
+    }
+
+    public void changeStatus(OrderStatusRequest request) {
+        switch (request.getOrderStatus()) {
+            case CANCELLED:
+                this.orderStatus = request.getOrderStatus();
+                this.cancelReason = request.getCancelReason();
+                this.canceledAt = LocalDateTime.now();
+                break;
+            case PREPARING:
+                this.orderStatus = request.getOrderStatus();
+                break;
+            case WAITING_CONFIRM:
+            case COMPLETED:
+                this.orderStatus = request.getOrderStatus();
+                this.finishedAt = LocalDateTime.now();
+                break;
+            default:
+                throw new ApiException(OrderError.UNKNOWN_STATUS);
+        }
     }
 }
