@@ -88,6 +88,20 @@ public class OrderService {
         }
         //TODO: 구매 확정 대기로 변경 시 3일 뒤 자동 구매 확정으로 변경 && 구매 확정으로 변경 시, 크레딧 이동
     }
+    /*구매자의 구매 확정*/
+    @Transactional
+    public void confirmPurchase(Long userId, Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
+        if (!userId.equals(order.getClient().getId())) {
+            throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
+        }
+        order.forceComplete();
+        orderRepository.save(order);
+        log.info("주문 구매 확정 처리");
+
+        transferCreditOnConfirmation(userId, order.getService().getUser().getId(), order.getPrice());
+    }
     /*수락하는 user의 권한 확인 메서드*/
     public OrderEntity verifyProvider(Long userId, Long orderId) {
         UserEntity user = userRepository.findById(userId)

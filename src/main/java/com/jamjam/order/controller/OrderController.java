@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import retrofit2.http.Path;
 
 import java.util.List;
 
@@ -38,14 +39,24 @@ public class OrderController {
     }
     /*서비스 상태 변경 - 제공자
     * 진행 중(수락), 취소, 완료됨 */
-    @PatchMapping("/change-status")
+    @PatchMapping("/provider/change-status")
     @Operation(summary = "제공자가 주문의 상태를 변경")
     public ResponseEntity<ResponseDto<Void>> acceptOrder(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody OrderStatusRequest request) {
         orderService.changeStatusOrder(customUserDetails.getUserId(), request);
 
-        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
+    /*서비스 상태 변경 - 구매자
+    * 구매 확정*/
+    @PatchMapping("/client/{orderId}/confirm")
+    @Operation(summary = "구매자가 구매 확정")
+    public ResponseEntity<ResponseDto<Void>> confirmPurchase(
+            @PathVariable Long orderId,
+            @CurrentUser CustomUserDetails customUserDetails) {
+        orderService.confirmPurchase(customUserDetails.getUserId(), orderId);
 
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
+    }
 }
