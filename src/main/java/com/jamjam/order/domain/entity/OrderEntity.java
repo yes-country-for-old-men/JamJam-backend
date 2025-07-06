@@ -13,6 +13,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +45,7 @@ public class OrderEntity {
     private String description;
     @Column(columnDefinition = "TEXT")
     private String additionalRequest;
+    private BigDecimal price;
 
     @CreatedDate
     @Column(updatable = false)
@@ -67,13 +69,15 @@ public class OrderEntity {
 
     @Builder
     public OrderEntity(String title, LocalDate deadline, List<String> orderImages,
-                       String description, String additionalRequest, LocalDateTime finishedAt,
-                       OrderStatus orderStatus, UserEntity client, ServiceEntity service) {
+                       String description, String additionalRequest, BigDecimal price,
+                       LocalDateTime finishedAt, OrderStatus orderStatus, UserEntity client,
+                       ServiceEntity service) {
         this.title = title;
         this.deadline = deadline;
         this.orderImages = orderImages;
         this.description = description;
         this.additionalRequest = additionalRequest;
+        this.price = price;
         this.finishedAt = finishedAt;
         this.orderStatus = orderStatus;
         this.client = client;

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,12 +72,20 @@ public class OrderService {
         log.info("서비스 신청 완료");
     }
     /*제공자의 주문 상태 변경*/
-    public void changeStatusOrder(Long userId, OrderStatusRequest request) {
-        OrderEntity order = verifyProvider(userId, request.getOrderId());
+    public void changeStatusOrder(Long providerId, OrderStatusRequest request) {
+        OrderEntity order = verifyProvider(providerId, request.getOrderId());
 
         order.changeStatus(request);
 
         orderRepository.save(order);
+        log.info("주문 상태 변경 완료");
+
+        Long clientId = order.getClient().getId();
+
+        if (request.getOrderStatus() == OrderStatus.COMPLETED) {
+            transferCreditOnConfirmation(clientId, providerId, order.getPrice());
+        }
+        //TODO: 구매 확정 대기로 변경 시 3일 뒤 자동 구매 확정으로 변경 && 구매 확정으로 변경 시, 크레딧 이동
     }
     /*수락하는 user의 권한 확인 메서드*/
     public OrderEntity verifyProvider(Long userId, Long orderId) {
@@ -90,6 +99,21 @@ public class OrderService {
             throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
         }
         return order;
+    }
+    /*구매자 크레딧 제공자에게 전달*/
+    public void transferCreditOnConfirmation(Long clientId, Long providerId, BigDecimal price) {
+        UserEntity client = userRepository.findById(clientId)
+                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+        UserEntity provider = userRepository.findById(providerId)
+                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+        log.info("client: {}, provider: {}", client.getNickname(), provider.getNickname());
+
+        client.changeCredit(price.negate());
+        provider.changeCredit(price);
+
+        userRepository.save(client);
+        userRepository.save(provider);
+        log.info("크레딧 정산 완료");
     }
 }
 
