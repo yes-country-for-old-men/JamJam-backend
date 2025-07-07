@@ -1,9 +1,8 @@
 package com.jamjam.user.presentation.dto.request;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.Builder;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Builder
@@ -27,8 +26,8 @@ public record ProviderRequest(
         String company,
         String position,
         String department,
-        java.time.LocalDate startDate,
-        java.time.LocalDate endDate,
+        LocalDate startDate,
+        LocalDate endDate,
         Boolean freelancer,
         String proofUrl
     ) {}

@@ -1,8 +1,10 @@
 package com.jamjam.user.application;
 
+import com.jamjam.global.exception.ApiException;
 import com.jamjam.user.domain.entity.*;
 import com.jamjam.user.domain.repository.ProviderRepository;
 import com.jamjam.user.domain.repository.UserRepository;
+import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ProviderRequest;
 import com.jamjam.user.presentation.dto.response.ProviderResponse;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +62,12 @@ public class ProviderService {
 
         log.info("[updateProvider] ProviderEntity found: {}", entity);
 
-        // ✅ 기본 필드 partial update
+        if (entity.getContactHoursEnd() >= 24 || entity.getContactHoursEnd() <= 0) {
+            throw new ApiException(UserError.INVALID_CONTACT_TIME);
+        } else if (entity.getContactHoursStart() >= 24 || entity.getContactHoursStart() <= 0 ) {
+            throw new ApiException(UserError.INVALID_CONTACT_TIME);
+        }
+
         entity.updatePartial(
                 request.categoryId(),
                 request.location(),
@@ -70,7 +77,6 @@ public class ProviderService {
                 request.averageResponseTime()
         );
 
-        // ✅ skills update
         if (request.skills() != null) {
             List<SkillEntity> updatedSkills = request.skills().stream().map(skillDto -> {
                 SkillEntity skill = null;
@@ -94,7 +100,6 @@ public class ProviderService {
             log.info("[updateProvider] skills updated: {}", updatedSkills);
         }
 
-        // ✅ careers update
         if (request.careers() != null) {
             List<CareerEntity> updatedCareers = request.careers().stream().map(careerDto -> {
                 CareerEntity career = null;
@@ -132,7 +137,6 @@ public class ProviderService {
             log.info("[updateProvider] careers updated: {}", updatedCareers);
         }
 
-        // ✅ educations update
         if (request.educations() != null) {
             List<EducationEntity> updatedEducations = request.educations().stream().map(educationDto -> {
                 EducationEntity education = null;
@@ -162,7 +166,6 @@ public class ProviderService {
             log.info("[updateProvider] educations updated: {}", updatedEducations);
         }
 
-        // ✅ licenses update
         if (request.licenses() != null) {
             List<LicenseEntity> updatedLicenses = request.licenses().stream().map(licenseDto -> {
                 LicenseEntity license = null;
