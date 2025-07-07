@@ -11,6 +11,7 @@ import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.OpenAiClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class AiGenerationService {
     public AiServiceResponse generateService(AiServiceRequest request) {
         /*gpt api 요청*/
         String content = openAiClient.requestGptForServiceElements(request);
+        log.info(content);
 
         JsonNode node;
         try {
@@ -37,9 +39,12 @@ public class AiGenerationService {
             JsonNode full = objectMapper.readTree(content);
             // message.content 안에 실제 JSON 문자열이 있음
             String innerJsonString = full.path("choices").get(0).path("message").path("content").asText();
+            innerJsonString = innerJsonString.replaceAll("^```json\\s*", "").replaceAll("```$", "").trim();
+            log.info(innerJsonString);
             // 다시 파싱 (중첩 JSON 구조이기 때문)
             node = objectMapper.readTree(innerJsonString);
         } catch (JsonProcessingException e) {
+            log.error("JSON 파싱 실패: " + e.getMessage());
             throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
         }
 

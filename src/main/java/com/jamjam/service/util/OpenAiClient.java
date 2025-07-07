@@ -42,11 +42,13 @@ public class OpenAiClient {
                 "다음 정보를 기반으로 아래 조건에 맞는 항목들을 생성해줘:\n" +
                         "- 서비스명 3가지 제안\n" +
                         "- 서비스 소개글: 실제 소개 페이지에서 고객이 구매 혹은 문의를 하도록 유도할 수 있어야 하며, 전문성과 감성을 함께 전달하는 마케팅용 소개글을 작성해줘. " +
-                        "단순한 요약이나 정보 나열이 아니라, 신뢰를 줄 수 있는 말투와 고객이 어떤 가치를 얻는지 중심으로 이야기하듯 풀어줘.\n" +
-                        "특히 다음 요소를 포함하도록 해줘:\n" +
+                        "특히 다음 요소를 꼭 반영해줘:\n" +
                         "1. 시각적으로 구획이 잘 보이도록 HTML 태그를 적극적으로 활용해줘 (제목, 리스트, 구분선, 강조 등)\n" +
                         "2. 이모지도 적절하게 사용해줘\n" +
                         "3. 고객이 얻는 혜택, 감성, 경험 중심으로 표현해줘\n" +
+                        "4. 단순 나열이 아닌, 말하듯 풀어서 이야기하는 형식\n" +
+                        "5. 고객 페르소나를 상정해서 그들이 공감할 수 있도록 써줘\n" +
+                        "6. 총 분량은 800자 이상\n" +
                         "- 그리고 생성된 소개글 내용을 WYSIWYG 에디터용 HTML로 반환해줘. 단, HTML 태그 형식에 너무 갇히지 말고 글의 감동과 설득력을 우선해줘" +
                         "- 아래 리스트 중 하나의 카테고리 지정\n" +
                         "상세 설명: %s\n보유 기술: %s\n경력: %s\n" +
@@ -66,7 +68,7 @@ public class OpenAiClient {
                         "\"반드시 코드 블록 없이 JSON 형식으로만 응답해줘.\"\n" +
                         "description 안에 포함된 모든 이모지(이모티콘)는 유니코드 이스케이프 형식(예: \\uD83D\\uDE00)으로 변환해서 반환해줘.\n" +
                         "JSON 양식은 다음과 같아." +
-                        "{ \"service_names\": , \"description\": , \"category\": }",
+                        "{ \"service_names\": [...], \"description\": \"...\", \"category\": 6 }",
                 request.getDescription(),
                 request.getSkills(),
                 request.getCareer()
@@ -75,7 +77,7 @@ public class OpenAiClient {
         Map<String, Object> body = new HashMap<>();
         body.put("model", "gpt-4o");
         body.put("temperature", 0.9);
-        body.put("max_tokens", 600);
+        body.put("max_tokens", 1500);
 
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", "너는 노인들의 특기와 경력을 기반으로 외주 서비스를 구성하는 어시스턴트야. 시각 요소와 썸네일 구성도 포함해."));
