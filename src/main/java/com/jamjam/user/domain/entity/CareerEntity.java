@@ -24,6 +24,10 @@ public class CareerEntity {
     @JsonIgnore
     private UserEntity user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "provider_id")
+    private ProviderEntity provider;
+
     @Column(name = "company_name")
     private String companyName;
 
@@ -41,12 +45,13 @@ public class CareerEntity {
 
     @Builder
     public CareerEntity(Boolean freelancer,
-                                  String companyName,
-                                  String department,
-                                  String position,
-                                  LocalDate startDate,
-                                  LocalDate endDate,
-                                  String proofUrl) {
+                       String companyName,
+                       String department,
+                       String position,
+                       LocalDate startDate,
+                       LocalDate endDate,
+                       String proofUrl,
+                       ProviderEntity provider) {
         this.freelancer = freelancer;
         this.companyName = companyName;
         this.department = department;
@@ -54,5 +59,23 @@ public class CareerEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.proofUrl = proofUrl;
+        this.provider = provider;
+    }
+
+    public static CareerEntity of(String company, String position) {
+        CareerEntity ce = new CareerEntity();
+        ce.companyName = company;
+        ce.position = position;
+        return ce;
+    }
+
+    public void updatePartial(String companyName, String position, String department, LocalDate startDate, LocalDate endDate, Boolean freelancer, String proofUrl) {
+        if (companyName != null) this.companyName = companyName;
+        if (position != null) this.position = position;
+        if (department != null) this.department = department;
+        if (startDate != null) this.startDate = startDate;
+        if (endDate != null) this.endDate = endDate;
+        if (freelancer != null) this.freelancer = freelancer;
+        if (proofUrl != null) this.proofUrl = proofUrl;
     }
 }
