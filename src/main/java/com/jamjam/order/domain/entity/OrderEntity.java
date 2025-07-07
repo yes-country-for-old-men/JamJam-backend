@@ -99,10 +99,6 @@ public class OrderEntity {
                 this.orderStatus = request.getOrderStatus();
                 this.serviceCompletedAt = LocalDateTime.now();
                 break;
-            case COMPLETED:
-                this.orderStatus = request.getOrderStatus();
-                this.purchaseConfirmedAt = LocalDateTime.now();
-                break;
             default:
                 throw new ApiException(OrderError.UNKNOWN_STATUS);
         }

@@ -43,7 +43,12 @@ public class OrderService {
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
         ServiceEntity service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new ApiException(OrderError.SERVICE_NOT_FOUND));
+        /*보유 크레딧과 주문 가격 비교*/
+        if (user.getCredit().compareTo(request.getPrice()) < 0) throw new ApiException(OrderError.CREDIT_NOT_ENOUGH);
 
+        user.changeCredit(request.getPrice().negate());
+        log.info("client {} 크레딧 차감", request.getPrice());
+        /*주문 내용 저장*/
         List<String> imageUrls = new ArrayList<>();
         try {
             if (images != null) {
@@ -65,6 +70,7 @@ public class OrderService {
                 .additionalRequest(request.getAdditionalRequest())
                 .orderImages(imageUrls)
                 .orderStatus(OrderStatus.REQUESTED)
+                .price(request.getPrice())
                 .client(user)
                 .service(service)
                 .build();
@@ -77,16 +83,14 @@ public class OrderService {
         OrderEntity order = verifyProvider(providerId, request.getOrderId());
 
         order.changeStatus(request);
-
         orderRepository.save(order);
         log.info("주문 상태 변경 완료");
 
-        Long clientId = order.getClient().getId();
-
         if (request.getOrderStatus() == OrderStatus.COMPLETED) {
-            transferCreditOnConfirmation(clientId, providerId, order.getPrice());
+            transferCreditOnConfirmation(providerId, order.getPrice());
+        } else if (request.getOrderStatus() == OrderStatus.CANCELLED) {
+            refundCreditOnCancellation(order.getClient(), order.getPrice());
         }
-        //TODO: 구매 확정 대기로 변경 시 3일 뒤 자동 구매 확정으로 변경 && 구매 확정으로 변경 시, 크레딧 이동
     }
     /*구매자의 구매 확정*/
     @Transactional
@@ -100,7 +104,7 @@ public class OrderService {
         orderRepository.save(order);
         log.info("주문 구매 확정 처리");
 
-        transferCreditOnConfirmation(userId, order.getService().getUser().getId(), order.getPrice());
+        transferCreditOnConfirmation(order.getService().getUser().getId(), order.getPrice());
     }
     /*수락하는 user의 권한 확인 메서드*/
     public OrderEntity verifyProvider(Long userId, Long orderId) {
@@ -117,19 +121,22 @@ public class OrderService {
     }
     /*구매자 크레딧 제공자에게 전달*/
     @Transactional
-    public void transferCreditOnConfirmation(Long clientId, Long providerId, BigDecimal price) {
-        UserEntity client = userRepository.findById(clientId)
-                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+    public void transferCreditOnConfirmation(Long providerId, BigDecimal price) {
         UserEntity provider = userRepository.findById(providerId)
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
-        log.info("client: {}, provider: {}", client.getNickname(), provider.getNickname());
 
-        client.changeCredit(price.negate());
         provider.changeCredit(price);
-        log.info("client credit: {}, provider credit: {}", client.getCredit(), provider.getCredit());
-        userRepository.save(client);
+        log.info("provider: {} credit: +{}", provider.getNickname(), price);
         userRepository.save(provider);
         log.info("크레딧 정산 완료");
+    }
+    /*주문 취소 시, 크레딧 반환*/
+    @Transactional
+    public void refundCreditOnCancellation(UserEntity client, BigDecimal price) {
+        client.changeCredit(price);
+
+        userRepository.save(client);
+        log.info("주문 취소로 인한 {} 크레딧 반환 완료", price);
     }
 }
 

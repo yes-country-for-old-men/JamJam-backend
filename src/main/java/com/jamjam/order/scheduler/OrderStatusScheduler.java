@@ -31,10 +31,9 @@ public class OrderStatusScheduler {
         log.info("자동 완료된 주문 수: {}", orders.size());
 
         for (OrderEntity order : orders) {
-            Long clientId = order.getClient().getId();
             Long providerId = order.getService().getUser().getId();
             BigDecimal price = order.getPrice();
-            orderService.transferCreditOnConfirmation(clientId, providerId, price);
+            orderService.transferCreditOnConfirmation(providerId, price);
         }
     }
 }
