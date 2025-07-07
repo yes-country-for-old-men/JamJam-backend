@@ -20,8 +20,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 
-import static org.springframework.scheduling.config.TaskExecutionOutcome.Status.SUCCESS;
-
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 
