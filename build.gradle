@@ -30,6 +30,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework:spring-messaging'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.apache.commons:commons-text:1.10.0'
 
 	// TEST CONFIGURATION
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
