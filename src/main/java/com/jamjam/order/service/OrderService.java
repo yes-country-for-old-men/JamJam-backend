@@ -14,6 +14,7 @@ import com.jamjam.service.domain.repository.ServiceRepository;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.domain.entity.UserEntity;
+import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -144,7 +145,15 @@ public class OrderService {
     /*제공자의 주문 상태 별 주문 목록 반환*/
     @Transactional
     public List<OrderSummaryDTO> getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus) {
-        List<OrderEntity> orders = orderRepository.findByIdAndOrderStatus(customUserDetails.getUserId(), orderStatus);
+        UserEntity user = userRepository.findById(customUserDetails.getUserId())
+                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+
+        List<OrderEntity> orders = new ArrayList<>();
+        if (user.getRole() == UserRole.PROVIDER) {
+            orders = orderRepository.findByProviderIdAndOrderStatus(user.getId(), orderStatus);
+        } else if (user.getRole() == UserRole.CLIENT) {
+            orders = orderRepository.findByClientIdAndOrderStatus(user.getId(), orderStatus);
+        }
         log.info("{} 상태 주문 건수: {}", orderStatus, orders.size());
 
         List<OrderSummaryDTO> selectedOrders = new ArrayList<>();

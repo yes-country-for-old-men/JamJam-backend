@@ -61,12 +61,11 @@ public class OrderController {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
     /*주문 내역 - 제공자*/
-    @GetMapping("/provider/order-list")
-    @Operation(summary = "주문 내역 (제공자)")
+    @GetMapping("/order-list")
+    @Operation(summary = "주문 내역")
     public ResponseEntity<ResponseDto<List<OrderSummaryDTO>>> getProviderOrders(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam OrderStatus orderStatus) {
-        System.out.printf("%s의 %s 상태 주문", customUserDetails.getUserId(), orderStatus);
         List<OrderSummaryDTO> response = orderService.getProviderOrders(customUserDetails, orderStatus);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
