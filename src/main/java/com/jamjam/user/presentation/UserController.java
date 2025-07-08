@@ -59,7 +59,7 @@ public class UserController {
     public ResponseEntity<ResponseDto<Void>> updateUserInfo(
             @CurrentUser CustomUserDetails user,
             @RequestPart("request") UserUpdateRequest request,
-            @RequestPart(value = "profile-url", required = false) MultipartFile profileUrl) throws IOException {
+            @RequestPart(value = "profileUrl", required = false) MultipartFile profileUrl) throws IOException {
         userService.updateUserInfo(user.getUserId(), request, profileUrl);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }

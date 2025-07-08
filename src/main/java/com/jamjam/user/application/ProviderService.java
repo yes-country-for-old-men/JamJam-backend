@@ -40,73 +40,81 @@ public class ProviderService {
         log.info("[createProvider] request: {}", request);
 
         List<SkillEntity> skills = new ArrayList<>();
-        for (int i = 0; i < request.skills().size(); i++) {
-            ProviderRequest.SkillDto skillDto = request.skills().get(i);
-            String proofUrl = null;
+        if (request.skills() != null) {
+            for (int i = 0; i < request.skills().size(); i++) {
+                ProviderRequest.SkillDto skillDto = request.skills().get(i);
+                String proofUrl = null;
 
-            if (skillFiles != null && skillFiles.size() > i && !skillFiles.get(i).isEmpty()) {
-                proofUrl = s3Uploader.upload(skillFiles.get(i), "skills");
+                if (skillFiles != null && skillFiles.size() > i && !skillFiles.get(i).isEmpty()) {
+                    proofUrl = s3Uploader.upload(skillFiles.get(i), "skills");
+                }
+
+                SkillEntity skill = SkillEntity.builder()
+                        .name(skillDto.name())
+                        .proofUrl(proofUrl)
+                        .build();
+                skills.add(skill);
             }
-
-            SkillEntity skill = SkillEntity.builder()
-                    .name(skillDto.name())
-                    .proofUrl(proofUrl)
-                    .build();
-            skills.add(skill);
         }
 
         // careers proof 파일 매핑
         List<CareerEntity> careers = new ArrayList<>();
-        for (int i = 0; i < request.careers().size(); i++) {
-            ProviderRequest.CareerDto careerDto = request.careers().get(i);
-            String proofUrl = null;
+        if (request.careers() != null) {
+            for (int i = 0; i < request.careers().size(); i++) {
+                ProviderRequest.CareerDto careerDto = request.careers().get(i);
+                String proofUrl = null;
 
-            if (careerFiles != null && careerFiles.size() > i && !careerFiles.get(i).isEmpty()) {
-                proofUrl = s3Uploader.upload(careerFiles.get(i), "careers");
+                if (careerFiles != null && careerFiles.size() > i && !careerFiles.get(i).isEmpty()) {
+                    proofUrl = s3Uploader.upload(careerFiles.get(i), "careers");
+                }
+
+                CareerEntity career = CareerEntity.builder()
+                        .company(careerDto.company())
+                        .position(careerDto.position())
+                        .proofUrl(proofUrl)
+                        .build();
+                careers.add(career);
             }
-
-            CareerEntity career = CareerEntity.builder()
-                    .company(careerDto.company())
-                    .position(careerDto.position())
-                    .proofUrl(proofUrl)
-                    .build();
-            careers.add(career);
         }
 
         // educations proof 파일 매핑
         List<EducationEntity> educations = new ArrayList<>();
-        for (int i = 0; i < request.educations().size(); i++) {
-            ProviderRequest.EducationDto educationDto = request.educations().get(i);
-            String proofUrl = null;
+        if (request.educations() != null) {
+            for (int i = 0; i < request.educations().size(); i++) {
+                ProviderRequest.EducationDto educationDto = request.educations().get(i);
+                String proofUrl = null;
 
-            if (educationFiles != null && educationFiles.size() > i && !educationFiles.get(i).isEmpty()) {
-                proofUrl = s3Uploader.upload(educationFiles.get(i), "educations");
+                if (educationFiles != null && educationFiles.size() > i && !educationFiles.get(i).isEmpty()) {
+                    proofUrl = s3Uploader.upload(educationFiles.get(i), "educations");
+                }
+
+                EducationEntity education = EducationEntity.builder()
+                        .school(educationDto.school())
+                        .major(educationDto.major())
+                        .degree(educationDto.degree())
+                        .proofUrl(proofUrl)
+                        .build();
+                educations.add(education);
             }
-
-            EducationEntity education = EducationEntity.builder()
-                    .school(educationDto.school())
-                    .major(educationDto.major())
-                    .degree(educationDto.degree())
-                    .proofUrl(proofUrl)
-                    .build();
-            educations.add(education);
         }
 
         // licenses proof 파일 매핑
         List<LicenseEntity> licenses = new ArrayList<>();
-        for (int i = 0; i < request.licenses().size(); i++) {
-            ProviderRequest.LicenseDto licenseDto = request.licenses().get(i);
-            String proofUrl = null;
+        if (request.licenses() != null) {
+            for (int i = 0; i < request.licenses().size(); i++) {
+                ProviderRequest.LicenseDto licenseDto = request.licenses().get(i);
+                String proofUrl = null;
 
-            if (licenseFiles != null && licenseFiles.size() > i && !licenseFiles.get(i).isEmpty()) {
-                proofUrl = s3Uploader.upload(licenseFiles.get(i), "licenses");
+                if (licenseFiles != null && licenseFiles.size() > i && !licenseFiles.get(i).isEmpty()) {
+                    proofUrl = s3Uploader.upload(licenseFiles.get(i), "licenses");
+                }
+
+                LicenseEntity license = LicenseEntity.builder()
+                        .name(licenseDto.name())
+                        .proofUrl(proofUrl)
+                        .build();
+                licenses.add(license);
             }
-
-            LicenseEntity license = LicenseEntity.builder()
-                    .name(licenseDto.name())
-                    .proofUrl(proofUrl)
-                    .build();
-            licenses.add(license);
         }
 
         Optional<ProviderEntity> existing = providerRepository.findById(userId);
