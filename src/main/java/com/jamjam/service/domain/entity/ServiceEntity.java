@@ -37,7 +37,7 @@ public class ServiceEntity {
     private Integer categoryId;
 
     @ElementCollection
-    @CollectionTable(name = "service_info_images")
+    @CollectionTable(name = "service_info_images", joinColumns = @JoinColumn(name = "service_id"))
     private List<String> portfolioImages;
 
     @NotNull

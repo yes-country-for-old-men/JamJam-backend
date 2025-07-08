@@ -72,7 +72,6 @@ public class ServiceService {
                     .portfolioImages(infoImageUrls)
                     .user(user)
                     .build();
-            log.info(String.valueOf(service.getUser().getId()));
 
             serviceRepository.save(service);
             log.info("서비스 등록 완료");
