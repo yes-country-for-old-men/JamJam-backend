@@ -13,18 +13,21 @@ public class LicenseEntity {
     private Long id;
 
     private String name;
+    private String proofUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id")
     private ProviderEntity provider;
 
     @Builder
-    public LicenseEntity(String name, ProviderEntity provider) {
+    public LicenseEntity(String name, ProviderEntity provider, String proofUrl) {
         this.name = name;
         this.provider = provider;
+        this.proofUrl = proofUrl;
     }
 
-    public void updatePartial(String name) {
+    public void updatePartial(String name, String proofUrl) {
         if (name != null) this.name = name;
+        if (proofUrl != null) this.proofUrl = proofUrl;
     }
 } 

@@ -10,8 +10,7 @@ public class ProviderResponse {
     private Integer categoryId;
     private String location;
     private String introduction;
-    private Integer contactHoursStart;
-    private Integer contactHoursEnd;
+    private ContactHoursDto contactHours;
     private String averageResponseTime;
     private List<SkillDto> skills;
     private List<CareerDto> careers;
@@ -23,17 +22,17 @@ public class ProviderResponse {
         private Long id;
         private String name;
     }
-    @Getter @Builder
-    public static class CareerDto {
-        private Long id;
-        private String company;
-        private String position;
-        private String department;
-        private java.time.LocalDate startDate;
-        private java.time.LocalDate endDate;
-        private Boolean freelancer;
-        private String proofUrl;
-    }
+    @Builder
+    public record ContactHoursDto(
+            Integer startHour,
+            Integer endHour
+    ) {}
+    @Builder
+    public record CareerDto(
+            Long id,
+            String company,
+            String position
+    ) {}
     @Getter @Builder
     public static class EducationDto {
         private Long id;

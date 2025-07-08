@@ -14,8 +14,10 @@ import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
@@ -53,9 +55,12 @@ public class UserController {
                 userService.getUserInfo(user.getUserId())));
     }
 
-    @PatchMapping
-    public ResponseEntity<ResponseDto<Void>> updateUserInfo(@CurrentUser CustomUserDetails user, @RequestBody UserUpdateRequest request) {
-        userService.updateUserInfo(user.getUserId(), request);
+    @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseDto<Void>> updateUserInfo(
+            @CurrentUser CustomUserDetails user,
+            @RequestPart("request") UserUpdateRequest request,
+            @RequestPart(value = "profile-url", required = false) MultipartFile profileUrl) throws IOException {
+        userService.updateUserInfo(user.getUserId(), request, profileUrl);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 

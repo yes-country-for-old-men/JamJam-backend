@@ -26,7 +26,7 @@ public record ServiceInfoDTO(
                 entity.getDescription(),
                 entity.getSalary(),
                 entity.getCategoryId(),
-                entity.getUser().getCareers()
+                entity.getUser().getProvider().getCareers()
         );
     }
 }

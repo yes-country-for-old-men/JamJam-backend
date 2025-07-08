@@ -66,11 +66,9 @@ public class UserEntity {
   
     private BigDecimal credit;
 
-    @OneToMany(mappedBy = "user",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    private List<CareerEntity> careers = new ArrayList<>();
+    @Getter
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private ProviderEntity provider;
 
     @OneToOne(cascade = CascadeType.ALL
             , orphanRemoval = true,
@@ -96,7 +94,6 @@ public class UserEntity {
         this.nickname = nickname;
         this.credit = BigDecimal.ZERO;
         this.profileUrl = "";
-        this.careers = new ArrayList<>();
     }
 
     public void changeName(String newName) {
@@ -130,6 +127,6 @@ public class UserEntity {
     public void changeProfileUrl(String newProfileUrl) {
         this.profileUrl = newProfileUrl;
     }
-
+  
     public void changeCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
 }
