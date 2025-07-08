@@ -10,7 +10,8 @@ public record OrderInfoDTO(
         LocalDate deadline,
         String description,
         String additionalRequest,
-        List<String> orderImages
+        List<String> orderImages,
+        String cancelReason
 ) {
     public static OrderInfoDTO from(OrderEntity entity) {
         return new OrderInfoDTO(
@@ -18,7 +19,8 @@ public record OrderInfoDTO(
                 entity.getDeadline(),
                 entity.getDescription(),
                 entity.getAdditionalRequest(),
-                entity.getOrderImages()
+                entity.getOrderImages(),
+                entity.getCancelReason()
         );
     }
 }

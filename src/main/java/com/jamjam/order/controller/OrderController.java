@@ -60,7 +60,7 @@ public class OrderController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
-    /*주문 내역 - 제공자*/
+    /*주문 내역*/
     @GetMapping("/order-list")
     @Operation(summary = "주문 내역")
     public ResponseEntity<ResponseDto<List<OrderSummaryDTO>>> getOrders(
