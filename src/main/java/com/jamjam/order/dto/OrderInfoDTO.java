@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record OrderInfoDTO(
-        Long orderId,
         String title,
         LocalDate deadline,
         String description,
@@ -15,7 +14,6 @@ public record OrderInfoDTO(
 ) {
     public static OrderInfoDTO from(OrderEntity entity) {
         return new OrderInfoDTO(
-                entity.getId(),
                 entity.getTitle(),
                 entity.getDeadline(),
                 entity.getDescription(),

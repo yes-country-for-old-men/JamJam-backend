@@ -144,7 +144,7 @@ public class OrderService {
     }
     /*제공자의 주문 상태 별 주문 목록 반환*/
     @Transactional
-    public List<OrderSummaryDTO> getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus) {
+    public List<OrderSummaryDTO> getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus) {
         UserEntity user = userRepository.findById(customUserDetails.getUserId())
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
 
@@ -162,6 +162,13 @@ public class OrderService {
         }
 
         return selectedOrders;
+    }
+    /*주문 상세 정보 반환*/
+    public OrderInfoDTO getOrderDetail(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
+
+        return OrderInfoDTO.from(order);
     }
 }
 

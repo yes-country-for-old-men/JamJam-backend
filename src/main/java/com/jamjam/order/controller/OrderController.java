@@ -63,10 +63,20 @@ public class OrderController {
     /*주문 내역 - 제공자*/
     @GetMapping("/order-list")
     @Operation(summary = "주문 내역")
-    public ResponseEntity<ResponseDto<List<OrderSummaryDTO>>> getProviderOrders(
+    public ResponseEntity<ResponseDto<List<OrderSummaryDTO>>> getOrders(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam OrderStatus orderStatus) {
-        List<OrderSummaryDTO> response = orderService.getProviderOrders(customUserDetails, orderStatus);
+        List<OrderSummaryDTO> response = orderService.getOrders(customUserDetails, orderStatus);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+    /*주문 상세 정보*/
+    @GetMapping("/detail")
+    @Operation(summary = "주문 상세 정보")
+    public ResponseEntity<ResponseDto<OrderInfoDTO>> getOrderDetail(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestParam Long orderId) {
+        OrderInfoDTO response = orderService.getOrderDetail(orderId);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
