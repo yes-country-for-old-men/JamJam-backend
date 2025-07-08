@@ -127,7 +127,6 @@ public class UserEntity {
     public void changeProfileUrl(String newProfileUrl) {
         this.profileUrl = newProfileUrl;
     }
-
-    public void changeCredit(BigDecimal newCredit) { this.credit = newCredit; }
-
+  
+    public void changeCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
 }
