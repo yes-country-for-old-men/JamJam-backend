@@ -4,12 +4,15 @@ import com.jamjam.global.exception.ApiException;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.domain.repository.OrderRepository;
+import com.jamjam.order.dto.OrderInfoDTO;
 import com.jamjam.order.dto.OrderRegisterRequest;
 import com.jamjam.order.dto.OrderStatusRequest;
+import com.jamjam.order.dto.OrderSummaryDTO;
 import com.jamjam.order.exception.OrderError;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
 import com.jamjam.service.util.S3Uploader;
+import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -137,6 +140,19 @@ public class OrderService {
 
         userRepository.save(client);
         log.info("주문 취소로 인한 {} 크레딧 반환 완료", price);
+    }
+    /*제공자의 주문 상태 별 주문 목록 반환*/
+    @Transactional
+    public List<OrderSummaryDTO> getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus) {
+        List<OrderEntity> orders = orderRepository.findByIdAndOrderStatus(customUserDetails.getUserId(), orderStatus);
+        log.info("{} 상태 주문 건수: {}", orderStatus, orders.size());
+
+        List<OrderSummaryDTO> selectedOrders = new ArrayList<>();
+        for (OrderEntity order : orders) {
+            selectedOrders.add(OrderSummaryDTO.from(order));
+        }
+
+        return selectedOrders;
     }
 }
 
