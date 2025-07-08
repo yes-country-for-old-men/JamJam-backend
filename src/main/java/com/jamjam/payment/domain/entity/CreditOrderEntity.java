@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor
-@Table(name="orders")
+@Table(name="credit_orders")
 public class CreditOrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
