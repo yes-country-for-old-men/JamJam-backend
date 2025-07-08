@@ -1,5 +1,6 @@
 package com.jamjam.user.presentation.dto.request;
 
+import com.jamjam.user.domain.entity.ContactHours;
 import lombok.Builder;
 
 import java.time.LocalDate;
@@ -10,8 +11,7 @@ public record ProviderRequest(
     Integer categoryId,
     String location,
     String introduction,
-    Integer contactHoursStart,
-    Integer contactHoursEnd,
+    ContactHoursDto contactHours,
     String averageResponseTime,
     List<SkillDto> skills,
     List<CareerDto> careers,
@@ -22,17 +22,17 @@ public record ProviderRequest(
     public record SkillDto(Long id, String name) {}
     @Builder
     public record CareerDto(
-        Long id,
-        String company,
-        String position,
-        String department,
-        LocalDate startDate,
-        LocalDate endDate,
-        Boolean freelancer,
-        String proofUrl
+            Long id,
+            String company,
+            String position
     ) {}
     @Builder
     public record EducationDto(Long id, String school, String major, String degree) {}
     @Builder
     public record LicenseDto(Long id, String name) {}
+    @Builder
+    public record ContactHoursDto(
+            Integer startHour,
+            Integer endHour
+    ) {}
 } 

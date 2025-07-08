@@ -4,6 +4,7 @@ import com.jamjam.global.exception.ApiException;
 import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
+import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
@@ -15,36 +16,34 @@ import com.jamjam.user.presentation.dto.response.CheckResponse;
 import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-
     private final RefreshRepository refreshRepository;
-
     private final JwtUtil jwtUtil;
-
-    @Autowired
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder,
-                       RefreshRepository refreshRepository, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.refreshRepository = refreshRepository;
-        this.jwtUtil = jwtUtil;
-    }
+    private final S3Uploader s3Uploader;
 
     public UserResponse getUserInfo(Long userId) {
         Optional<UserEntity> userEntityOptional = userRepository.findById(userId);
@@ -60,19 +59,25 @@ public class UserService {
                 .profileUrl(userEntity.getProfileUrl())
                 .gender(userEntity.getGender())
                 .role(userEntity.getRole())
+                .credit(userEntity.getCredit())
                 .build();
     }
 
     @Transactional
-    public void updateUserInfo(Long userId, UserUpdateRequest request) {
+    public void updateUserInfo(Long userId, UserUpdateRequest request, MultipartFile profile) throws IOException {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        if (profile != null && !profile.isEmpty()) {
+            String profileUrl = s3Uploader.upload(profile, "profile");
+            log.info("프로필 사진 저장 완료: " + profileUrl);
+            user.changeProfileUrl(profileUrl);
+        }
 
         if (request.name()            != null) user.changeName(request.name());
         if (request.nickname()        != null) user.changeNickname(request.nickname());
         if (request.phoneNumber()     != null) user.changePhone(request.phoneNumber());
         if (request.birth()           != null) user.changeBirth(request.birth());
-        if (request.profileUrl()      != null) user.changeProfileUrl(request.profileUrl());
         if (request.gender()          != null) user.changeGender(request.gender());
     }
 

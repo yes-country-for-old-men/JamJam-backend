@@ -2,6 +2,7 @@ package com.jamjam.user.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,17 +23,14 @@ public class ProviderEntity {
     @Column(length = 3000)
     private String introduction;
 
-    private String contactHours;
+    @Embedded
+    private ContactHours contactHours;
 
     private String averageResponseTime;
 
     private Integer categoryId;
 
     private String location;
-
-    private Integer contactHoursStart;
-
-    private Integer contactHoursEnd;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id")
@@ -52,21 +50,21 @@ public class ProviderEntity {
 
     @Builder
     public ProviderEntity(UserEntity user,
-                          String introduction, String contactHours,
-                          String averageResponseTime, Integer categoryId,
-                          String location, Integer contactHoursStart,
-                          Integer contactHoursEnd,
-                          List<SkillEntity> skills, List<CareerEntity> careers,
-                          List<EducationEntity> educations, List<LicenseEntity> licenses
-    ) {
+                          String introduction,
+                          ContactHours contactHours,
+                          String averageResponseTime,
+                          Integer categoryId,
+                          String location,
+                          List<SkillEntity> skills,
+                          List<CareerEntity> careers,
+                          List<EducationEntity> educations,
+                          List<LicenseEntity> licenses) {
         this.user = user;
         this.introduction = introduction;
         this.contactHours = contactHours;
         this.averageResponseTime = averageResponseTime;
         this.categoryId = categoryId;
         this.location = location;
-        this.contactHoursStart = contactHoursStart;
-        this.contactHoursEnd = contactHoursEnd;
         if (skills != null) this.skills = skills;
         if (careers != null) this.careers = careers;
         if (educations != null) this.educations = educations;
@@ -77,8 +75,7 @@ public class ProviderEntity {
             Integer categoryId,
             String location,
             String introduction,
-            Integer contactHoursStart,
-            Integer contactHoursEnd,
+            ContactHours contactHours,
             String averageResponseTime
     ) {
         if (categoryId != null) {
@@ -90,36 +87,29 @@ public class ProviderEntity {
         if (introduction != null) {
             this.introduction = introduction;
         }
-        if (contactHoursStart != null) {
-            this.contactHoursStart = contactHoursStart;
-        }
-        if (contactHoursEnd != null) {
-            this.contactHoursEnd = contactHoursEnd;
+        if (contactHours != null) {
+            this.contactHours = contactHours;
         }
         if (averageResponseTime != null) {
             this.averageResponseTime = averageResponseTime;
         }
     }
 
-    // ✅ skills update method
     public void updateSkills(List<SkillEntity> updatedSkills) {
         this.skills.clear();
         this.skills.addAll(updatedSkills);
     }
 
-    // ✅ careers update method
     public void updateCareers(List<CareerEntity> updatedCareers) {
         this.careers.clear();
         this.careers.addAll(updatedCareers);
     }
 
-    // ✅ educations update method
     public void updateEducations(List<EducationEntity> updatedEducations) {
         this.educations.clear();
         this.educations.addAll(updatedEducations);
     }
 
-    // ✅ licenses update method
     public void updateLicenses(List<LicenseEntity> updatedLicenses) {
         this.licenses.clear();
         this.licenses.addAll(updatedLicenses);

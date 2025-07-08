@@ -4,6 +4,7 @@ import com.jamjam.user.domain.entity.Gender;
 import com.jamjam.user.domain.entity.UserRole;
 import lombok.Builder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Builder
@@ -15,6 +16,7 @@ public record UserResponse(
         LocalDate birth,
         UserRole role,
         Gender gender,
-        String profileUrl
+        String profileUrl,
+        BigDecimal credit
 ){
 }

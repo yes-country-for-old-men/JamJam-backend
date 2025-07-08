@@ -10,8 +10,13 @@ import com.jamjam.user.presentation.dto.request.ProviderRequest;
 import com.jamjam.user.presentation.dto.response.ProviderResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/providers")
@@ -19,12 +24,16 @@ import org.springframework.web.bind.annotation.*;
 public class ProviderController {
     private final ProviderService providerService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseDto<Void>> createProvider(
             @CurrentUser CustomUserDetails user,
-            @RequestBody ProviderRequest request
-    ) {
-        providerService.createProvider(user.getUserId(), request);
+            @RequestPart("request") ProviderRequest request,
+            @RequestPart(value = "skillFiles", required = false) List<MultipartFile> skillFiles,
+            @RequestPart(value = "careerFiles", required = false) List<MultipartFile> careerFiles,
+            @RequestPart(value = "educationFiles", required = false) List<MultipartFile> educationFiles,
+            @RequestPart(value = "licenseFiles", required = false) List<MultipartFile> licenseFiles
+    ) throws IOException {
+        providerService.createProvider(user.getUserId(), request, skillFiles, careerFiles, educationFiles, licenseFiles);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 
@@ -37,21 +46,25 @@ public class ProviderController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PatchMapping
-    public ResponseEntity<ProviderResponse> updateProvider(
+    @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseDto<ProviderResponse>> updateProvider(
             @CurrentUser CustomUserDetails user,
-            @RequestBody ProviderRequest request
-    ) {
-        var entity = providerService.updateProvider(user.getUserId(), request);
+            @RequestPart("request") ProviderRequest request,
+            @RequestPart(value = "skillFiles", required = false) List<MultipartFile> skillFiles,
+            @RequestPart(value = "careerFiles", required = false) List<MultipartFile> careerFiles,
+            @RequestPart(value = "educationFiles", required = false) List<MultipartFile> educationFiles,
+            @RequestPart(value = "licenseFiles", required = false) List<MultipartFile> licenseFiles
+    ) throws IOException {
+        var entity = providerService.updateProvider(user.getUserId(), request, skillFiles, careerFiles, educationFiles, licenseFiles);
         var response = providerService.getProvider(entity.getId()).orElse(null);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteProvider(
+    public ResponseEntity<ResponseDto<Void>> deleteProvider(
             @CurrentUser CustomUserDetails user
     ) {
         providerService.deleteProvider(user.getUserId());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 } 
