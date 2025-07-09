@@ -1,5 +1,7 @@
 package com.jamjam.user.presentation.dto.response;
 
+import com.jamjam.user.domain.entity.AccountDto;
+import com.jamjam.user.domain.entity.AccountEntity;
 import com.jamjam.user.domain.entity.Gender;
 import com.jamjam.user.domain.entity.UserRole;
 import lombok.Builder;
@@ -17,9 +19,7 @@ public record UserResponse(
         UserRole role,
         Gender gender,
         String profileUrl,
-        String bankName,
-        String accountNumber,
-        String depositor,
+        AccountDto account,
         BigDecimal credit
 ){
 }

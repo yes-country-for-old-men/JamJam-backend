@@ -1,6 +1,8 @@
 package com.jamjam.user.domain.entity;
 
+import com.jamjam.global.exception.ApiException;
 import com.jamjam.service.domain.entity.ServiceEntity;
+import com.jamjam.user.exception.UserError;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -70,12 +72,8 @@ public class UserEntity {
     @OneToOne(mappedBy = "user")
     private ProviderEntity provider;
 
-    @Column(name = "account_number")
-    private String accountNumber;
-
-    private String depositor;
-
-    private String bankName;
+    @OneToOne(mappedBy = "user")
+    private AccountEntity account;
 
     @Builder(toBuilder = true)
     public UserEntity(
@@ -97,9 +95,6 @@ public class UserEntity {
         this.profileUrl = "";
         this.isAlarmAgreed = false;
         this.fcmToken = "";
-        this.accountNumber = "";
-        this.depositor = "";
-        this.bankName = "";
     }
 
     public void changeName(String newName) {
@@ -136,9 +131,7 @@ public class UserEntity {
   
     public void changeCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
 
-    public void changeAccountNumber(String newAccountNumber) { this.accountNumber = newAccountNumber; }
-
-    public void changeDepositor(String newDepositor) { this.depositor = newDepositor; }
-
-    public void changeBankName(String newBankName) { this.bankName = newBankName; }
+    public void registerAccount(AccountEntity account) {
+        this.account = account;
+    }
 }
