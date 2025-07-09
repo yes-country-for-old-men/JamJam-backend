@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,5 +16,5 @@ public class OrderRegisterRequest {
     private String description;
     private String additionalRequest;
     private BigDecimal price;
-    private UUID serviceId;
+    private Long serviceId;
 }

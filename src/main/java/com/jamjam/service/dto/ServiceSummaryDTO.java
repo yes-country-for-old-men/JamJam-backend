@@ -2,7 +2,9 @@ package com.jamjam.service.dto;
 
 import com.jamjam.service.domain.entity.ServiceEntity;
 
+
 public record ServiceSummaryDTO(
+        Long serviceId,
         String thumbnailUrl,
         String serviceName,
         String providerName,
@@ -10,8 +12,8 @@ public record ServiceSummaryDTO(
 ) {
     public static ServiceSummaryDTO from(ServiceEntity entity) {
         String nickname = (entity.getUser() != null) ? entity.getUser().getNickname() : "알 수 없음";
-
         return new ServiceSummaryDTO(
+                entity.getId(),
                 entity.getThumbnail(),
                 entity.getServiceName(),
                 nickname,
