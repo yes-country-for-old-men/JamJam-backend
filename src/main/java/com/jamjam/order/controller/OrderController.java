@@ -33,8 +33,8 @@ public class OrderController {
     public ResponseEntity<ResponseDto<Void>> registerOrder(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestPart("request") OrderRegisterRequest request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        orderService.registerService(request, customUserDetails.getUserId(), images);
+            @RequestPart(value = "images", required = false) List<MultipartFile> referenceFiles) {
+        orderService.registerService(request, customUserDetails.getUserId(), referenceFiles);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.CREATE_SUCCESS));
     }

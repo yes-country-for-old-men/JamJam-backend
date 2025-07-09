@@ -38,13 +38,11 @@ public class OrderEntity {
     private LocalDate deadline;
 
     @ElementCollection
-    @CollectionTable(name = "order_images")
-    private List<String> orderImages;
+    @CollectionTable(name = "order_reference_files")
+    private List<String> referenceFiles;
 
     @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(columnDefinition = "TEXT")
-    private String additionalRequest;
     private BigDecimal price;
 
     @CreatedDate
@@ -68,15 +66,14 @@ public class OrderEntity {
     private ServiceEntity service;
 
     @Builder
-    public OrderEntity(String title, LocalDate deadline, List<String> orderImages,
-                       String description, String additionalRequest, BigDecimal price,
+    public OrderEntity(String title, LocalDate deadline, List<String> referenceFiles,
+                       String description, BigDecimal price,
                        LocalDateTime serviceCompletedAt, LocalDateTime purchaseConfirmedAt,
                        OrderStatus orderStatus, UserEntity client, ServiceEntity service) {
         this.title = title;
         this.deadline = deadline;
-        this.orderImages = orderImages;
+        this.referenceFiles = referenceFiles;
         this.description = description;
-        this.additionalRequest = additionalRequest;
         this.price = price;
         this.serviceCompletedAt = serviceCompletedAt;
         this.purchaseConfirmedAt = purchaseConfirmedAt;

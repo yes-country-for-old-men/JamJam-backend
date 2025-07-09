@@ -42,7 +42,7 @@ public class OrderService {
     }
     /*주문 신청*/
     @Transactional
-    public void registerService(OrderRegisterRequest request, Long userId, List<MultipartFile> images) {
+    public void registerService(OrderRegisterRequest request, Long userId, List<MultipartFile> referenceFiles) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
         ServiceEntity service = serviceRepository.findById(request.getServiceId())
@@ -53,13 +53,13 @@ public class OrderService {
         user.changeCredit(request.getPrice().negate());
         log.info("client {} 크레딧 차감", request.getPrice());
         /*주문 내용 저장*/
-        List<String> imageUrls = new ArrayList<>();
+        List<String> referenceUrls = new ArrayList<>();
         try {
-            if (images != null) {
-                for (MultipartFile image : images) {
+            if (referenceFiles != null) {
+                for (MultipartFile image : referenceFiles) {
                     if (!image.isEmpty()) {
                         String imageUrl = s3Uploader.upload(image, "order-request-images");
-                        imageUrls.add(imageUrl);
+                        referenceUrls.add(imageUrl);
                     }
                 }
                 log.info("참고 자료 이미지 저장 완료");
@@ -71,8 +71,7 @@ public class OrderService {
                 .title(request.getTitle())
                 .deadline(request.getDeadline())
                 .description(request.getDescription())
-                .additionalRequest(request.getAdditionalRequest())
-                .orderImages(imageUrls)
+                .referenceFiles(referenceUrls)
                 .orderStatus(OrderStatus.REQUESTED)
                 .price(request.getPrice())
                 .client(user)

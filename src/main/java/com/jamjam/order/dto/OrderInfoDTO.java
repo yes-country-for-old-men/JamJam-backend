@@ -9,8 +9,7 @@ public record OrderInfoDTO(
         String title,
         LocalDate deadline,
         String description,
-        String additionalRequest,
-        List<String> orderImages,
+        List<String> referenceFiles,
         String cancelReason
 ) {
     public static OrderInfoDTO from(OrderEntity entity) {
@@ -18,8 +17,7 @@ public record OrderInfoDTO(
                 entity.getTitle(),
                 entity.getDeadline(),
                 entity.getDescription(),
-                entity.getAdditionalRequest(),
-                entity.getOrderImages(),
+                entity.getReferenceFiles(),
                 entity.getCancelReason()
         );
     }

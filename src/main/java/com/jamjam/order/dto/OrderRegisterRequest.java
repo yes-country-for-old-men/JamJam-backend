@@ -14,7 +14,6 @@ public class OrderRegisterRequest {
     private String title;
     private LocalDate deadline;
     private String description;
-    private String additionalRequest;
     private BigDecimal price;
     private Long serviceId;
 }
