@@ -72,7 +72,8 @@ public class UserEntity {
     @OneToOne(mappedBy = "user")
     private ProviderEntity provider;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne
+    @JoinColumn(name = "account_id")
     private AccountEntity account;
 
     @Builder(toBuilder = true)
