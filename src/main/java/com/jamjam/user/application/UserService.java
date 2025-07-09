@@ -57,6 +57,9 @@ public class UserService {
                 .gender(userEntity.getGender())
                 .role(userEntity.getRole())
                 .credit(userEntity.getCredit())
+                .bankName(userEntity.getBankName())
+                .accountNumber(userEntity.getAccountNumber())
+                .depositor(userEntity.getDepositor())
                 .build();
     }
 

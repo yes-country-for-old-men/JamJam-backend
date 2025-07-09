@@ -17,6 +17,9 @@ public record UserResponse(
         UserRole role,
         Gender gender,
         String profileUrl,
+        String bankName,
+        String accountNumber,
+        String depositor,
         BigDecimal credit
 ){
 }
