@@ -29,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -82,6 +80,7 @@ public class UserService {
         if (request.password()       != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
         if (request.accountNumber() != null) user.changeAccountNumber(request.accountNumber());
         if (request.depositor()      != null) user.changeDepositor(request.depositor());
+        if (request.bankName() != null) user.changeBankName(request.bankName());
     }
 
     @Transactional

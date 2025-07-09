@@ -75,12 +75,14 @@ public class UserEntity {
 
     private String depositor;
 
+    private String bankName;
+
     @Builder(toBuilder = true)
     public UserEntity(
             String name, String phoneNumber, boolean isPhoneVerified,
             String loginId, String password, LocalDate birth,
             Gender gender, LocalDate createAt, UserRole role,
-            String nickname, String accountNumber, String depositor) {
+            String nickname) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.isPhoneVerified = isPhoneVerified;
@@ -95,8 +97,9 @@ public class UserEntity {
         this.profileUrl = "";
         this.isAlarmAgreed = false;
         this.fcmToken = "";
-        this.accountNumber = accountNumber;
-        this.depositor = depositor;
+        this.accountNumber = "";
+        this.depositor = "";
+        this.bankName = "";
     }
 
     public void changeName(String newName) {
@@ -136,4 +139,6 @@ public class UserEntity {
     public void changeAccountNumber(String newAccountNumber) { this.accountNumber = newAccountNumber; }
 
     public void changeDepositor(String newDepositor) { this.depositor = newDepositor; }
+
+    public void changeBankName(String newBankName) { this.bankName = newBankName; }
 }

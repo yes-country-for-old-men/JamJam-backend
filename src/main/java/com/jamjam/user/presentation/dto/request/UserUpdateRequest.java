@@ -12,6 +12,7 @@ public record UserUpdateRequest(
         String password,
         String accountNumber,
         String depositor,
+        String bankName,
         Boolean deleteProfileImage
 ) {
 }
