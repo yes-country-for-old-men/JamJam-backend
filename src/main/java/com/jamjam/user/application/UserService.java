@@ -77,11 +77,11 @@ public class UserService {
             user.changeProfileUrl(profileUrl);
         }
 
-        if (request.name()            != null) user.changeName(request.name());
         if (request.nickname()        != null) user.changeNickname(request.nickname());
         if (request.phoneNumber()     != null) user.changePhone(request.phoneNumber());
-        if (request.birth()           != null) user.changeBirth(request.birth());
-        if (request.gender()          != null) user.changeGender(request.gender());
+        if (request.password()       != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
+        if (request.accountNumber() != null) user.changeAccountNumber(request.accountNumber());
+        if (request.depositor()      != null) user.changeDepositor(request.depositor());
     }
 
     @Transactional
