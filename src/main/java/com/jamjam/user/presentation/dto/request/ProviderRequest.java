@@ -12,11 +12,14 @@ public record ProviderRequest(
     String location,
     String introduction,
     ContactHoursDto contactHours,
-    String averageResponseTime,
     List<SkillDto> skills,
     List<CareerDto> careers,
     List<EducationDto> educations,
-    List<LicenseDto> licenses
+    List<LicenseDto> licenses,
+    List<Long> deletedSkillIds,
+    List<Long> deletedCareerIds,
+    List<Long> deletedEducationIds,
+    List<Long> deletedLicenseIds
 ) {
     @Builder
     public record SkillDto(Long id, String name) {}

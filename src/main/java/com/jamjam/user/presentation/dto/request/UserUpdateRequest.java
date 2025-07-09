@@ -11,6 +11,7 @@ public record UserUpdateRequest(
         String nickname,
         String phoneNumber,
         LocalDate birth,
-        Gender gender
+        Gender gender,
+        Boolean deleteProfileImage
 ) {
 }

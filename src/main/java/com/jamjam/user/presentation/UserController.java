@@ -50,7 +50,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<UserResponse>> getUserInfo(@CurrentUser CustomUserDetails user) {
+    public ResponseEntity<ResponseDto<UserResponse>> getUserInfo(
+            @CurrentUser CustomUserDetails user) {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
                 userService.getUserInfo(user.getUserId())));
     }

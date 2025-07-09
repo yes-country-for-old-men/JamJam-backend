@@ -38,12 +38,11 @@ public class ProviderController {
     }
 
     @GetMapping
-    public ResponseEntity<ProviderResponse> getProvider(
+    public ResponseEntity<ResponseDto<ProviderResponse>> getProvider(
             @CurrentUser CustomUserDetails user
     ) {
-        return providerService.getProvider(user.getUserId())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
+                providerService.getProvider(user.getUserId())));
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -55,8 +54,7 @@ public class ProviderController {
             @RequestPart(value = "educationFiles", required = false) List<MultipartFile> educationFiles,
             @RequestPart(value = "licenseFiles", required = false) List<MultipartFile> licenseFiles
     ) throws IOException {
-        var entity = providerService.updateProvider(user.getUserId(), request, skillFiles, careerFiles, educationFiles, licenseFiles);
-        var response = providerService.getProvider(entity.getId()).orElse(null);
+        ProviderResponse response = providerService.updateProvider(user.getUserId(), request, skillFiles, careerFiles, educationFiles, licenseFiles);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 
@@ -67,4 +65,4 @@ public class ProviderController {
         providerService.deleteProvider(user.getUserId());
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
-} 
+}

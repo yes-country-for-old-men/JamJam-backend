@@ -19,12 +19,13 @@ public class CareerEntity {
 
     private String position;
     private String proofUrl;
+    private Long clientCareerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id")
     private ProviderEntity provider;
 
-    public void updatePartial(String company, String position, String proofUrl) {
+    public void updatePartial(String company, String position, String proofUrl, Long clientCareerId) {
         if (company != null) {
             this.company = company;
         }
@@ -33,6 +34,9 @@ public class CareerEntity {
         }
         if (proofUrl != null) {
             this.proofUrl = proofUrl;
+        }
+        if (clientCareerId != null) {
+            this.clientCareerId = clientCareerId;
         }
     }
 }

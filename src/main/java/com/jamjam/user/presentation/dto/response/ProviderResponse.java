@@ -21,6 +21,7 @@ public class ProviderResponse {
     public static class SkillDto {
         private Long id;
         private String name;
+        private String proofUrl;
     }
     @Builder
     public record ContactHoursDto(
@@ -31,7 +32,8 @@ public class ProviderResponse {
     public record CareerDto(
             Long id,
             String company,
-            String position
+            String position,
+            String proofUrl
     ) {}
     @Getter @Builder
     public static class EducationDto {
@@ -39,10 +41,12 @@ public class ProviderResponse {
         private String school;
         private String major;
         private String degree;
+        private String proofUrl;
     }
     @Getter @Builder
     public static class LicenseDto {
         private Long id;
         private String name;
+        private String proofUrl;
     }
 } 

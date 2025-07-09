@@ -113,7 +113,7 @@ public class SecurityConfig {
     private CorsConfiguration buildCorsConfig(HttpServletRequest req) {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOriginPatterns(Arrays.asList(allowedOriginsCsv.split(",")));
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS", "PATCH"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setExposedHeaders(List.of("Authorization","Set-Cookie"));
         cfg.setAllowCredentials(true);

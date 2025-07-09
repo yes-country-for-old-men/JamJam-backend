@@ -16,24 +16,27 @@ public class EducationEntity {
     private String major;
     private String degree;
     private String proofUrl;
+    private Long clientEducationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id")
     private ProviderEntity provider;
 
     @Builder
-    public EducationEntity(String school, String major, String degree, ProviderEntity provider, String proofUrl) {
+    public EducationEntity(String school, String major, String degree, ProviderEntity provider, String proofUrl, Long clientEducationId) {
         this.school = school;
         this.major = major;
         this.degree = degree;
         this.provider = provider;
         this.proofUrl = proofUrl;
+        this.clientEducationId = clientEducationId;
     }
 
-    public void updatePartial(String school, String major, String degree, String proofUrl) {
+    public void updatePartial(String school, String major, String degree, String proofUrl, Long clientEducationId) {
         if (school != null) this.school = school;
         if (major != null) this.major = major;
         if (degree != null) this.degree = degree;
         if (proofUrl != null) this.proofUrl = proofUrl;
+        if (clientEducationId != null) this.clientEducationId = clientEducationId;
     }
 } 
