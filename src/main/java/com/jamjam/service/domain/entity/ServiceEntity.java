@@ -5,12 +5,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Builder
 @Entity
@@ -23,8 +22,7 @@ import java.util.UUID;
 public class ServiceEntity {
     @Id
     @GeneratedValue
-    @UuidGenerator
-    private UUID id;
+    private Long id;
 
     @NotNull
     private String serviceName;
@@ -36,9 +34,9 @@ public class ServiceEntity {
     @NotNull
     private Integer categoryId;
 
-    @ElementCollection
-    @CollectionTable(name = "service_info_images", joinColumns = @JoinColumn(name = "service_id"))
-    private List<String> portfolioImages;
+//    @ElementCollection
+//    @CollectionTable(name = "service_info_images", joinColumns = @JoinColumn(name = "service_id"))
+//    private List<String> portfolioImages;
 
     @NotNull
     @Column(columnDefinition = "TEXT")
@@ -51,4 +49,7 @@ public class ServiceEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ServiceInfoImageEntity> portfolioImages = new ArrayList<>();
 }

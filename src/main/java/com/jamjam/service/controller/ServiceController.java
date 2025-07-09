@@ -8,6 +8,7 @@ import com.jamjam.service.service.AiGenerationService;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,8 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/service")
 public class ServiceController {
@@ -63,9 +64,9 @@ public class ServiceController {
     @Operation(summary = "서비스 목록 조회", description = "카테고리, 제공자 별")
     public ResponseEntity<ResponseDto<Page<ServiceSummaryDTO>>> getServiceList(
             @RequestParam(required = false) Integer category,
-            @RequestParam(required = false) String provider,
+            @RequestParam(required = false) Long providerId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ServiceSummaryDTO> responses = serviceService.getFilteredServices(category, provider, pageable);
+        Page<ServiceSummaryDTO> responses = serviceService.getFilteredServices(category, providerId, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, responses));
     }
@@ -73,7 +74,7 @@ public class ServiceController {
     @GetMapping("/detail")
     @Operation(summary = "서비스 상세 페이지 조회")
     public ResponseEntity<ResponseDto<ServiceInfoDTO>> getServiceDetail(
-            @RequestParam UUID serviceId) {
+            @RequestParam Long serviceId) {
         ServiceInfoDTO response = serviceService.getServiceDetail(serviceId);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
@@ -83,7 +84,7 @@ public class ServiceController {
     @Operation(summary = "서비스 삭제")
     public ResponseEntity<ResponseDto<Void>> deleteService(
             @CurrentUser CustomUserDetails customUserDetails,
-            @RequestParam UUID serviceId) {
+            @RequestParam Long serviceId) {
         serviceService.deleteService(customUserDetails, serviceId);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.DELETE_SUCCESS));
@@ -93,7 +94,7 @@ public class ServiceController {
     @Operation(summary = "서비스 정보 수정")
     public ResponseEntity<ResponseDto<Void>> editService(
             @CurrentUser CustomUserDetails customUserDetails,
-            @RequestParam UUID serviceId,
+            @RequestParam Long serviceId,
             @RequestPart(value = "request", required = false) ServiceEditRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
             @RequestPart(value = "portfolioImages", required = false) List<MultipartFile> portfolioImages) {
