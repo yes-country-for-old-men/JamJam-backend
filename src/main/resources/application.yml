@@ -51,12 +51,12 @@ aws:
 
 logging:
   level:
-    org.springframework.messaging.simp: DEBUG
-    org.springframework.web.socket: DEBUG
+    root: DEBUG
+    org.springframework.messaging.simp: WARN
+    org.springframework.web.socket: WARN
     com.jamjam: DEBUG
-    com.jamjam.chat.interceptor: DEBUG
-    org.springframework.messaging: DEBUG
-
+    com.jamjam.chat.interceptor: INFO
+    org.springframework.messaging: WARN
 
 port-one:
   api:

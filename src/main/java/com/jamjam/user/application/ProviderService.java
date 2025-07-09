@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,7 @@ public class ProviderService {
                 SkillEntity skill = SkillEntity.builder()
                         .name(skillDto.name())
                         .proofUrl(proofUrl)
+                        .clientSkillId(skillDto.id())
                         .build();
                 skills.add(skill);
             }
@@ -72,6 +74,7 @@ public class ProviderService {
                         .company(careerDto.company())
                         .position(careerDto.position())
                         .proofUrl(proofUrl)
+                        .clientCareerId(careerDto.id())
                         .build();
                 careers.add(career);
             }
@@ -93,6 +96,7 @@ public class ProviderService {
                         .major(educationDto.major())
                         .degree(educationDto.degree())
                         .proofUrl(proofUrl)
+                        .clientEducationId(educationDto.id())
                         .build();
                 educations.add(education);
             }
@@ -112,6 +116,7 @@ public class ProviderService {
                 LicenseEntity license = LicenseEntity.builder()
                         .name(licenseDto.name())
                         .proofUrl(proofUrl)
+                        .clientLicenseId(licenseDto.id())
                         .build();
                 licenses.add(license);
             }
@@ -131,7 +136,6 @@ public class ProviderService {
                 .location(request.location())
                 .introduction(request.introduction())
                 .contactHours(mapToContactHours(request.contactHours()))
-                .averageResponseTime(request.averageResponseTime())
                 .skills(skills)
                 .careers(careers)
                 .educations(educations)
@@ -162,13 +166,15 @@ public class ProviderService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<ProviderResponse> getProvider(Long id) {
+    public ProviderResponse getProvider(Long id) {
         log.info("[getProvider] id={}", id);
-        return providerRepository.findById(id).map(this::mapToResponse);
+        return providerRepository.findById(id)
+                .map(this::mapToResponse)
+                .orElse(null);
     }
 
     @Transactional
-    public ProviderEntity updateProvider(Long id, ProviderRequest request,
+    public ProviderResponse updateProvider(Long id, ProviderRequest request,
                                          List<MultipartFile> skillFiles,
                                          List<MultipartFile> careerFiles,
                                          List<MultipartFile> educationFiles,
@@ -204,17 +210,15 @@ public class ProviderService {
                 request.categoryId(),
                 request.location(),
                 request.introduction(),
-                updatedContactHours,
-                request.averageResponseTime()
+                updatedContactHours
         );
 
         // ✅ skills update
         if (request.skills() != null) {
-            List<SkillEntity> updatedSkills = new ArrayList<>();
             for (int i = 0; i < request.skills().size(); i++) {
                 ProviderRequest.SkillDto dto = request.skills().get(i);
                 SkillEntity skill = entity.getSkills().stream()
-                        .filter(s -> s.getId().equals(dto.id()))
+                        .filter(s -> Objects.equals(s.getClientSkillId(), dto.id()))
                         .findFirst()
                         .orElse(null);
 
@@ -228,23 +232,22 @@ public class ProviderService {
                             .name(dto.name())
                             .proofUrl(proofUrl)
                             .provider(entity)
+                            .clientSkillId(dto.id())
                             .build();
+                    entity.getSkills().add(skill);
                 } else {
-                    skill.updatePartial(dto.name(), proofUrl);
+                    skill.updatePartial(dto.name(), proofUrl, dto.id());
                 }
-                updatedSkills.add(skill);
             }
-            entity.updateSkills(updatedSkills);
-            log.info("[updateProvider] skills updated: {}", updatedSkills);
+            log.info("[updateProvider] skills add/update done");
         }
 
         // ✅ careers update
         if (request.careers() != null) {
-            List<CareerEntity> updatedCareers = new ArrayList<>();
             for (int i = 0; i < request.careers().size(); i++) {
                 ProviderRequest.CareerDto dto = request.careers().get(i);
                 CareerEntity career = entity.getCareers().stream()
-                        .filter(c -> c.getId().equals(dto.id()))
+                        .filter(c -> Objects.equals(c.getClientCareerId(), dto.id()))
                         .findFirst()
                         .orElse(null);
 
@@ -259,23 +262,22 @@ public class ProviderService {
                             .position(dto.position())
                             .proofUrl(proofUrl)
                             .provider(entity)
+                            .clientCareerId(dto.id())
                             .build();
+                    entity.getCareers().add(career);
                 } else {
-                    career.updatePartial(dto.company(), dto.position(), proofUrl);
+                    career.updatePartial(dto.company(), dto.position(), proofUrl, dto.id());
                 }
-                updatedCareers.add(career);
             }
-            entity.updateCareers(updatedCareers);
-            log.info("[updateProvider] careers updated: {}", updatedCareers);
+            log.info("[updateProvider] careers add/update done");
         }
 
         // ✅ educations update
         if (request.educations() != null) {
-            List<EducationEntity> updatedEducations = new ArrayList<>();
             for (int i = 0; i < request.educations().size(); i++) {
                 ProviderRequest.EducationDto dto = request.educations().get(i);
                 EducationEntity education = entity.getEducations().stream()
-                        .filter(e -> e.getId().equals(dto.id()))
+                        .filter(e -> Objects.equals(e.getClientEducationId(), dto.id()))
                         .findFirst()
                         .orElse(null);
 
@@ -291,23 +293,22 @@ public class ProviderService {
                             .degree(dto.degree())
                             .proofUrl(proofUrl)
                             .provider(entity)
+                            .clientEducationId(dto.id())
                             .build();
+                    entity.getEducations().add(education);
                 } else {
-                    education.updatePartial(dto.school(), dto.major(), dto.degree(), proofUrl);
+                    education.updatePartial(dto.school(), dto.major(), dto.degree(), proofUrl, dto.id());
                 }
-                updatedEducations.add(education);
             }
-            entity.updateEducations(updatedEducations);
-            log.info("[updateProvider] educations updated: {}", updatedEducations);
+            log.info("[updateProvider] educations add/update done");
         }
 
         // ✅ licenses update
         if (request.licenses() != null) {
-            List<LicenseEntity> updatedLicenses = new ArrayList<>();
             for (int i = 0; i < request.licenses().size(); i++) {
                 ProviderRequest.LicenseDto dto = request.licenses().get(i);
                 LicenseEntity license = entity.getLicenses().stream()
-                        .filter(l -> l.getId().equals(dto.id()))
+                        .filter(l -> Objects.equals(l.getClientLicenseId(), dto.id()))
                         .findFirst()
                         .orElse(null);
 
@@ -321,18 +322,36 @@ public class ProviderService {
                             .name(dto.name())
                             .proofUrl(proofUrl)
                             .provider(entity)
+                            .clientLicenseId(dto.id())
                             .build();
+                    entity.getLicenses().add(license);
                 } else {
-                    license.updatePartial(dto.name(), proofUrl);
+                    license.updatePartial(dto.name(), proofUrl, dto.id());
                 }
-                updatedLicenses.add(license);
             }
-            entity.updateLicenses(updatedLicenses);
-            log.info("[updateProvider] licenses updated: {}", updatedLicenses);
+            log.info("[updateProvider] licenses add/update done");
+        }
+
+        if (request.deletedSkillIds() != null && !request.deletedSkillIds().isEmpty()) {
+            entity.getSkills().removeIf(skill -> request.deletedSkillIds().contains(skill.getClientSkillId()));
+            log.info("[updateProvider] skills deleted: {}", request.deletedSkillIds());
+        }
+        if (request.deletedCareerIds() != null && !request.deletedCareerIds().isEmpty()) {
+            entity.getCareers().removeIf(career -> request.deletedCareerIds().contains(career.getClientCareerId()));
+            log.info("[updateProvider] careers deleted: {}", request.deletedCareerIds());
+        }
+        if (request.deletedEducationIds() != null && !request.deletedEducationIds().isEmpty()) {
+            entity.getEducations().removeIf(education -> request.deletedEducationIds().contains(education.getClientEducationId()));
+            log.info("[updateProvider] educations deleted: {}", request.deletedEducationIds());
+        }
+        if (request.deletedLicenseIds() != null && !request.deletedLicenseIds().isEmpty()) {
+            entity.getLicenses().removeIf(license -> request.deletedLicenseIds().contains(license.getClientLicenseId()));
+            log.info("[updateProvider] licenses deleted: {}", request.deletedLicenseIds());
         }
 
         log.info("[updateProvider] entity fully updated");
-        return entity;
+        return mapToResponse(entity);
+
     }
 
 
@@ -392,7 +411,6 @@ public class ProviderService {
                 .location(request.location())
                 .introduction(request.introduction())
                 .contactHours(contactHours)
-                .averageResponseTime(request.averageResponseTime())
                 .skills(skills)
                 .careers(careers)
                 .educations(educations)
@@ -423,32 +441,36 @@ public class ProviderService {
                 .skills(entity.getSkills() == null ? List.of() :
                         entity.getSkills().stream()
                                 .map(s -> ProviderResponse.SkillDto.builder()
-                                        .id(s.getId())
+                                        .id(s.getClientSkillId())
                                         .name(s.getName())
+                                        .proofUrl(s.getProofUrl())
                                         .build())
                                 .collect(Collectors.toList()))
                 .careers(entity.getCareers() == null ? List.of() :
                         entity.getCareers().stream()
                                 .map(c -> ProviderResponse.CareerDto.builder()
-                                        .id(c.getId())
+                                        .id(c.getClientCareerId())
                                         .company(c.getCompany())
                                         .position(c.getPosition())
+                                        .proofUrl(c.getProofUrl())
                                         .build())
                                 .collect(Collectors.toList()))
                 .educations(entity.getEducations() == null ? List.of() :
                         entity.getEducations().stream()
                                 .map(e -> ProviderResponse.EducationDto.builder()
-                                        .id(e.getId())
+                                        .id(e.getClientEducationId())
                                         .school(e.getSchool())
                                         .major(e.getMajor())
                                         .degree(e.getDegree())
+                                        .proofUrl(e.getProofUrl())
                                         .build())
                                 .collect(Collectors.toList()))
                 .licenses(entity.getLicenses() == null ? List.of() :
                         entity.getLicenses().stream()
                                 .map(l -> ProviderResponse.LicenseDto.builder()
-                                        .id(l.getId())
+                                        .id(l.getClientLicenseId())
                                         .name(l.getName())
+                                        .proofUrl(l.getProofUrl())
                                         .build())
                                 .collect(Collectors.toList()))
                 .build();

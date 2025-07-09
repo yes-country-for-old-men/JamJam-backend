@@ -52,7 +52,6 @@ public class ProviderEntity {
     public ProviderEntity(UserEntity user,
                           String introduction,
                           ContactHours contactHours,
-                          String averageResponseTime,
                           Integer categoryId,
                           String location,
                           List<SkillEntity> skills,
@@ -62,7 +61,7 @@ public class ProviderEntity {
         this.user = user;
         this.introduction = introduction;
         this.contactHours = contactHours;
-        this.averageResponseTime = averageResponseTime;
+        this.averageResponseTime = "24시간 이내";
         this.categoryId = categoryId;
         this.location = location;
         if (skills != null) this.skills = skills;
@@ -75,8 +74,7 @@ public class ProviderEntity {
             Integer categoryId,
             String location,
             String introduction,
-            ContactHours contactHours,
-            String averageResponseTime
+            ContactHours contactHours
     ) {
         if (categoryId != null) {
             this.categoryId = categoryId;
@@ -89,9 +87,6 @@ public class ProviderEntity {
         }
         if (contactHours != null) {
             this.contactHours = contactHours;
-        }
-        if (averageResponseTime != null) {
-            this.averageResponseTime = averageResponseTime;
         }
     }
 

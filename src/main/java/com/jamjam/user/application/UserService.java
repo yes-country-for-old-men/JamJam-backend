@@ -68,6 +68,10 @@ public class UserService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
+        if (request.deleteProfileImage()){
+            s3Uploader.delete(user.getProfileUrl());
+        }
+
         if (profile != null && !profile.isEmpty()) {
             String profileUrl = s3Uploader.upload(profile, "profile");
             log.info("프로필 사진 저장 완료: " + profileUrl);
