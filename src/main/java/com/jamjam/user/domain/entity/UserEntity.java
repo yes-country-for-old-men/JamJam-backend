@@ -1,5 +1,6 @@
 package com.jamjam.user.domain.entity;
 
+import com.jamjam.notify.FcmTokenEntity;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -69,6 +70,9 @@ public class UserEntity {
     @Getter
     @OneToOne(mappedBy = "user")
     private ProviderEntity provider;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FcmTokenEntity> fcmTokens = new ArrayList<>();
 
     @Column(name = "account_number")
     private String accountNumber;
