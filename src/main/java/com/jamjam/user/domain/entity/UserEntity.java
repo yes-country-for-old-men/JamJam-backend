@@ -1,7 +1,9 @@
 package com.jamjam.user.domain.entity;
 
+import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.FcmTokenEntity;
 import com.jamjam.service.domain.entity.ServiceEntity;
+import com.jamjam.user.exception.UserError;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -70,21 +72,20 @@ public class UserEntity {
     @Getter
     @OneToOne(mappedBy = "user")
     private ProviderEntity provider;
+  
+    @OneToOne
+    @JoinColumn(name = "account_id")
+    private AccountEntity account;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FcmTokenEntity> fcmTokens = new ArrayList<>();
-
-    @Column(name = "account_number")
-    private String accountNumber;
-
-    private String depositor;
 
     @Builder(toBuilder = true)
     public UserEntity(
             String name, String phoneNumber, boolean isPhoneVerified,
             String loginId, String password, LocalDate birth,
             Gender gender, LocalDate createAt, UserRole role,
-            String nickname, String accountNumber, String depositor) {
+            String nickname) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.isPhoneVerified = isPhoneVerified;
@@ -99,8 +100,6 @@ public class UserEntity {
         this.profileUrl = "";
         this.isAlarmAgreed = false;
         this.fcmToken = "";
-        this.accountNumber = accountNumber;
-        this.depositor = depositor;
     }
 
     public void changeName(String newName) {
@@ -137,7 +136,7 @@ public class UserEntity {
   
     public void changeCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
 
-    public void changeAccountNumber(String newAccountNumber) { this.accountNumber = newAccountNumber; }
-
-    public void changeDepositor(String newDepositor) { this.depositor = newDepositor; }
+    public void registerAccount(AccountEntity account) {
+        this.account = account;
+    }
 }

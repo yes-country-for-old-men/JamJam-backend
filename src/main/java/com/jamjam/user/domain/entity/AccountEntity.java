@@ -16,19 +16,24 @@ public class AccountEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "bank_name")
-    private String bankName;
+    private BankType bank;
 
     @Column(name = "account_number")
     private String accountNumber;
 
     @Column(name = "holder_name")
-    private String holderName;
+    private String depositor;
 
     @Builder
-    public AccountEntity(String bankName, String accountNumber, String holderName) {
-        this.bankName = bankName;
+    public AccountEntity(BankType bank, String accountNumber, String depositor) {
+        this.bank = bank;
         this.accountNumber = accountNumber;
-        this.holderName = holderName;
+        this.depositor = depositor;
     }
+
+    public void changeAccountNumber(String newAccountNumber) { this.accountNumber = newAccountNumber; }
+
+    public void changeDepositor(String newDepositor) { this.depositor = newDepositor; }
+
+    public void changeBank(BankType newBank) { this.bank = newBank; }
 }

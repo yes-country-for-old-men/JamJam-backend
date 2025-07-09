@@ -5,6 +5,9 @@ import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.service.util.S3Uploader;
+import com.jamjam.user.domain.entity.AccountDto;
+import com.jamjam.user.domain.entity.AccountEntity;
+import com.jamjam.user.domain.entity.BankType;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
@@ -29,8 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -59,6 +60,7 @@ public class UserService {
                 .gender(userEntity.getGender())
                 .role(userEntity.getRole())
                 .credit(userEntity.getCredit())
+                .account(AccountDto.fromEntity(userEntity.getAccount()))
                 .build();
     }
 
@@ -80,8 +82,16 @@ public class UserService {
         if (request.nickname()        != null) user.changeNickname(request.nickname());
         if (request.phoneNumber()     != null) user.changePhone(request.phoneNumber());
         if (request.password()       != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
-        if (request.accountNumber() != null) user.changeAccountNumber(request.accountNumber());
-        if (request.depositor()      != null) user.changeDepositor(request.depositor());
+        if (request.account() != null) {
+            AccountDto account = request.account();
+            if (user.getAccount() != null) {
+                if (account.accountNumber() != null) user.getAccount().changeAccountNumber(account.accountNumber());
+                if (account.depositor()  != null) user.getAccount().changeDepositor(account.depositor());
+                if (account.bankCode() != null) user.getAccount().changeBank(BankType.fromCode(account.bankCode()));
+            } else if (account.bankCode() != null && account.accountNumber() != null && account.depositor() != null) {
+                user.registerAccount(new AccountEntity(BankType.fromCode(account.bankCode()), account.accountNumber(), account.depositor()));
+            }
+        }
     }
 
     @Transactional
