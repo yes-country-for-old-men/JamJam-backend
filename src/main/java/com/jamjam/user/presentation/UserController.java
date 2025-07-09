@@ -8,10 +8,7 @@ import com.jamjam.user.application.SmsVerificationService;
 import com.jamjam.user.application.UserService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.presentation.dto.request.*;
-import com.jamjam.user.presentation.dto.response.AppReissueResponse;
-import com.jamjam.user.presentation.dto.response.CheckResponse;
-import com.jamjam.user.presentation.dto.response.LoginResponse;
-import com.jamjam.user.presentation.dto.response.UserResponse;
+import com.jamjam.user.presentation.dto.response.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
@@ -103,14 +100,27 @@ public class UserController {
     }
 
     @GetMapping("/check/loginId")
-    public ResponseEntity<ResponseDto<CheckResponse>> checkDuplicateLoginId(@RequestParam String loginId) {
-        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS
-                , userService.checkDuplicateLoginId(loginId)));
+    public ResponseEntity<ResponseDto<CheckDuplicateResponse>> checkDuplicateLoginId(
+            @RequestParam String loginId
+    ) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
+                userService.checkDuplicateLoginId(loginId)));
     }
 
     @GetMapping("/check/nickname")
-    public ResponseEntity<ResponseDto<CheckResponse>> checkDuplicateNickname(@RequestParam String nickname) {
-        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS
-                , userService.checkDuplicateNickName(nickname)));
+    public ResponseEntity<ResponseDto<CheckDuplicateResponse>> checkDuplicateNickname(
+            @RequestParam String nickname
+    ) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
+                userService.checkDuplicateNickName(nickname)));
+    }
+
+    @GetMapping("/check-password")
+    public ResponseEntity<ResponseDto<CheckCorrectResponse>> checkDuplicatePassword(
+            @CurrentUser CustomUserDetails user,
+            @RequestBody PasswordCheckRequest passwordRequest
+    ) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
+                userService.checkCorrectPassword(user.getUserId(), passwordRequest.password())));
     }
 }

@@ -12,20 +12,19 @@ import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ClientJoinRequest;
 import com.jamjam.user.presentation.dto.request.ProviderJoinRequest;
 import com.jamjam.user.presentation.dto.request.UserUpdateRequest;
-import com.jamjam.user.presentation.dto.response.CheckResponse;
+import com.jamjam.user.presentation.dto.response.CheckCorrectResponse;
+import com.jamjam.user.presentation.dto.response.CheckDuplicateResponse;
 import com.jamjam.user.presentation.dto.response.LoginResponse;
 import com.jamjam.user.presentation.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -204,10 +203,18 @@ public class UserService {
         );
     }
 
-    public CheckResponse checkDuplicateLoginId(String loginId) {
-        return new CheckResponse(!userRepository.existsByLoginId(loginId));
+    public CheckDuplicateResponse checkDuplicateLoginId(String loginId) {
+        return new CheckDuplicateResponse(!userRepository.existsByLoginId(loginId));
     }
-    public CheckResponse checkDuplicateNickName(String nickname) {
-        return new CheckResponse(!userRepository.existsByNickname(nickname));
+
+    public CheckDuplicateResponse checkDuplicateNickName(String nickname) {
+        return new CheckDuplicateResponse(!userRepository.existsByNickname(nickname));
+    }
+
+    public CheckCorrectResponse checkCorrectPassword(Long userId, String password) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+        boolean matches = bCryptPasswordEncoder.matches(password, user.getPassword());
+        return new CheckCorrectResponse(matches);
     }
 }
