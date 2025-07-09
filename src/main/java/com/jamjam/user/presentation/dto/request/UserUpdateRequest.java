@@ -7,11 +7,11 @@ import java.time.LocalDate;
 
 @Builder
 public record UserUpdateRequest(
-        String name,
         String nickname,
         String phoneNumber,
-        LocalDate birth,
-        Gender gender,
+        String password,
+        String accountNumber,
+        String depositor,
         Boolean deleteProfileImage
 ) {
 }

@@ -67,21 +67,20 @@ public class UserEntity {
     private BigDecimal credit;
 
     @Getter
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user")
     private ProviderEntity provider;
 
-    @OneToOne(cascade = CascadeType.ALL
-            , orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id")
-    private AccountEntity account; // 어떻게할지
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    private String depositor;
 
     @Builder(toBuilder = true)
     public UserEntity(
             String name, String phoneNumber, boolean isPhoneVerified,
             String loginId, String password, LocalDate birth,
             Gender gender, LocalDate createAt, UserRole role,
-            String nickname) {
+            String nickname, String accountNumber, String depositor) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.isPhoneVerified = isPhoneVerified;
@@ -94,6 +93,10 @@ public class UserEntity {
         this.nickname = nickname;
         this.credit = BigDecimal.ZERO;
         this.profileUrl = "";
+        this.isAlarmAgreed = false;
+        this.fcmToken = "";
+        this.accountNumber = accountNumber;
+        this.depositor = depositor;
     }
 
     public void changeName(String newName) {
@@ -129,4 +132,8 @@ public class UserEntity {
     }
   
     public void changeCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
+
+    public void changeAccountNumber(String newAccountNumber) { this.accountNumber = newAccountNumber; }
+
+    public void changeDepositor(String newDepositor) { this.depositor = newDepositor; }
 }
