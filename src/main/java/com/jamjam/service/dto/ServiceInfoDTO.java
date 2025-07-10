@@ -9,32 +9,32 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public record ServiceInfoDTO(
+        Long userId,
         Long serviceId,
         String thumbnail,
-        Map<Long, String> portfolioImages,
+        List<PortfolioImageDTO> portfolioImages,
         String serviceName,
         String description,
         Integer salary,
         Integer category
 ) {
     public static ServiceInfoDTO from(ServiceEntity entity) {
-        List<ServiceInfoImageEntity> images = Optional.ofNullable(entity.getPortfolioImages())
-                .orElse(Collections.emptyList());
+        List<PortfolioImageDTO> imageList = Optional.ofNullable(entity.getPortfolioImages())
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(img -> new PortfolioImageDTO(img.getId(), img.getImageUrl()))
+                .toList();
 
-        Map<Long, String> imageMap = images.stream()
-                .collect(Collectors.toMap(
-                        ServiceInfoImageEntity::getId,
-                        ServiceInfoImageEntity::getImageUrl,
-                        (v1, v2) -> v2 // 중복 발생 시 마지막 값으로 덮어쓰기
-                ));
         return new ServiceInfoDTO(
+                entity.getUser().getId(),
                 entity.getId(),
                 entity.getThumbnail(),
-                imageMap,
+                imageList,
                 entity.getServiceName(),
                 entity.getDescription(),
                 entity.getSalary(),
                 entity.getCategoryId()
         );
     }
+    public record PortfolioImageDTO(Long id, String url) {}
 }

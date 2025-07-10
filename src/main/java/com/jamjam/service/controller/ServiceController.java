@@ -62,11 +62,11 @@ public class ServiceController {
     /*서비스 목록 가져오기(카테고리, 제공자 별)*/
     @GetMapping("/service-list")
     @Operation(summary = "서비스 목록 조회", description = "카테고리, 제공자 별")
-    public ResponseEntity<ResponseDto<Page<ServiceSummaryDTO>>> getServiceList(
+    public ResponseEntity<ResponseDto<ServiceListResponse>> getServiceList(
             @RequestParam(required = false) Integer category,
             @RequestParam(required = false) Long providerId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ServiceSummaryDTO> responses = serviceService.getFilteredServices(category, providerId, pageable);
+        ServiceListResponse responses = serviceService.getFilteredServices(category, providerId, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, responses));
     }

@@ -3,6 +3,7 @@ package com.jamjam.search.controller;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.search.service.SearchService;
+import com.jamjam.service.dto.ServiceListResponse;
 import com.jamjam.service.dto.ServiceSummaryDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
@@ -28,11 +29,11 @@ public class SearchController {
 
     @GetMapping("/service")
     @Operation(summary = "서비스 검색")
-    public ResponseEntity<ResponseDto<Page<ServiceSummaryDTO>>> getServiceByKeyword(
+    public ResponseEntity<ResponseDto<ServiceListResponse>> getServiceByKeyword(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String nickname,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ServiceSummaryDTO> response = searchService.getServiceByKeyword(keyword, nickname, pageable);
+        ServiceListResponse response = searchService.getServiceByKeyword(keyword, nickname, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }

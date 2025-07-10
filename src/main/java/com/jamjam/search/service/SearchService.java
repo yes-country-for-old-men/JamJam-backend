@@ -2,11 +2,14 @@ package com.jamjam.search.service;
 
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
+import com.jamjam.service.dto.ServiceListResponse;
 import com.jamjam.service.dto.ServiceSummaryDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Slf4j
@@ -18,7 +21,7 @@ public class SearchService {
         this.serviceRepository = serviceRepository;
     }
 
-    public Page<ServiceSummaryDTO> getServiceByKeyword(String keyword, String nickname, Pageable pageable) {
+    public ServiceListResponse getServiceByKeyword(String keyword, String nickname, Pageable pageable) {
         Page<ServiceEntity> entities;
         if (keyword != null) {
             entities = serviceRepository.findByKeyword(keyword, pageable);
@@ -29,7 +32,15 @@ public class SearchService {
         } else {
             entities = serviceRepository.findAll(pageable);
         }
+        List<ServiceSummaryDTO> dtoList = entities.stream()
+                .map(ServiceSummaryDTO::from)
+                .toList();
 
-        return entities.map(ServiceSummaryDTO::from);
+        return ServiceListResponse.builder()
+                .services(dtoList)
+                .currentPage(entities.getNumber() + 1)
+                .totalPages(entities.getTotalPages())
+                .hasNext(entities.hasNext())
+                .build();
     }
 }
