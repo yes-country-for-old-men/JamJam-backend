@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.config.GptConfig;
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.service.dto.AiImageRequest;
 import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.AiServiceRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +48,7 @@ public class OpenAiClient {
                         "3. 고객이 얻는 혜택, 감성, 경험 중심으로 표현해줘\n" +
                         "4. 단순 나열이 아닌, 말하듯 풀어서 이야기하는 형식\n" +
                         "5. 고객 페르소나를 상정해서 그들이 공감할 수 있도록 써줘\n" +
-                        "6. 총입력으로 들어오는 서비스 소개글의 4배 분량은 최소한 만들어줘. 만약 입력 서비스 소개글이 너무 적어도 최소한 1000자는 맞춰줘\n" +
+                        "6. 총 분량은 800자 이상, 그리고 입력으로 들어오는 서비스 소개글의 3배 분량은 최소한 만들어줘.\n" +
                         "- 그리고 생성된 소개글 내용을 WYSIWYG 에디터용 HTML로 반환해줘. 단, HTML 태그 형식에 너무 갇히지 말고 글의 감동과 설득력을 우선해줘" +
                         "- 아래 리스트 중 하나의 카테고리 지정\n" +
                         "상세 설명: %s\n보유 기술: %s\n경력: %s\n" +
