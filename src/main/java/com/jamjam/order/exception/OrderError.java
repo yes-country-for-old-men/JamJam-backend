@@ -10,6 +10,7 @@ public enum OrderError implements ErrorCode {
     IMAGE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 실패", "IMAGE_UPLOAD_ERROR"),
     CANNOT_ACCEPT_ORDER(HttpStatus.BAD_REQUEST, "주문을 수락할 수 없는 상태입니다.", "CANNOT_ACCEPT_ORDER"),
     FORBIDDEN_CHANGE_ORDER_STATUS(HttpStatus.FORBIDDEN, "주문 상태를 수정할 권한이 없습니다.", "FORBIDDEN_CHANGE_ORDER_STATUS"),
+    UNKNOWN_USER_ROLE(HttpStatus.BAD_REQUEST, "유효하지 않은 사용자 역할입니다.", "UNKNOWN_USER_ROLE"),
     UNKNOWN_STATUS(HttpStatus.BAD_REQUEST, "알 수 없는 주문 상태입니다.", "UNKNOWN_STATUS"),
     CREDIT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "크레딧 부족으로 주문을 진행할 수 없습니다.", "CREDIT_NOT_ENOUGH");
 

@@ -4,13 +4,13 @@ import com.jamjam.global.annotation.CurrentUser;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.order.domain.entity.OrderStatus;
-import com.jamjam.order.dto.OrderInfoDTO;
-import com.jamjam.order.dto.OrderRegisterRequest;
-import com.jamjam.order.dto.OrderStatusRequest;
-import com.jamjam.order.dto.OrderSummaryDTO;
+import com.jamjam.order.dto.*;
 import com.jamjam.order.service.OrderService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,10 +63,11 @@ public class OrderController {
     /*주문 내역*/
     @GetMapping("/order-list")
     @Operation(summary = "주문 내역")
-    public ResponseEntity<ResponseDto<List<OrderSummaryDTO>>> getOrders(
+    public ResponseEntity<ResponseDto<OrderListResponse>> getOrders(
             @CurrentUser CustomUserDetails customUserDetails,
-            @RequestParam OrderStatus orderStatus) {
-        List<OrderSummaryDTO> response = orderService.getOrders(customUserDetails, orderStatus);
+            @RequestParam OrderStatus orderStatus,
+            @PageableDefault(sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        OrderListResponse response = orderService.getOrders(customUserDetails, orderStatus, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }

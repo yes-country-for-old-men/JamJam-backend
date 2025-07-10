@@ -4,10 +4,7 @@ import com.jamjam.global.exception.ApiException;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.domain.repository.OrderRepository;
-import com.jamjam.order.dto.OrderInfoDTO;
-import com.jamjam.order.dto.OrderRegisterRequest;
-import com.jamjam.order.dto.OrderStatusRequest;
-import com.jamjam.order.dto.OrderSummaryDTO;
+import com.jamjam.order.dto.*;
 import com.jamjam.order.exception.OrderError;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
@@ -17,6 +14,8 @@ import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -143,24 +142,29 @@ public class OrderService {
     }
     /*제공자의 주문 상태 별 주문 목록 반환*/
     @Transactional
-    public List<OrderSummaryDTO> getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus) {
+    public OrderListResponse getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
         UserEntity user = userRepository.findById(customUserDetails.getUserId())
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
 
-        List<OrderEntity> orders = new ArrayList<>();
+        Page<OrderEntity> entities;
         if (user.getRole() == UserRole.PROVIDER) {
-            orders = orderRepository.findByProviderIdAndOrderStatus(user.getId(), orderStatus);
+            entities = orderRepository.findByProviderIdAndOrderStatus(user.getId(), orderStatus, pageable);
         } else if (user.getRole() == UserRole.CLIENT) {
-            orders = orderRepository.findByClientIdAndOrderStatus(user.getId(), orderStatus);
-        }
-        log.info("{} 상태 주문 건수: {}", orderStatus, orders.size());
-
-        List<OrderSummaryDTO> selectedOrders = new ArrayList<>();
-        for (OrderEntity order : orders) {
-            selectedOrders.add(OrderSummaryDTO.from(order));
+            entities = orderRepository.findByClientIdAndOrderStatus(user.getId(), orderStatus, pageable);
+        } else {
+            throw new ApiException(OrderError.UNKNOWN_USER_ROLE);
         }
 
-        return selectedOrders;
+        List<OrderSummaryDTO> dtoList = entities.stream()
+                .map(OrderSummaryDTO::from)
+                .toList();
+
+        return OrderListResponse.builder()
+                .orders(dtoList)
+                .currentPage(entities.getNumber() + 1)
+                .totalPages(entities.getTotalPages())
+                .hasNext(entities.hasNext())
+                .build();
     }
     /*주문 상세 정보 반환*/
     public OrderInfoDTO getOrderDetail(Long orderId) {

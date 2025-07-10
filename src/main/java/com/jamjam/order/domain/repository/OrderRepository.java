@@ -2,6 +2,8 @@ package com.jamjam.order.domain.repository;
 
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,8 +17,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     List<OrderEntity> findWaitingConfirmOrdersBefore(@Param("purchaseDeadline")LocalDateTime purchaseDeadline);
 
     @Query("SELECT o FROM OrderEntity o WHERE o.service.user.id = :providerId AND o.orderStatus = :orderStatus")
-    List<OrderEntity> findByProviderIdAndOrderStatus(Long providerId, OrderStatus orderStatus);
+    Page<OrderEntity> findByProviderIdAndOrderStatus(Long providerId, OrderStatus orderStatus, Pageable pageable);
 
     @Query("SELECT o FROM OrderEntity o WHERE o.client.id = :clientId AND o.orderStatus = :orderStatus")
-    List<OrderEntity> findByClientIdAndOrderStatus(Long clientId, OrderStatus orderStatus);
+    Page<OrderEntity> findByClientIdAndOrderStatus(Long clientId, OrderStatus orderStatus, Pageable pageable);
 }
