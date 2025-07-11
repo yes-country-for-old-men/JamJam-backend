@@ -1,6 +1,7 @@
 package com.jamjam.user.domain.entity;
 
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.notify.FcmTokenEntity;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.user.exception.UserError;
 import jakarta.persistence.*;
@@ -75,6 +76,9 @@ public class UserEntity {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id")
     private AccountEntity account;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FcmTokenEntity> fcmTokens = new ArrayList<>();
 
     @Builder(toBuilder = true)
     public UserEntity(
