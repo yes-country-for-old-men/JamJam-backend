@@ -34,8 +34,7 @@ public class OrderEntity {
     private String title;
 
     @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate deadline;
+    private LocalDateTime deadline;
 
     @ElementCollection
     @CollectionTable(name = "order_reference_files")
@@ -66,7 +65,7 @@ public class OrderEntity {
     private ServiceEntity service;
 
     @Builder
-    public OrderEntity(String title, LocalDate deadline, List<String> referenceFiles,
+    public OrderEntity(String title, LocalDateTime deadline, List<String> referenceFiles,
                        String description, BigDecimal price,
                        LocalDateTime serviceCompletedAt, LocalDateTime purchaseConfirmedAt,
                        OrderStatus orderStatus, UserEntity client, ServiceEntity service) {

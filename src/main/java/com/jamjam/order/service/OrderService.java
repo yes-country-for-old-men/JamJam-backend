@@ -94,6 +94,21 @@ public class OrderService {
             refundCreditOnCancellation(order.getClient(), order.getPrice());
         }
     }
+    /*구매자의 주문 취소*/
+    @Transactional
+    public void cancelPurchase(Long userId, OrderStatusRequest request) {
+        OrderEntity order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
+
+        if (!userId.equals(order.getClient().getId())) {
+            throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
+        }
+
+        order.changeStatus(request);
+        orderRepository.save(order);
+        log.info("주문 취소 완료");
+        refundCreditOnCancellation(order.getClient(), order.getPrice());
+    }
     /*구매자의 구매 확정*/
     @Transactional
     public void confirmPurchase(Long userId, Long orderId) {

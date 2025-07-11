@@ -71,21 +71,46 @@ public class AiGenerationService {
     /*이미지 프롬프트 생성 후
     * Gpt-image-1에 이미지 생성 요청*/
     public AiImageResponse generateImage(AiImageRequest request) {
+        String content = openAiClient.requestGptForThumbnail(request);
+
+        JsonNode node;
+        try {
+            // 전체 GPT 응답 파싱
+            JsonNode full = objectMapper.readTree(content);
+            // message.content 안에 실제 JSON 문자열이 있음
+            String innerJsonString = full.path("choices").get(0).path("message").path("content").asText();
+            innerJsonString = innerJsonString.replaceAll("^```json\\s*", "").replaceAll("```$", "").trim();
+            log.info(innerJsonString);
+            // 다시 파싱 (중첩 JSON 구조이기 때문)
+            node = objectMapper.readTree(innerJsonString);
+        } catch (JsonProcessingException e) {
+            log.error("JSON 파싱 실패: " + e.getMessage());
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
+        }
+
+        String visualElements = node.path("visual_elements").asText();
+        String toneStyle = node.path("tone_style").asText();
+        String typographyStyle = node.path("typography_style").asText();
+
         String imagePrompt;
         if (request.isTypography()) {
             imagePrompt = String.format(
-                    "이 이미지는 정사각형 썸네일로, 중앙에는 \"%s\"라는 문구가 선명한 한글 타이포그래피로 배치되어 있습니다. " +
-                            "전체 구도는 시각적으로 조화롭고 시선을 끌 수 있도록 구성되어야 합니다. " +
-                            "이 서비스는 \"%s\"와 같은 특징을 가지고 있으므로, 이미지 분위기나 색감, 스타일은 이를 반영해야 합니다.",
+                    "%s.\n" +
+                            "이미지 중앙에는 \"%s\"라는 문구가  %s 스타일의 한글 타이포그래피로 선명하고 정확하게 배치되어 있으며," +
+                            "%s 분위기의 정사각형 썸네일입니다." +
+                            "전체적인 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
+                    visualElements,
                     request.getServiceName(),
-                    request.getDescription()
+                    typographyStyle,
+                    toneStyle
             );
         } else {
             imagePrompt = String.format(
-                    "이 이미지는 정사각형 썸네일입니다. 문구는 없어야 합니다." +
-                            "전체 구도는 시각적으로 조화롭고 시선을 끌 수 있도록 구성되어야 합니다. " +
-                            "이 서비스는 \"%s\"와 같은 특징을 가지고 있으므로, 이미지 분위기나 색감, 스타일은 이를 반영해야 합니다.",
-                    request.getDescription()
+                    "%s.\n" +
+                            "이를 반영한 %s 분위기의 정사각형 썸네일입니다." +
+                            "전체적인 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
+                    visualElements,
+                    toneStyle
             );
         }
         /*프론트에 ai 생성 결과를 보낼 때는 base64
