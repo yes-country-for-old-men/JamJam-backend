@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -58,8 +59,8 @@ public class UserController {
     public ResponseEntity<ResponseDto<Void>> updateUserInfo(
             @CurrentUser CustomUserDetails user,
             @RequestPart("request") UserUpdateRequest request,
-            @RequestPart(value = "profileUrl", required = false) MultipartFile profileUrl) throws IOException {
-        userService.updateUserInfo(user.getUserId(), request, profileUrl);
+            @RequestPart(value = "profileUrl", required = false) MultipartFile profileImage) throws IOException {
+        userService.updateUserInfo(user.getUserId(), request, profileImage);
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 
@@ -116,7 +117,7 @@ public class UserController {
                 userService.checkDuplicateNickName(nickname)));
     }
 
-    @GetMapping("/check-password")
+    @PostMapping("/check-password")
     public ResponseEntity<ResponseDto<CheckCorrectResponse>> checkDuplicatePassword(
             @CurrentUser CustomUserDetails user,
             @RequestBody PasswordCheckRequest passwordRequest

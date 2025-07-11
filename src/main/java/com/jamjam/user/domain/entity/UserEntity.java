@@ -72,8 +72,8 @@ public class UserEntity {
     @Getter
     @OneToOne(mappedBy = "user")
     private ProviderEntity provider;
-  
-    @OneToOne
+
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id")
     private AccountEntity account;
 
