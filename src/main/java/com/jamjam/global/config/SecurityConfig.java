@@ -62,7 +62,6 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final RefreshRepository refreshRepository;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private final CorsProperties corsProps;
     private final WebSocketProperties webSocketProps;
 
     @Value("${spring.cors.allowed-origins}")

@@ -1,6 +1,7 @@
 package com.jamjam.user.application;
 
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.service.dto.ServiceSummaryDTO;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.*;
 import com.jamjam.user.domain.repository.ProviderRepository;
@@ -8,6 +9,11 @@ import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ProviderRequest;
 import com.jamjam.user.presentation.dto.response.ProviderResponse;
+import com.jamjam.user.presentation.dto.response.ProviderPageResponse;
+import com.jamjam.service.domain.entity.ServiceEntity;
+import com.jamjam.service.domain.repository.ServiceRepository;
+import com.jamjam.service.dto.ServiceInfoDTO;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +35,7 @@ public class ProviderService {
     private final ProviderRepository providerRepository;
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
+    private final ServiceRepository serviceRepository;
 
     @Transactional
     public void createProvider(Long userId, ProviderRequest request,
@@ -171,6 +178,66 @@ public class ProviderService {
         return providerRepository.findById(id)
                 .map(this::mapToResponse)
                 .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public ProviderPageResponse getProviderPage(Long userId) {
+        ProviderEntity provider = providerRepository.findById(userId)
+            .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        List<ServiceEntity> services = serviceRepository.findByUserId(userId, Pageable.unpaged()).getContent();
+        List<ServiceSummaryDTO> serviceDTOs = services.stream()
+                .map(ServiceSummaryDTO::from)
+                .toList();
+
+        return ProviderPageResponse.builder()
+            .categoryId(provider.getCategoryId())
+            .location(provider.getLocation())
+            .introduction(provider.getIntroduction())
+            .contactHours(provider.getContactHours() == null ? null : ProviderPageResponse.ContactHoursDto.builder()
+                .startHour(provider.getContactHours().startHour())
+                .endHour(provider.getContactHours().endHour())
+                .build())
+            .averageResponseTime(provider.getAverageResponseTime())
+            .skills(provider.getSkills() == null ? List.of() :
+                provider.getSkills().stream()
+                    .map(s -> ProviderPageResponse.SkillDto.builder()
+                        .id(s.getClientSkillId())
+                        .name(s.getName())
+                        .proofUrl(s.getProofUrl())
+                        .build())
+                    .toList())
+            .careers(provider.getCareers() == null ? List.of() :
+                provider.getCareers().stream()
+                    .map(c -> ProviderPageResponse.CareerDto.builder()
+                        .id(c.getClientCareerId())
+                        .company(c.getCompany())
+                        .position(c.getPosition())
+                        .proofUrl(c.getProofUrl())
+                        .build())
+                    .toList())
+            .educations(provider.getEducations() == null ? List.of() :
+                provider.getEducations().stream()
+                    .map(e -> ProviderPageResponse.EducationDto.builder()
+                        .id(e.getClientEducationId())
+                        .school(e.getSchool())
+                        .major(e.getMajor())
+                        .degree(e.getDegree())
+                        .proofUrl(e.getProofUrl())
+                        .build())
+                    .toList())
+            .licenses(provider.getLicenses() == null ? List.of() :
+                provider.getLicenses().stream()
+                    .map(l -> ProviderPageResponse.LicenseDto.builder()
+                        .id(l.getClientLicenseId())
+                        .name(l.getName())
+                        .proofUrl(l.getProofUrl())
+                        .build())
+                    .toList())
+            .profileUrl(provider.getUser().getProfileUrl())
+            .nickname(provider.getUser().getNickname())
+            .services(serviceDTOs)
+            .build();
     }
 
     @Transactional

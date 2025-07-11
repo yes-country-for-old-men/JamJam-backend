@@ -8,6 +8,7 @@ import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.domain.entity.ProviderEntity;
 import com.jamjam.user.presentation.dto.request.ProviderRequest;
 import com.jamjam.user.presentation.dto.response.ProviderResponse;
+import com.jamjam.user.presentation.dto.response.ProviderPageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -43,6 +44,14 @@ public class ProviderController {
     ) {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
                 providerService.getProvider(user.getUserId())));
+    }
+
+    @GetMapping("/page/{userId}")
+    public ResponseEntity<ResponseDto<ProviderPageResponse>> getProviderPage(
+            @PathVariable Long userId
+    ) {
+        ProviderPageResponse response = providerService.getProviderPage(userId);
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

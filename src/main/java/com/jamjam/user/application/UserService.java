@@ -69,27 +69,31 @@ public class UserService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
-        if (request.deleteProfileImage()){
+        if (Boolean.TRUE.equals(request.deleteProfileImage())) {
             s3Uploader.delete(user.getProfileUrl());
-        }
+            log.info("프로필 사진 삭제");
+            user.changeProfileUrl(null);
 
-        if (profile != null && !profile.isEmpty()) {
-            String profileUrl = s3Uploader.upload(profile, "profile");
-            log.info("프로필 사진 저장 완료: " + profileUrl);
-            user.changeProfileUrl(profileUrl);
+        } else if (profile != null && !profile.isEmpty()) {
+            String url = s3Uploader.upload(profile, "profile");
+            log.info("프로필 사진 업로드: {}", url);
+            user.changeProfileUrl(url);
+
+        } else {
+            log.debug("프로필 사진 변경 없음");
         }
 
         if (request.nickname()        != null) user.changeNickname(request.nickname());
         if (request.phoneNumber()     != null) user.changePhone(request.phoneNumber());
         if (request.password()       != null) user.changePassword(bCryptPasswordEncoder.encode(request.password()));
         if (request.account() != null) {
-            AccountDto account = request.account();
+            AccountDto requestAccount = request.account();
             if (user.getAccount() != null) {
-                if (account.accountNumber() != null) user.getAccount().changeAccountNumber(account.accountNumber());
-                if (account.depositor()  != null) user.getAccount().changeDepositor(account.depositor());
-                if (account.bankCode() != null) user.getAccount().changeBank(BankType.fromCode(account.bankCode()));
-            } else if (account.bankCode() != null && account.accountNumber() != null && account.depositor() != null) {
-                user.registerAccount(new AccountEntity(BankType.fromCode(account.bankCode()), account.accountNumber(), account.depositor()));
+                if (requestAccount.accountNumber() != null) user.getAccount().changeAccountNumber(requestAccount.accountNumber());
+                if (requestAccount.depositor()  != null) user.getAccount().changeDepositor(requestAccount.depositor());
+                if (requestAccount.bankCode() != null) user.getAccount().changeBank(BankType.fromCode(requestAccount.bankCode()));
+            } else if (requestAccount.bankCode() != null && requestAccount.accountNumber() != null && requestAccount.depositor() != null) {
+                user.registerAccount(new AccountEntity(BankType.fromCode(requestAccount.bankCode()), requestAccount.accountNumber(), requestAccount.depositor()));
             }
         }
     }
