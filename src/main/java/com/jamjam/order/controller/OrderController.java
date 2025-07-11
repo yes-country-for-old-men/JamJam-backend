@@ -49,6 +49,17 @@ public class OrderController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
+    /*서비스 취소 - 구매자
+    * 주문 수락 전에만 취소 가능*/
+    @PatchMapping("/client/cancel")
+    @Operation(summary = "구매자가 주문 수락 전 취소")
+    public ResponseEntity<ResponseDto<Void>> cancelPurchase(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestBody OrderStatusRequest request) {
+        orderService.cancelPurchase(customUserDetails.getUserId(), request);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
+    }
     /*서비스 상태 변경 - 구매자
     * 구매 확정*/
     @PatchMapping("/client/{orderId}/confirm")

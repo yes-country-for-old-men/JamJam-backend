@@ -2,14 +2,14 @@ package com.jamjam.service.dto;
 
 
 import com.jamjam.service.domain.entity.ServiceEntity;
-import com.jamjam.service.domain.entity.ServiceInfoImageEntity;
-import com.jamjam.user.domain.entity.CareerEntity;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public record ServiceInfoDTO(
         Long userId,
+        String nickName,
+        String profileUrl,
+        String location,
         Long serviceId,
         String thumbnail,
         List<PortfolioImageDTO> portfolioImages,
@@ -27,6 +27,9 @@ public record ServiceInfoDTO(
 
         return new ServiceInfoDTO(
                 entity.getUser().getId(),
+                entity.getUser().getNickname(),
+                entity.getUser().getProfileUrl(),
+                entity.getUser().getProvider().getLocation(),
                 entity.getId(),
                 entity.getThumbnail(),
                 imageList,
