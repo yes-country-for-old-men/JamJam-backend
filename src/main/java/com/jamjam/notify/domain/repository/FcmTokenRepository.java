@@ -1,5 +1,6 @@
-package com.jamjam.notify;
+package com.jamjam.notify.domain.repository;
 
+import com.jamjam.notify.domain.entity.FcmTokenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

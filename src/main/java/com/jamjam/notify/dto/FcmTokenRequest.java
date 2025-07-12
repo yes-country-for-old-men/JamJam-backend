@@ -1,4 +1,4 @@
-package com.jamjam.notify;
+package com.jamjam.notify.dto;
 
 import lombok.Getter;
 

@@ -34,5 +34,8 @@ out/
 /nbdist/
 /.nb-gradle/
 
+### Firebase ###
+src/main/resources/firebase
+
 ### VS Code ###
 .vscode/

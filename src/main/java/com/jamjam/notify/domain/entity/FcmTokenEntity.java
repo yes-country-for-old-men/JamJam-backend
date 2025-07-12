@@ -1,12 +1,14 @@
-package com.jamjam.notify;
+package com.jamjam.notify.domain.entity;
 
 import com.jamjam.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 @Table(name = "fcmTokens")
 public class FcmTokenEntity {
     @Id

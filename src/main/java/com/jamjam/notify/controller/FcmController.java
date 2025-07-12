@@ -1,8 +1,10 @@
-package com.jamjam.notify;
+package com.jamjam.notify.controller;
 
 import com.jamjam.global.annotation.CurrentUser;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
+import com.jamjam.notify.service.FcmService;
+import com.jamjam.notify.dto.FcmTokenRequest;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;

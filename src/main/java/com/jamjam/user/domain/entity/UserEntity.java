@@ -1,9 +1,6 @@
 package com.jamjam.user.domain.entity;
 
-import com.jamjam.global.exception.ApiException;
-import com.jamjam.notify.FcmTokenEntity;
-import com.jamjam.service.domain.entity.ServiceEntity;
-import com.jamjam.user.exception.UserError;
+import com.jamjam.notify.domain.entity.FcmTokenEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -64,8 +61,6 @@ public class UserEntity {
     private String profileUrl;
 
     private Boolean isAlarmAgreed;
-
-    private String fcmToken;
   
     private BigDecimal credit;
 
@@ -99,7 +94,6 @@ public class UserEntity {
         this.credit = BigDecimal.ZERO;
         this.profileUrl = "";
         this.isAlarmAgreed = false;
-        this.fcmToken = "";
     }
 
     public void changeName(String newName) {

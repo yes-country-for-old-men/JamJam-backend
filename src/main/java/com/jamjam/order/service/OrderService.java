@@ -1,6 +1,9 @@
 package com.jamjam.order.service;
 
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.notify.domain.entity.FcmTokenEntity;
+import com.jamjam.notify.domain.entity.NotificationType;
+import com.jamjam.notify.service.FcmService;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.domain.repository.OrderRepository;
@@ -32,12 +35,16 @@ public class OrderService {
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
     private final ServiceRepository serviceRepository;
+    private final FcmService fcmService;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, S3Uploader s3Uploader, ServiceRepository serviceRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository,
+                        S3Uploader s3Uploader, ServiceRepository serviceRepository,
+                        FcmService fcmService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
         this.serviceRepository = serviceRepository;
+        this.fcmService = fcmService;
     }
     /*주문 신청*/
     @Transactional
@@ -78,6 +85,17 @@ public class OrderService {
                 .build();
         orderRepository.save(order);
         log.info("서비스 신청 완료");
+
+        UserEntity provider = service.getUser();
+        String body = "\"" + service.getServiceName() + "\" 서비스에 새로운 주문이 요청되었습니다.";
+        for (FcmTokenEntity token : provider.getFcmTokens()) {
+            fcmService.sendMessage(
+                    provider,
+                    token.getToken(),
+                    "신규 주문 등록",
+                    body,
+                    NotificationType.REQUEST);
+        }
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
