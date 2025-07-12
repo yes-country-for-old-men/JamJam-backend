@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.config.GptConfig;
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.service.dto.AiImageRequest;
 import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.AiServiceRequest;
 import lombok.extern.slf4j.Slf4j;

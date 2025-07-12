@@ -21,4 +21,10 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 
     @Query("SELECT o FROM OrderEntity o WHERE o.client.id = :clientId AND o.orderStatus = :orderStatus")
     Page<OrderEntity> findByClientIdAndOrderStatus(Long clientId, OrderStatus orderStatus, Pageable pageable);
+
+    @Query("SELECT o.orderStatus, COUNT(o) FROM OrderEntity o " + "WHERE o.service.user.id = :providerId GROUP BY o.orderStatus")
+    List<Object[]> countByStatusForProvider(@Param("providerId") Long providerId);
+
+    @Query("SELECT o.orderStatus, COUNT(o) FROM OrderEntity  o " + "WHERE o.client.id = :clientId GROUP BY o.orderStatus")
+    List<Object[]> countByStatusForClient(@Param("clientId") Long clientId);
 }

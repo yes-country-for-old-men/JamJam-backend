@@ -20,6 +20,7 @@ import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.util.NotificationSender;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -181,7 +182,7 @@ public class OrderService {
         userRepository.save(client);
         log.info("주문 취소로 인한 {} 크레딧 반환 완료", price);
     }
-    /*제공자의 주문 상태 별 주문 목록 반환*/
+    /*유저의 주문 상태 별 주문 목록 반환*/
     @Transactional
     public OrderListResponse getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
         UserEntity user = userRepository.findById(customUserDetails.getUserId())
@@ -205,6 +206,37 @@ public class OrderService {
                 .currentPage(entities.getNumber() + 1)
                 .totalPages(entities.getTotalPages())
                 .hasNext(entities.hasNext())
+                .build();
+    }
+    /*유저의 상태 별 주문 갯수 반환*/
+    @Transactional
+    public OrderCountResponse getOrderCount(CustomUserDetails customUserDetails) {
+        UserEntity user = userRepository.findById(customUserDetails.getUserId())
+                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+
+        int preparing = 0, completed = 0, cancelled = 0;
+        List<Object[]> result;
+
+        if (user.getRole() == UserRole.PROVIDER) {
+            result = orderRepository.countByStatusForProvider(user.getId());
+        } else if (user.getRole() == UserRole.CLIENT) {
+            result = orderRepository.countByStatusForClient(user.getId());
+        } else {
+            throw new ApiException(OrderError.UNKNOWN_USER_ROLE);
+        }
+        for (Object[] row : result) {
+            OrderStatus status = (OrderStatus) row[0];
+            Long count = (Long) row[1];
+            switch (status) {
+                case PREPARING -> preparing += count;
+                case WAITING_CONFIRM, COMPLETED -> completed += count;
+                case CANCELLED -> cancelled += count;
+            }
+        }
+        return OrderCountResponse.builder()
+                .preparing(preparing)
+                .completed(completed)
+                .cancelled(cancelled)
                 .build();
     }
     /*주문 상세 정보 반환*/

@@ -92,4 +92,13 @@ public class OrderController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
+    /*주문 상태 별 개수 반환*/
+    @GetMapping("/count")
+    @Operation(summary = "주문 상태 별 개수")
+    public ResponseEntity<ResponseDto<OrderCountResponse>> getOrderCount(
+            @CurrentUser CustomUserDetails customUserDetails) {
+        OrderCountResponse response = orderService.getOrderCount(customUserDetails);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
 }
