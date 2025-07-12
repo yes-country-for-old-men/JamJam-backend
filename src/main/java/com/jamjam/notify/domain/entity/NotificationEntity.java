@@ -3,6 +3,7 @@ package com.jamjam.notify.domain.entity;
 import com.jamjam.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 

@@ -42,7 +42,7 @@ public class FcmService {
                     .orElseThrow(() -> new ApiException(NotifyError.USER_NOT_FOUND));
             log.info("user {}의 신규 토큰 저장", user.getNickname());
 
-            FcmTokenEntity token = new FcmTokenEntity(user, request.getDevice(), request.getToken());
+            FcmTokenEntity token = new FcmTokenEntity(user, request.getToken());
             fcmTokenRepository.save(token);
             log.info("토큰 저장 완료");
         }
