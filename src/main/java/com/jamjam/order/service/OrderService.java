@@ -2,7 +2,9 @@ package com.jamjam.order.service;
 
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.order.domain.entity.OrderEntity;
+import com.jamjam.order.domain.entity.OrderReferenceFileEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
+import com.jamjam.order.domain.repository.OrderReferenceFileRepository;
 import com.jamjam.order.domain.repository.OrderRepository;
 import com.jamjam.order.dto.*;
 import com.jamjam.order.exception.OrderError;
@@ -32,12 +34,14 @@ public class OrderService {
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
     private final ServiceRepository serviceRepository;
+    private final OrderReferenceFileRepository orderReferenceFileRepository;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, S3Uploader s3Uploader, ServiceRepository serviceRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, S3Uploader s3Uploader, ServiceRepository serviceRepository, OrderReferenceFileRepository orderReferenceFileRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
         this.serviceRepository = serviceRepository;
+        this.orderReferenceFileRepository = orderReferenceFileRepository;
     }
     /*주문 신청*/
     @Transactional
@@ -51,32 +55,37 @@ public class OrderService {
 
         user.changeCredit(request.getPrice().negate());
         log.info("client {} 크레딧 차감", request.getPrice());
-        /*주문 내용 저장*/
-        List<String> referenceUrls = new ArrayList<>();
-        try {
-            if (referenceFiles != null) {
-                for (MultipartFile image : referenceFiles) {
-                    if (!image.isEmpty()) {
-                        String imageUrl = s3Uploader.upload(image, "order-request-images");
-                        referenceUrls.add(imageUrl);
-                    }
-                }
-                log.info("참고 자료 이미지 저장 완료");
-            }
-        } catch (IOException e) {
-            throw new ApiException(OrderError.IMAGE_UPLOAD_ERROR);
-        }
+
         OrderEntity order = OrderEntity.builder()
                 .title(request.getTitle())
                 .deadline(request.getDeadline())
                 .description(request.getDescription())
-                .referenceFiles(referenceUrls)
                 .orderStatus(OrderStatus.REQUESTED)
                 .price(request.getPrice())
                 .client(user)
                 .service(service)
                 .build();
         orderRepository.save(order);
+
+        /*주문 내용 저장*/
+        try {
+            if (referenceFiles != null) {
+                for (MultipartFile file : referenceFiles) {
+                    if (!file.isEmpty()) {
+                        String fileUrl = s3Uploader.upload(file, "order-request-images");
+                        OrderReferenceFileEntity fileInfo = OrderReferenceFileEntity.builder()
+                                .fileUrl(fileUrl)
+                                .order(order)
+                                .build();
+                        orderReferenceFileRepository.save(fileInfo);
+                    }
+                }
+                log.info("참고 자료 이미지 저장 완료");
+            }
+        } catch (IOException e) {
+            throw new ApiException(OrderError.FILE_UPLOAD_ERROR);
+        }
+
         log.info("서비스 신청 완료");
     }
     /*제공자의 주문 상태 변경*/

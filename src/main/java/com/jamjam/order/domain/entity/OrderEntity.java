@@ -16,6 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,9 +37,12 @@ public class OrderEntity {
     @NotNull
     private LocalDateTime deadline;
 
-    @ElementCollection
-    @CollectionTable(name = "order_reference_files")
-    private List<String> referenceFiles;
+//    @ElementCollection
+//    @CollectionTable(name = "order_reference_files")
+//    private List<String> referenceFiles;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderReferenceFileEntity> referenceFiles = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -71,7 +75,6 @@ public class OrderEntity {
                        OrderStatus orderStatus, UserEntity client, ServiceEntity service) {
         this.title = title;
         this.deadline = deadline;
-        this.referenceFiles = referenceFiles;
         this.description = description;
         this.price = price;
         this.serviceCompletedAt = serviceCompletedAt;

@@ -64,7 +64,6 @@ public class ServiceService {
             serviceRepository.save(service);
             log.info("서비스 등록 완료");
 
-            List<String> infoImageUrls = new ArrayList<>();
             if (portfolioImages != null) {
                 for (MultipartFile image : portfolioImages) {
                     if (!image.isEmpty()) {
