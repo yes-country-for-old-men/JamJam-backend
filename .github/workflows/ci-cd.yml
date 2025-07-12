@@ -63,8 +63,8 @@ jobs:
             set -e
             cd /home/ubuntu/jamjam
             echo "▶ pulling latest image"
-            docker compose pull        # :latest 이미지 갱신
+            sudo docker compose pull        # :latest 이미지 갱신
             echo "▶ restarting containers"
-            docker compose up -d --remove-orphans
+            sudo docker compose up -d --remove-orphans
             echo "▶ cleanup old images"
-            docker image prune -f
+            sudo docker image prune -f
