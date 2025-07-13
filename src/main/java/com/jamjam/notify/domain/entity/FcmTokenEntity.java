@@ -15,6 +15,8 @@ public class FcmTokenEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String device;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity user;
@@ -22,8 +24,9 @@ public class FcmTokenEntity {
     @Column(length = 512, nullable = false)
     private String token;
 
-    public FcmTokenEntity(UserEntity user, String token) {
+    public FcmTokenEntity(UserEntity user, String device, String token) {
         this.user = user;
+        this.device = device;
         this.token = token;
     }
 }

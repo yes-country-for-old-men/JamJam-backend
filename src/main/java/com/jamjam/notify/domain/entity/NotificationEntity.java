@@ -2,12 +2,17 @@ package com.jamjam.notify.domain.entity;
 
 import com.jamjam.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
-import lombok.Builder;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Builder
+
 @Entity
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "notifications")
 public class NotificationEntity {
     @Id
@@ -15,6 +20,7 @@ public class NotificationEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id")
     private UserEntity receiver;
 
     private String title;

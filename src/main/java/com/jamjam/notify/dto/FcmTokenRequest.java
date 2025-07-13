@@ -4,5 +4,6 @@ import lombok.Getter;
 
 @Getter
 public class FcmTokenRequest {
+    private String device;
     private String token;
 }
