@@ -249,7 +249,7 @@ public class ProviderService {
 
         log.info("[updateProvider] id={}, request={}", id, request);
         ProviderEntity entity = providerRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found"));
+                .orElseThrow(() -> new ApiException(UserError.PROVIDER_NOT_FOUND));
 
         log.info("[updateProvider] ProviderEntity found: {}", entity);
 
