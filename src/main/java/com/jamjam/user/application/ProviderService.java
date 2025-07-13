@@ -280,33 +280,26 @@ public class ProviderService {
                 updatedContactHours
         );
 
-        // ✅ skills update
-        if (request.skills() != null) {
+        if (request.skills() != null && !request.skills().isEmpty()) {
+            entity.getSkills().clear();
+
             for (int i = 0; i < request.skills().size(); i++) {
                 ProviderRequest.SkillDto dto = request.skills().get(i);
-                SkillEntity skill = entity.getSkills().stream()
-                        .filter(s -> Objects.equals(s.getClientSkillId(), dto.id()))
-                        .findFirst()
-                        .orElse(null);
 
                 String proofUrl = null;
                 if (skillFiles != null && skillFiles.size() > i && !skillFiles.get(i).isEmpty()) {
                     proofUrl = s3Uploader.upload(skillFiles.get(i), "skills");
                 }
 
-                if (skill == null) {
-                    skill = SkillEntity.builder()
-                            .name(dto.name())
-                            .proofUrl(proofUrl)
-                            .provider(entity)
-                            .clientSkillId(dto.id())
-                            .build();
-                    entity.getSkills().add(skill);
-                } else {
-                    skill.updatePartial(dto.name(), proofUrl, dto.id());
-                }
+                SkillEntity skill = SkillEntity.builder()
+                        .name(dto.name())
+                        .proofUrl(proofUrl)
+                        .provider(entity)
+                        .clientSkillId(dto.id())
+                        .build();
+                entity.getSkills().add(skill);
             }
-            log.info("[updateProvider] skills add/update done");
+            log.info("[updateProvider] skills replaced with new list");
         }
 
         // ✅ careers update
