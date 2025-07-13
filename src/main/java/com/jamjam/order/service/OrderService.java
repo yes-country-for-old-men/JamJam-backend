@@ -42,15 +42,13 @@ public class OrderService {
     private final OrderReferenceFileRepository orderReferenceFileRepository;
     private final NotificationSender notificationSender;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, S3Uploader s3Uploader, ServiceRepository serviceRepository, OrderReferenceFileRepository orderReferenceFileRepository) {
     public OrderService(OrderRepository orderRepository, UserRepository userRepository,
                         S3Uploader s3Uploader, ServiceRepository serviceRepository,
-                        NotificationSender notificationSender) {
+                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
         this.serviceRepository = serviceRepository;
-        this.notificationSender = notificationSender;
         this.orderReferenceFileRepository = orderReferenceFileRepository;
         this.notificationSender = notificationSender;
     }
@@ -71,7 +69,6 @@ public class OrderService {
                 .title(request.getTitle())
                 .deadline(request.getDeadline())
                 .description(request.getDescription())
-                .referenceFiles(referenceUrls)
                 .orderStatus(OrderStatus.REQUESTED)
                 .price(request.getPrice())
                 .client(user)
@@ -106,7 +103,7 @@ public class OrderService {
                 service.getUser(),
                 "신규 주문 등록",
                 body,
-                NotificationType.REQUEST);
+                NotificationType.ORDER);
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
@@ -117,11 +114,24 @@ public class OrderService {
         orderRepository.save(order);
         log.info("주문 상태 변경 완료");
 
-        if (request.getOrderStatus() == OrderStatus.COMPLETED) {
-            transferCreditOnConfirmation(providerId, order.getPrice());
-        } else if (request.getOrderStatus() == OrderStatus.CANCELLED) {
+        String body;
+        if (request.getOrderStatus() == OrderStatus.CANCELLED) {
             refundCreditOnCancellation(order.getClient(), order.getPrice());
+            body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 취소되었습니다.";
+        } else if (request.getOrderStatus() == OrderStatus.PREPARING) {
+            body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 수락되었습니다.";
+        } else if (request.getOrderStatus() == OrderStatus.WAITING_CONFIRM) {
+            body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 작업 완료되었습니다.";
+        } else {
+            throw new ApiException(OrderError.CANNOT_COMPLETE_ORDER);
         }
+
+        notificationSender.sendToUser(
+                order.getClient(),
+                "주문 진행 상황",
+                body,
+                NotificationType.ORDER
+        );
     }
     /*구매자의 주문 취소*/
     @Transactional

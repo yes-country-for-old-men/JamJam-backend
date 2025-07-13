@@ -36,7 +36,7 @@ public class NotificationSender {
         if (setting == null) return false;
 
         return switch (type) {
-            case REQUEST, DEADLINE ->  setting.isOrderNotification();
+            case ORDER ->  setting.isOrderNotification();
             case CHAT -> setting.isChatNotification();
             case EVENT -> setting.isEventNotification();
             default -> false;
