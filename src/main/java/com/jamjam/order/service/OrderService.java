@@ -50,6 +50,7 @@ public class OrderService {
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
         this.serviceRepository = serviceRepository;
+        this.notificationSender = notificationSender;
         this.orderReferenceFileRepository = orderReferenceFileRepository;
         this.notificationSender = notificationSender;
     }
@@ -70,6 +71,7 @@ public class OrderService {
                 .title(request.getTitle())
                 .deadline(request.getDeadline())
                 .description(request.getDescription())
+                .referenceFiles(referenceUrls)
                 .orderStatus(OrderStatus.REQUESTED)
                 .price(request.getPrice())
                 .client(user)
@@ -182,7 +184,7 @@ public class OrderService {
         userRepository.save(client);
         log.info("주문 취소로 인한 {} 크레딧 반환 완료", price);
     }
-    /*유저의 주문 상태 별 주문 목록 반환*/
+    /*제공자의 주문 상태 별 주문 목록 반환*/
     @Transactional
     public OrderListResponse getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
         UserEntity user = userRepository.findById(customUserDetails.getUserId())
