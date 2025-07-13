@@ -86,7 +86,6 @@ public class OrderController {
     @GetMapping("/detail")
     @Operation(summary = "주문 상세 정보")
     public ResponseEntity<ResponseDto<OrderInfoDTO>> getOrderDetail(
-            @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam Long orderId) {
         OrderInfoDTO response = orderService.getOrderDetail(orderId);
 

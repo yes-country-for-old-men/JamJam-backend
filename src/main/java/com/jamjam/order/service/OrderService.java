@@ -244,7 +244,7 @@ public class OrderService {
         UserEntity user = userRepository.findById(customUserDetails.getUserId())
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
 
-        int preparing = 0, completed = 0, cancelled = 0;
+        int preparing = 0, requested = 0, completed = 0, cancelled = 0;
         List<Object[]> result;
 
         if (user.getRole() == UserRole.PROVIDER) {
@@ -258,12 +258,14 @@ public class OrderService {
             OrderStatus status = (OrderStatus) row[0];
             Long count = (Long) row[1];
             switch (status) {
+                case REQUESTED -> requested += count;
                 case PREPARING -> preparing += count;
                 case WAITING_CONFIRM, COMPLETED -> completed += count;
                 case CANCELLED -> cancelled += count;
             }
         }
         return OrderCountResponse.builder()
+                .requested(requested)
                 .preparing(preparing)
                 .completed(completed)
                 .cancelled(cancelled)
