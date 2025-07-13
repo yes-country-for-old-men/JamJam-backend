@@ -154,7 +154,7 @@ public class OrderService {
         String body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 의뢰인에 의해 취소되었습니다.";
         notificationSender.sendToUser(
                 order.getService().getUser(),
-                "의뢰인의 주문 취소",
+                "의뢰인이 주문 취소",
                 body,
                 NotificationType.ORDER
         );
@@ -172,6 +172,13 @@ public class OrderService {
         log.info("주문 구매 확정 처리");
 
         transferCreditOnConfirmation(order.getService().getUser().getId(), order.getPrice());
+
+        notificationSender.sendToUser(
+                order.getService().getUser(),
+                "의뢰인이 구매 확정",
+                "의뢰인이 구매 확정 하였습니다.",
+                NotificationType.ORDER
+        );
     }
     /*수락하는 user의 권한 확인 메서드*/
     public OrderEntity verifyProvider(Long userId, Long orderId) {
