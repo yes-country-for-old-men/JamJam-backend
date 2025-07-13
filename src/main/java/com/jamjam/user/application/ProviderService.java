@@ -46,6 +46,9 @@ public class ProviderService {
     ) throws IOException {
 
         log.info("[createProvider] request: {}", request);
+        if (!providerRepository.existsById(userId)){
+            throw new ApiException(UserError.PROVIDER_NOT_FOUND);
+        }
 
         List<SkillEntity> skills = new ArrayList<>();
         if (request.skills() != null) {
