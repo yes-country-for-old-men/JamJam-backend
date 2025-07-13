@@ -142,11 +142,22 @@ public class OrderService {
         if (!userId.equals(order.getClient().getId())) {
             throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
         }
+        if (order.getOrderStatus() != OrderStatus.REQUESTED) {
+            throw new ApiException(OrderError.CANNOT_CANCEL_AT_THIS_STATUS);
+        }
 
         order.changeStatus(request);
         orderRepository.save(order);
         log.info("주문 취소 완료");
         refundCreditOnCancellation(order.getClient(), order.getPrice());
+
+        String body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 의뢰인에 의해 취소되었습니다.";
+        notificationSender.sendToUser(
+                order.getService().getUser(),
+                "의뢰인의 주문 취소",
+                body,
+                NotificationType.ORDER
+        );
     }
     /*구매자의 구매 확정*/
     @Transactional
