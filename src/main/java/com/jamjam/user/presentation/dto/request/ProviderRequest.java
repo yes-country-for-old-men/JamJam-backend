@@ -16,7 +16,6 @@ public record ProviderRequest(
     List<CareerDto> careers,
     List<EducationDto> educations,
     List<LicenseDto> licenses,
-    List<Long> deletedSkillIds,
     List<Long> deletedCareerIds,
     List<Long> deletedEducationIds,
     List<Long> deletedLicenseIds
