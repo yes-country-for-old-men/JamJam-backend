@@ -1,9 +1,7 @@
 package com.jamjam.order.service;
 
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.notify.domain.entity.FcmTokenEntity;
 import com.jamjam.notify.domain.entity.NotificationType;
-import com.jamjam.notify.service.FcmService;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderReferenceFileEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
@@ -23,7 +21,6 @@ import com.jamjam.user.domain.repository.CreditHistoryRepository;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.util.NotificationSender;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.query.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j

@@ -5,23 +5,19 @@ import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.service.util.S3Uploader;
-import com.jamjam.user.domain.entity.AccountDto;
-import com.jamjam.user.domain.entity.AccountEntity;
-import com.jamjam.user.domain.entity.BankType;
-import com.jamjam.user.domain.entity.UserEntity;
-import com.jamjam.user.domain.entity.UserRole;
+import com.jamjam.user.domain.entity.*;
+import com.jamjam.user.domain.repository.CreditHistoryRepository;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ClientJoinRequest;
 import com.jamjam.user.presentation.dto.request.ProviderJoinRequest;
 import com.jamjam.user.presentation.dto.request.UserUpdateRequest;
-import com.jamjam.user.presentation.dto.response.CheckCorrectResponse;
-import com.jamjam.user.presentation.dto.response.CheckDuplicateResponse;
-import com.jamjam.user.presentation.dto.response.LoginResponse;
-import com.jamjam.user.presentation.dto.response.UserResponse;
+import com.jamjam.user.presentation.dto.response.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -32,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -44,6 +41,7 @@ public class UserService {
     private final RefreshRepository refreshRepository;
     private final JwtUtil jwtUtil;
     private final S3Uploader s3Uploader;
+    private final CreditHistoryRepository creditHistoryRepository;
 
     public UserResponse getUserInfo(Long userId) {
         Optional<UserEntity> userEntityOptional = userRepository.findById(userId);
@@ -230,5 +228,26 @@ public class UserService {
                 .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
         boolean matches = bCryptPasswordEncoder.matches(password, user.getPassword());
         return new CheckCorrectResponse(matches);
+    }
+    /*유저의 크레딧 사용 내역 반환
+    * 분류: 전체, 입금, 출금*/
+    public CreditHistoryResponse getCreditHistory(Long userId, CreditChangeType type, Pageable pageable) {
+        Page<CreditHistoryEntity> entities;
+        if (type == CreditChangeType.ALL) {
+            entities = creditHistoryRepository.findByUserId(userId, pageable);
+        } else {
+            entities = creditHistoryRepository.findByUserIdAndType(userId, type, pageable);
+        }
+
+        List<CreditHistorySummary> dtoList = entities.stream()
+                .map(CreditHistorySummary::from)
+                .toList();
+
+        return CreditHistoryResponse.builder()
+                .histories(dtoList)
+                .currentPage(entities.getNumber() + 1)
+                .totalPages(entities.getTotalPages())
+                .hasNext(entities.hasNext())
+                .build();
     }
 }
