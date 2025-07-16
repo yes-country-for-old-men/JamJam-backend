@@ -97,7 +97,7 @@ public class PortOneService {
             * 로 변경*/
             payment.changePaymentBySuccess(PaymentStatus.OK, request.getPaymentUid());
             paymentRepository.save(payment);
-            //TODO: 크레딧 충전 메서드로 따로 빼기
+
             UserEntity user = userRepository.findById(customUserDetails.getUserId())
                     .orElseThrow(() -> new ApiException(PaymentError.USER_NOT_FOUND));
             user.changeCredit(orderPrice);
@@ -105,13 +105,13 @@ public class PortOneService {
             log.info("{} 크레딧 충전 완료", orderPrice);
             CreditHistoryEntity chargeHistory = CreditHistoryEntity.builder()
                     .amount(orderPrice)
-                    .type(CreditChangeType.CHARGE)
+                    .type(CreditChangeType.DEPOSIT)
                     .reason("크레딧 결제")
                     .user(user)
                     .build();
             creditHistoryRepository.save(chargeHistory);
             log.info("충전 내역 저장");
-            //TODO: ----------------------
+
             return true;
         } else {
             /*결제 정보 다르면,
