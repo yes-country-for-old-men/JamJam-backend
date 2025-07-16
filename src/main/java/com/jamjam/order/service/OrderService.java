@@ -15,8 +15,11 @@ import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.application.dto.CustomUserDetails;
+import com.jamjam.user.domain.entity.CreditChangeType;
+import com.jamjam.user.domain.entity.CreditHistoryEntity;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
+import com.jamjam.user.domain.repository.CreditHistoryRepository;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.util.NotificationSender;
 import lombok.extern.slf4j.Slf4j;
@@ -41,16 +44,18 @@ public class OrderService {
     private final ServiceRepository serviceRepository;
     private final OrderReferenceFileRepository orderReferenceFileRepository;
     private final NotificationSender notificationSender;
+    private final CreditHistoryRepository creditHistoryRepository;
 
     public OrderService(OrderRepository orderRepository, UserRepository userRepository,
                         S3Uploader s3Uploader, ServiceRepository serviceRepository,
-                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender) {
+                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
         this.serviceRepository = serviceRepository;
         this.orderReferenceFileRepository = orderReferenceFileRepository;
         this.notificationSender = notificationSender;
+        this.creditHistoryRepository = creditHistoryRepository;
     }
     /*주문 신청*/
     @Transactional
@@ -64,6 +69,10 @@ public class OrderService {
 
         user.changeCredit(request.getPrice().negate());
         log.info("client {} 크레딧 차감", request.getPrice());
+
+        saveCreditHistory(
+                request.getPrice(), CreditChangeType.WITHDRAW,
+                "서비스 의뢰로 인한 크레딧 차감", user);
 
         OrderEntity order = OrderEntity.builder()
                 .title(request.getTitle())
@@ -94,7 +103,6 @@ public class OrderService {
         } catch (IOException e) {
             throw new ApiException(OrderError.FILE_UPLOAD_ERROR);
         }
-
         log.info("서비스 신청 완료");
 
         /*해당 서비스 제공자에게 푸시 알림*/
@@ -203,6 +211,9 @@ public class OrderService {
         log.info("provider: {} credit: +{}", provider.getNickname(), price);
         userRepository.save(provider);
         log.info("크레딧 정산 완료");
+
+        saveCreditHistory(price, CreditChangeType.DEPOSIT,
+                "서비스 판매로 인한 입금", provider);
     }
     /*주문 취소 시, 크레딧 반환*/
     @Transactional
@@ -211,6 +222,9 @@ public class OrderService {
 
         userRepository.save(client);
         log.info("주문 취소로 인한 {} 크레딧 반환 완료", price);
+
+        saveCreditHistory(price, CreditChangeType.DEPOSIT,
+                "주문 취소로 인한 크레딧 반환", client);
     }
     /*유저의 주문 상태 별 주문 목록 반환*/
     @Transactional
@@ -277,6 +291,19 @@ public class OrderService {
                 .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
 
         return OrderInfoDTO.from(order);
+    }
+    /*크레딧 사용 내역 저장*/
+    @Transactional
+    public void saveCreditHistory(BigDecimal price, CreditChangeType type, String reason, UserEntity user) {
+        CreditHistoryEntity creditHistory = CreditHistoryEntity.builder()
+                .amount(price)
+                .type(type)
+                .reason(reason)
+                .user(user)
+                .build();
+
+        creditHistoryRepository.save(creditHistory);
+        log.info("크레딧 내역 저장 완료");
     }
 }
 
