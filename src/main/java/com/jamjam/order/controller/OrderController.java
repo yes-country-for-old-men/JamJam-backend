@@ -5,6 +5,7 @@ import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.dto.*;
+import com.jamjam.order.scheduler.OrderStatusScheduler;
 import com.jamjam.order.service.OrderService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,9 +23,11 @@ import java.util.List;
 @RequestMapping("/api/order")
 public class OrderController {
     private final OrderService orderService;
+    private final OrderStatusScheduler orderStatusScheduler;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, OrderStatusScheduler orderStatusScheduler) {
         this.orderService = orderService;
+        this.orderStatusScheduler = orderStatusScheduler;
     }
 
     /*서비스 신청*/
@@ -33,7 +36,7 @@ public class OrderController {
     public ResponseEntity<ResponseDto<Void>> registerOrder(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestPart("request") OrderRegisterRequest request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> referenceFiles) {
+            @RequestPart(value = "referenceFiles", required = false) List<MultipartFile> referenceFiles) {
         orderService.registerService(request, customUserDetails.getUserId(), referenceFiles);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.CREATE_SUCCESS));
@@ -86,7 +89,6 @@ public class OrderController {
     @GetMapping("/detail")
     @Operation(summary = "주문 상세 정보")
     public ResponseEntity<ResponseDto<OrderInfoDTO>> getOrderDetail(
-            @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam Long orderId) {
         OrderInfoDTO response = orderService.getOrderDetail(orderId);
 

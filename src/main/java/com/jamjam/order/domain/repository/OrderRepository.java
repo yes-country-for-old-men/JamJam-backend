@@ -27,4 +27,9 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 
     @Query("SELECT o.orderStatus, COUNT(o) FROM OrderEntity  o " + "WHERE o.client.id = :clientId GROUP BY o.orderStatus")
     List<Object[]> countByStatusForClient(@Param("clientId") Long clientId);
+
+    @Query("SELECT o FROM OrderEntity o " +
+            "WHERE o.deadline >= :start AND o.deadline < :end " +
+            "AND o.orderStatus = :status")
+    List<OrderEntity> findByDeadlineBetweenAndStatus(LocalDateTime start, LocalDateTime end, OrderStatus status);
 }

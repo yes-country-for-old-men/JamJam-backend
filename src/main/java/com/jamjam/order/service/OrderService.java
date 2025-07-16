@@ -1,6 +1,9 @@
 package com.jamjam.order.service;
 
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.notify.domain.entity.FcmTokenEntity;
+import com.jamjam.notify.domain.entity.NotificationType;
+import com.jamjam.notify.service.FcmService;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderReferenceFileEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
@@ -15,6 +18,7 @@ import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
+import com.jamjam.util.NotificationSender;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.Order;
 import org.springframework.data.domain.Page;
@@ -36,13 +40,17 @@ public class OrderService {
     private final S3Uploader s3Uploader;
     private final ServiceRepository serviceRepository;
     private final OrderReferenceFileRepository orderReferenceFileRepository;
+    private final NotificationSender notificationSender;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, S3Uploader s3Uploader, ServiceRepository serviceRepository, OrderReferenceFileRepository orderReferenceFileRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository,
+                        S3Uploader s3Uploader, ServiceRepository serviceRepository,
+                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
         this.serviceRepository = serviceRepository;
         this.orderReferenceFileRepository = orderReferenceFileRepository;
+        this.notificationSender = notificationSender;
     }
     /*주문 신청*/
     @Transactional
@@ -88,6 +96,14 @@ public class OrderService {
         }
 
         log.info("서비스 신청 완료");
+
+        /*해당 서비스 제공자에게 푸시 알림*/
+        String body = "\"" + service.getServiceName() + "\" 서비스에 새로운 주문이 요청되었습니다.";
+        notificationSender.sendToUser(
+                service.getUser(),
+                "신규 주문 등록",
+                body,
+                NotificationType.ORDER);
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
@@ -98,11 +114,24 @@ public class OrderService {
         orderRepository.save(order);
         log.info("주문 상태 변경 완료");
 
-        if (request.getOrderStatus() == OrderStatus.COMPLETED) {
-            transferCreditOnConfirmation(providerId, order.getPrice());
-        } else if (request.getOrderStatus() == OrderStatus.CANCELLED) {
+        String body;
+        if (request.getOrderStatus() == OrderStatus.CANCELLED) {
             refundCreditOnCancellation(order.getClient(), order.getPrice());
+            body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 취소되었습니다.";
+        } else if (request.getOrderStatus() == OrderStatus.PREPARING) {
+            body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 수락되었습니다.";
+        } else if (request.getOrderStatus() == OrderStatus.WAITING_CONFIRM) {
+            body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 작업 완료되었습니다.";
+        } else {
+            throw new ApiException(OrderError.CANNOT_COMPLETE_ORDER);
         }
+
+        notificationSender.sendToUser(
+                order.getClient(),
+                "주문 진행 상황",
+                body,
+                NotificationType.ORDER
+        );
     }
     /*구매자의 주문 취소*/
     @Transactional
@@ -113,11 +142,22 @@ public class OrderService {
         if (!userId.equals(order.getClient().getId())) {
             throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
         }
+        if (order.getOrderStatus() != OrderStatus.REQUESTED) {
+            throw new ApiException(OrderError.CANNOT_CANCEL_AT_THIS_STATUS);
+        }
 
         order.changeStatus(request);
         orderRepository.save(order);
         log.info("주문 취소 완료");
         refundCreditOnCancellation(order.getClient(), order.getPrice());
+
+        String body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 의뢰인에 의해 취소되었습니다.";
+        notificationSender.sendToUser(
+                order.getService().getUser(),
+                "의뢰인이 주문 취소",
+                body,
+                NotificationType.ORDER
+        );
     }
     /*구매자의 구매 확정*/
     @Transactional
@@ -132,6 +172,13 @@ public class OrderService {
         log.info("주문 구매 확정 처리");
 
         transferCreditOnConfirmation(order.getService().getUser().getId(), order.getPrice());
+
+        notificationSender.sendToUser(
+                order.getService().getUser(),
+                "의뢰인이 구매 확정",
+                "의뢰인이 구매 확정 하였습니다.",
+                NotificationType.ORDER
+        );
     }
     /*수락하는 user의 권한 확인 메서드*/
     public OrderEntity verifyProvider(Long userId, Long orderId) {
@@ -197,7 +244,7 @@ public class OrderService {
         UserEntity user = userRepository.findById(customUserDetails.getUserId())
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
 
-        int preparing = 0, completed = 0, cancelled = 0;
+        int preparing = 0, requested = 0, completed = 0, cancelled = 0;
         List<Object[]> result;
 
         if (user.getRole() == UserRole.PROVIDER) {
@@ -211,12 +258,14 @@ public class OrderService {
             OrderStatus status = (OrderStatus) row[0];
             Long count = (Long) row[1];
             switch (status) {
+                case REQUESTED -> requested += count;
                 case PREPARING -> preparing += count;
                 case WAITING_CONFIRM, COMPLETED -> completed += count;
                 case CANCELLED -> cancelled += count;
             }
         }
         return OrderCountResponse.builder()
+                .requested(requested)
                 .preparing(preparing)
                 .completed(completed)
                 .cancelled(cancelled)

@@ -1,8 +1,10 @@
 package com.jamjam.order.scheduler;
 
+import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.repository.OrderRepository;
 import com.jamjam.order.service.OrderService;
+import com.jamjam.util.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +20,7 @@ import java.util.List;
 public class OrderStatusScheduler {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
+    private final NotificationSender notificationSender;
 
     @Scheduled(cron = "0 0 * * * *")
     public void autoCompleteOrders() {
@@ -34,6 +37,13 @@ public class OrderStatusScheduler {
             Long providerId = order.getService().getUser().getId();
             BigDecimal price = order.getPrice();
             orderService.transferCreditOnConfirmation(providerId, price);
+
+            notificationSender.sendToUser(
+                    order.getService().getUser(),
+                    "주문이 자동 구매 확정",
+                    "구매 확정 기간이 지나 자동 처리되었습니다.",
+                    NotificationType.ORDER
+            );
         }
     }
 }
