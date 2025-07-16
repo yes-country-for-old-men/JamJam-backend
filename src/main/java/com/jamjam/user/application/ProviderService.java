@@ -159,16 +159,16 @@ public class ProviderService {
         Integer startHour = dto.startHour();
         Integer endHour = dto.endHour();
 
-        if (startHour != null && (startHour < 0 || startHour >= 24)) {
+        if (startHour != null && (startHour < 0 || startHour > 24)) {
             throw new ApiException(UserError.INVALID_CONTACT_TIME);
         }
-        if (endHour != null && (endHour < 0 || endHour >= 24)) {
+        if (endHour != null && (endHour < 0 || endHour > 24)) {
             throw new ApiException(UserError.INVALID_CONTACT_TIME);
         }
 
         return new ContactHours(
-                startHour != null ? startHour : 0,
-                endHour != null ? endHour : 0
+                startHour != null ? startHour : 1,
+                endHour != null ? endHour : 24
         );
     }
 
@@ -249,7 +249,7 @@ public class ProviderService {
 
         log.info("[updateProvider] id={}, request={}", id, request);
         ProviderEntity entity = providerRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found"));
+                .orElseThrow(() -> new ApiException(UserError.PROVIDER_NOT_FOUND));
 
         log.info("[updateProvider] ProviderEntity found: {}", entity);
 
@@ -260,10 +260,10 @@ public class ProviderService {
             Integer startHour = dto.startHour();
             Integer endHour = dto.endHour();
 
-            if (startHour != null && (startHour < 0 || startHour >= 24)) {
+            if (startHour != null && (startHour < 0 || startHour > 24)) {
                 throw new ApiException(UserError.INVALID_CONTACT_TIME);
             }
-            if (endHour != null && (endHour < 0 || endHour >= 24)) {
+            if (endHour != null && (endHour < 0 || endHour > 24)) {
                 throw new ApiException(UserError.INVALID_CONTACT_TIME);
             }
 
@@ -280,33 +280,26 @@ public class ProviderService {
                 updatedContactHours
         );
 
-        // ✅ skills update
-        if (request.skills() != null) {
+        if (request.skills() != null && !request.skills().isEmpty()) {
+            entity.getSkills().clear();
+
             for (int i = 0; i < request.skills().size(); i++) {
                 ProviderRequest.SkillDto dto = request.skills().get(i);
-                SkillEntity skill = entity.getSkills().stream()
-                        .filter(s -> Objects.equals(s.getClientSkillId(), dto.id()))
-                        .findFirst()
-                        .orElse(null);
 
                 String proofUrl = null;
                 if (skillFiles != null && skillFiles.size() > i && !skillFiles.get(i).isEmpty()) {
                     proofUrl = s3Uploader.upload(skillFiles.get(i), "skills");
                 }
 
-                if (skill == null) {
-                    skill = SkillEntity.builder()
-                            .name(dto.name())
-                            .proofUrl(proofUrl)
-                            .provider(entity)
-                            .clientSkillId(dto.id())
-                            .build();
-                    entity.getSkills().add(skill);
-                } else {
-                    skill.updatePartial(dto.name(), proofUrl, dto.id());
-                }
+                SkillEntity skill = SkillEntity.builder()
+                        .name(dto.name())
+                        .proofUrl(proofUrl)
+                        .provider(entity)
+                        .clientSkillId(dto.id())
+                        .build();
+                entity.getSkills().add(skill);
             }
-            log.info("[updateProvider] skills add/update done");
+            log.info("[updateProvider] skills replaced with new list");
         }
 
         // ✅ careers update
@@ -399,10 +392,6 @@ public class ProviderService {
             log.info("[updateProvider] licenses add/update done");
         }
 
-        if (request.deletedSkillIds() != null && !request.deletedSkillIds().isEmpty()) {
-            entity.getSkills().removeIf(skill -> request.deletedSkillIds().contains(skill.getClientSkillId()));
-            log.info("[updateProvider] skills deleted: {}", request.deletedSkillIds());
-        }
         if (request.deletedCareerIds() != null && !request.deletedCareerIds().isEmpty()) {
             entity.getCareers().removeIf(career -> request.deletedCareerIds().contains(career.getClientCareerId()));
             log.info("[updateProvider] careers deleted: {}", request.deletedCareerIds());
@@ -427,65 +416,6 @@ public class ProviderService {
         log.info("[deleteProvider] id={}", id);
         providerRepository.deleteById(id);
         log.info("[deleteProvider] deleted");
-    }
-
-    private ProviderEntity mapToEntity(UserEntity user, ProviderRequest request) {
-        log.info("[mapToEntity] user={}, request={}", user, request);
-
-        ContactHours contactHours = null;
-        if (request.contactHours() != null) {
-            ProviderRequest.ContactHoursDto dto = request.contactHours();
-            Integer startHour = dto.startHour();
-            Integer endHour = dto.endHour();
-
-            if (startHour != null && (startHour < 0 || startHour >= 24)) {
-                throw new ApiException(UserError.INVALID_CONTACT_TIME);
-            }
-            if (endHour != null && (endHour < 0 || endHour >= 24)) {
-                throw new ApiException(UserError.INVALID_CONTACT_TIME);
-            }
-
-            contactHours = new ContactHours(
-                    startHour != null ? startHour : 0,
-                    endHour != null ? endHour : 0
-            );
-        }
-
-        List<SkillEntity> skills = request.skills() == null ? new ArrayList<>() :
-                request.skills().stream().map(skillDto -> SkillEntity.builder().name(skillDto.name()).provider(null).build()).collect(Collectors.toList());
-        List<CareerEntity> careers = request.careers() == null ? new ArrayList<>() :
-                request.careers().stream()
-                        .map(careerDto -> CareerEntity.builder()
-                                .company(careerDto.company())
-                                .position(careerDto.position())
-                                .build()
-                        )
-                        .collect(Collectors.toList());
-        List<EducationEntity> educations = request.educations() == null ? new ArrayList<>() :
-                request.educations().stream().map(educationDto -> EducationEntity.builder()
-                        .school(educationDto.school())
-                        .major(educationDto.major())
-                        .degree(educationDto.degree())
-                        .provider(null)
-                        .build()
-                ).collect(Collectors.toList());
-        List<LicenseEntity> licenses = request.licenses() == null ? new ArrayList<>() :
-                request.licenses().stream().map(licenseDto -> LicenseEntity.builder().name(licenseDto.name()).provider(null).build()).collect(Collectors.toList());
-
-        ProviderEntity entity = ProviderEntity.builder()
-                .user(user)
-                .categoryId(request.categoryId())
-                .location(request.location())
-                .introduction(request.introduction())
-                .contactHours(contactHours)
-                .skills(skills)
-                .careers(careers)
-                .educations(educations)
-                .licenses(licenses)
-                .build();
-
-        log.info("[mapToEntity] ProviderEntity built: {}", entity);
-        return entity;
     }
 
     private ProviderResponse mapToResponse(ProviderEntity entity) {

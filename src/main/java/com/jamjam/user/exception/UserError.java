@@ -20,7 +20,8 @@ public enum UserError implements ErrorCode {
     ACCESS_INVALID(HttpStatus.BAD_REQUEST,  "액세스 토큰이 유효하지 않습니다.", "ACCESS_INVALID"),
     INVALID_CONTACT_TIME(HttpStatus.BAD_REQUEST, "유효한 연락 가능 시간이 아닙니다.", "INVALID_CONTACT_TIME"),
     PROVIDER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 생성한 프로바이더 정보가 존재합니다.", "PROVIDER_ALREADY_EXISTS"),
-    BANK_NOT_FOUND(HttpStatus.BAD_REQUEST, "등록할 수 없는 은행입니다.", "BANK_NOT_FOUND");
+    BANK_NOT_FOUND(HttpStatus.BAD_REQUEST, "등록할 수 없는 은행입니다.", "BANK_NOT_FOUND"),
+    PROVIDER_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 계정의 프로바이더 정보가 존재하지 않습니다.", "PROVIDER_NOT_FOUND"),;
 
     private final HttpStatus httpStatus;
     private final String message;
