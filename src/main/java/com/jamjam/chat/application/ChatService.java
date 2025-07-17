@@ -14,9 +14,11 @@ import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
 import com.jamjam.chat.presentation.dto.res.CreateRoomRes;
 import com.jamjam.global.dto.SliceInfo;
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
+import com.jamjam.util.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,6 +43,8 @@ public class ChatService {
     private final ChatMessageRepository msgRepo;
     private final ChatRoomReadStatusRepository readStatusRepo;
     private final UserRepository userRepo;
+    private final NotificationSender notificationSender;
+    private final UserRepository userRepository;
 
     @Transactional
     public ChatMessageEntity sendMessage(Long roomId, String senderId, String content) {
@@ -53,6 +57,18 @@ public class ChatService {
                 .content(content)
                 .sentAt(LocalDateTime.now())
                 .build();
+        /*채팅방 참여자에게 푸시 알림 web 제외*/
+        for (ChatRoomParticipantEntity participant : room.getParticipants()) {
+            UserEntity receiver = userRepository.findById(participant.getId())
+                    .orElseThrow(() -> new ApiException(ChatError.USER_NOT_FOUND));
+
+            notificationSender.sendToUser(
+                    receiver,
+                    senderId,
+                    content,
+                    NotificationType.CHAT
+            );
+        }
 
         return msgRepo.save(msg);
     }
