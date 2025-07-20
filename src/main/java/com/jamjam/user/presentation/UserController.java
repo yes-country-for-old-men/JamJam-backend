@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -43,7 +42,6 @@ public class UserController {
     @PostMapping("/sms/verify")
     public ResponseEntity<ResponseDto<Void>> verifyOne(@RequestBody SmsVerifyRequest request) {
         smsVerificationService.verifyCode(request.phoneNumber(), request.code());
-
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 
