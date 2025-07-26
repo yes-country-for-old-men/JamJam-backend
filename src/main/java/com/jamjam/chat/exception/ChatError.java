@@ -1,6 +1,5 @@
 package com.jamjam.chat.exception;
 
-import com.jamjam.global.exception.ApiException;
 import com.jamjam.global.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
