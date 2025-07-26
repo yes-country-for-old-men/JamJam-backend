@@ -67,7 +67,7 @@ public class OrderService {
         log.info("client {} 크레딧 차감", request.getPrice());
 
         saveCreditHistory(
-                request.getPrice(), CreditChangeType.WITHDRAW,
+                request.getPrice().negate(), CreditChangeType.WITHDRAW,
                 "서비스 의뢰로 인한 크레딧 차감", user);
 
         OrderEntity order = OrderEntity.builder()
