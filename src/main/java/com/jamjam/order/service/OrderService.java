@@ -60,6 +60,8 @@ public class OrderService {
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
         ServiceEntity service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new ApiException(OrderError.SERVICE_NOT_FOUND));
+        /*본인 서비스에 신청 시*/
+        if (service.getUser().getId().equals(user.getId())) throw new ApiException(OrderError.SELF_ORDER_NOT_ALLOWED);
         /*보유 크레딧과 주문 가격 비교*/
         if (user.getCredit().compareTo(request.getPrice()) < 0) throw new ApiException(OrderError.CREDIT_NOT_ENOUGH);
 
