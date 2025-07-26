@@ -5,11 +5,15 @@ import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.notify.dto.NotificationSettingRequest;
 import com.jamjam.notify.dto.NotificationSettingResponse;
+import com.jamjam.notify.dto.NotificationsResponse;
 import com.jamjam.notify.service.FcmService;
 import com.jamjam.notify.dto.FcmTokenRequest;
 import com.jamjam.notify.service.NotifyService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +52,15 @@ public class NotifyController {
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam String device) {
         NotificationSettingResponse response = notifyService.getUserNotificationSetting(customUserDetails, device);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+    @GetMapping("/notifications")
+    @Operation(summary = "알림 내역 조회")
+    public ResponseEntity<ResponseDto<NotificationsResponse>> getNotifications(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        NotificationsResponse response = notifyService.getNotifications(customUserDetails.getUserId(), pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }

@@ -20,7 +20,7 @@ public interface ServiceRepository extends JpaRepository<ServiceEntity, Long> {
 
     Page<ServiceEntity> findAll(Pageable pageable);
 
-    @Query("SELECT s FROM ServiceEntity s WHERE s.serviceName LIKE %:keyword% OR s.description LIKE %:keyword%")
+    @Query("SELECT s FROM ServiceEntity s WHERE s.serviceName LIKE %:keyword% OR s.descriptionPlainText LIKE %:keyword%")
     Page<ServiceEntity> findByKeyword(String keyword, Pageable pageable);
 
     @Query("SELECT s FROM ServiceEntity s Left JOIN s.user u WHERE u.nickname LIKE %:nickname%")

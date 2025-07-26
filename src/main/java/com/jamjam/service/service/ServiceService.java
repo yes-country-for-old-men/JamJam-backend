@@ -15,6 +15,7 @@ import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -52,9 +53,13 @@ public class ServiceService {
             String thumbnailUrl = s3Uploader.upload(thumbnail, "thumbnails");
             log.info("썸네일 저장 완료: " + thumbnailUrl);
 
+            String description = request.getDescription();
+            String descriptionPlainText = Jsoup.parse(description).text();
+
             ServiceEntity service = ServiceEntity.builder()
                     .serviceName(request.getServiceName())
-                    .description(request.getDescription())
+                    .description(description)
+                    .descriptionPlainText(descriptionPlainText)
                     .categoryId(request.getCategoryId())
                     .salary(request.getSalary())
                     .thumbnail(thumbnailUrl)

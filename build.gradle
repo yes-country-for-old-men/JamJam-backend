@@ -75,6 +75,9 @@ dependencies {
 	//Admin SDK(FCM)
 	implementation 'com.google.firebase:firebase-admin:9.5.0'
 
+	//JSOUP
+	implementation 'org.jsoup:jsoup:1.14.3'
+
 	//macos netty-resolver-dns
 	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.109.Final:osx-aarch_64'
 }

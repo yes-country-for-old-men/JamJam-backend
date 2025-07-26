@@ -38,8 +38,10 @@ public class ServiceController {
     /*GPT에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
     @PostMapping("/generate")
     @Operation(summary = "서비스 초안 생성", description = "gpt에 서비스 명, 서비스 상세 설명, 카테고리 요청")
-    public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(@RequestBody AiServiceRequest request) {
-        AiServiceResponse response = aiGenerationService.generateService(request);
+    public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestBody AiServiceRequest request) {
+        AiServiceResponse response = aiGenerationService.generateService(customUserDetails.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
