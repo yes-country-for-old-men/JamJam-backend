@@ -34,13 +34,13 @@ public class ServiceEntity {
     @NotNull
     private Integer categoryId;
 
-//    @ElementCollection
-//    @CollectionTable(name = "service_info_images", joinColumns = @JoinColumn(name = "service_id"))
-//    private List<String> portfolioImages;
-
     @NotNull
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @NotNull
+    @Column(columnDefinition = "TEXT")
+    private String descriptionPlainText;
 
     @CreationTimestamp
     @Column(updatable = false)

@@ -38,7 +38,7 @@ public class OpenAiClient {
     }
     /*최초 입력에 대한 1차 출력
     * 서비스명 3개, 서비스 설명, 카테고리 추출*/
-    public String requestGptForServiceElements(AiServiceRequest request) {
+    public String requestGptForServiceElements(List<String> skills, List<String> careers, String description) {
         String prompt = String.format(
                 "다음 정보를 기반으로 아래 조건에 맞는 항목들을 생성해줘:\n" +
                         "- 서비스명 3가지 제안\n" +
@@ -70,9 +70,9 @@ public class OpenAiClient {
                         "description 안에 포함된 모든 이모지(이모티콘)는 유니코드 이스케이프 형식(예: \\uD83D\\uDE00)으로 변환해서 반환해줘.\n" +
                         "JSON 양식은 다음과 같아." +
                         "{ \"service_names\": [...], \"description\": \"...\", \"category\": 6 }",
-                request.getDescription(),
-                request.getSkills(),
-                request.getCareer()
+                description,
+                skills,
+                careers
         );
 
         Map<String, Object> body = new HashMap<>();

@@ -10,26 +10,50 @@ import com.jamjam.service.dto.AiImageResponse;
 import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.OpenAiClient;
+import com.jamjam.user.domain.entity.ProviderEntity;
+import com.jamjam.user.domain.entity.SkillEntity;
+import com.jamjam.user.domain.repository.ProviderRepository;
+import com.jamjam.user.domain.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class AiGenerationService {
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
+    private final ProviderRepository providerRepository;
 
-    public AiGenerationService(OpenAiClient openAiClient, ObjectMapper objectMapper) {
+    public AiGenerationService(OpenAiClient openAiClient, ObjectMapper objectMapper, ProviderRepository providerRepository) {
         this.openAiClient = openAiClient;
         this.objectMapper = objectMapper;
+        this.providerRepository = providerRepository;
     }
     /*Gpt로부터 서비스명, 서비스 설명, 카테고리 요청 후 결과 반환*/
-    public AiServiceResponse generateService(AiServiceRequest request) {
+    public AiServiceResponse generateService(Long userId, AiServiceRequest request) {
+        ProviderEntity provider = providerRepository.findByUserId(userId)
+                .orElseThrow(() -> new ApiException(ServiceError.USER_NOT_FOUND));
+
+        List<String> skills = provider.getSkills().stream()
+                .map(SkillEntity::getName)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<String> careers = provider.getCareers().stream()
+                .map(c -> {
+                    String company = Optional.ofNullable(c.getCompany()).orElse("회사명 없음");
+                    String position = Optional.ofNullable(c.getPosition()).orElse("직무 없음");
+                    return company + "-" + position;
+                })
+                .toList();
+
         /*gpt api 요청*/
-        String content = openAiClient.requestGptForServiceElements(request);
+        String content = openAiClient.requestGptForServiceElements(skills, careers, request.getDescription());
         log.info(content);
 
         JsonNode node;
