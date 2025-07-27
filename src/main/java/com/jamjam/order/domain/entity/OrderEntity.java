@@ -16,6 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -34,17 +35,17 @@ public class OrderEntity {
     private String title;
 
     @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate deadline;
+    private LocalDateTime deadline;
 
-    @ElementCollection
-    @CollectionTable(name = "order_images")
-    private List<String> orderImages;
+//    @ElementCollection
+//    @CollectionTable(name = "order_reference_files")
+//    private List<String> referenceFiles;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderReferenceFileEntity> referenceFiles = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(columnDefinition = "TEXT")
-    private String additionalRequest;
     private BigDecimal price;
 
     @CreatedDate
@@ -68,15 +69,13 @@ public class OrderEntity {
     private ServiceEntity service;
 
     @Builder
-    public OrderEntity(String title, LocalDate deadline, List<String> orderImages,
-                       String description, String additionalRequest, BigDecimal price,
+    public OrderEntity(String title, LocalDateTime deadline, List<String> referenceFiles,
+                       String description, BigDecimal price,
                        LocalDateTime serviceCompletedAt, LocalDateTime purchaseConfirmedAt,
                        OrderStatus orderStatus, UserEntity client, ServiceEntity service) {
         this.title = title;
         this.deadline = deadline;
-        this.orderImages = orderImages;
         this.description = description;
-        this.additionalRequest = additionalRequest;
         this.price = price;
         this.serviceCompletedAt = serviceCompletedAt;
         this.purchaseConfirmedAt = purchaseConfirmedAt;

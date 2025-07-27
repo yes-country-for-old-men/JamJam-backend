@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.config.GptConfig;
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.service.dto.AiImageRequest;
 import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.dto.AiServiceRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class OpenAiClient {
     }
     /*최초 입력에 대한 1차 출력
     * 서비스명 3개, 서비스 설명, 카테고리 추출*/
-    public String requestGptForServiceElements(AiServiceRequest request) {
+    public String requestGptForServiceElements(List<String> skills, List<String> careers, String description) {
         String prompt = String.format(
                 "다음 정보를 기반으로 아래 조건에 맞는 항목들을 생성해줘:\n" +
                         "- 서비스명 3가지 제안\n" +
@@ -48,7 +49,7 @@ public class OpenAiClient {
                         "3. 고객이 얻는 혜택, 감성, 경험 중심으로 표현해줘\n" +
                         "4. 단순 나열이 아닌, 말하듯 풀어서 이야기하는 형식\n" +
                         "5. 고객 페르소나를 상정해서 그들이 공감할 수 있도록 써줘\n" +
-                        "6. 총 분량은 800자 이상\n" +
+                        "6. 총 분량은 800자 이상, 그리고 입력으로 들어오는 서비스 소개글의 3배 분량은 최소한 만들어줘.\n" +
                         "- 그리고 생성된 소개글 내용을 WYSIWYG 에디터용 HTML로 반환해줘. 단, HTML 태그 형식에 너무 갇히지 말고 글의 감동과 설득력을 우선해줘" +
                         "- 아래 리스트 중 하나의 카테고리 지정\n" +
                         "상세 설명: %s\n보유 기술: %s\n경력: %s\n" +
@@ -69,9 +70,9 @@ public class OpenAiClient {
                         "description 안에 포함된 모든 이모지(이모티콘)는 유니코드 이스케이프 형식(예: \\uD83D\\uDE00)으로 변환해서 반환해줘.\n" +
                         "JSON 양식은 다음과 같아." +
                         "{ \"service_names\": [...], \"description\": \"...\", \"category\": 6 }",
-                request.getDescription(),
-                request.getSkills(),
-                request.getCareer()
+                description,
+                skills,
+                careers
         );
 
         Map<String, Object> body = new HashMap<>();
@@ -80,7 +81,37 @@ public class OpenAiClient {
         body.put("max_tokens", 1500);
 
         List<Map<String, String>> messages = new ArrayList<>();
-        messages.add(Map.of("role", "system", "content", "너는 노인들의 특기와 경력을 기반으로 외주 서비스를 구성하는 어시스턴트야. 시각 요소와 썸네일 구성도 포함해."));
+        messages.add(Map.of("role", "system", "content", "너는 노인들의 특기와 경력을 기반으로 외주 서비스를 구성하는 어시스턴트야. "));
+        messages.add(Map.of("role", "user", "content", prompt));
+        body.put("messages", messages);
+        return callOpenAI(GPT_URL, body);
+    }
+    public String requestGptForThumbnail(AiImageRequest request) {
+        String prompt = String.format(
+                "외주 서비스 분야와 메인 문구를 바탕으로 시각 요소를 제안해줘.\n" +
+                        "서비스 분야: %s\n" +
+                        "메인 문구: %s\n" +
+                        "아래 세 가지 요소만 코드 블럭 없이 JSON 형식으로 생성해줘.\n" +
+                        "1. visual_elements: 배경과 주변에 배치된 시각 요소 (한 문장)\n" +
+                        "2. tone_style: 전체 분위기와 스타일 (예: 따뜻하고 빈티지한 느낌)\n" +
+                        "3. typography_style: 타이포그래피 느낌 (예: 손글씨, 산세리프, 고딕체 등)\n" +
+                        "JSON 형식 예시:\n" +
+                        "{\n" +
+                        "\"visual_elements\":\"우드톤 책상 위에 놓인 향기 나는 커피잔과 노트북\",\n" +
+                        "\"tone_style\":\"차분하고 전문적인 블로그 느낌\",\n" +
+                        "\"typography_style\":\"모던한 산세리프\"\n" +
+                        "}",
+                request.getDescription(),
+                request.getServiceName()
+        );
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", "gpt-4o");
+        body.put("temperature", 0.9);
+        body.put("max_tokens", 500);
+
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "system", "content", "너는 썸네일 디자이너야."));
         messages.add(Map.of("role", "user", "content", prompt));
         body.put("messages", messages);
         return callOpenAI(GPT_URL, body);
@@ -102,42 +133,42 @@ public class OpenAiClient {
         }
     }
     /*서비스 상세 설명 받아 마크다운 문법 적용하여 반환*/
-//    public String applyMarkdown(String description) {
-//        String prompt = String.format(
-//                "다음은 서비스 상세 설명 텍스트야. %s" +
-//                        "이 내용을 사용자가 보기 좋도록 마크다운 문법을 적용해줘." +
-//                        "JSON 형식으로만 응답해줘. 코드 블록 없이 말야.\n" +
-//                        "반환 예시: \n" +
-//                        "{\n \"appliedDescription\": \"여기에 마크다운 적용된 설명\"\n}",
-//                description
-//        );
-//
-//        Map<String, Object> body = new HashMap<>();
-//        body.put("model", "gpt-4o");
-//        body.put("temperature", 0.9);
-//        body.put("max_tokens", 600);
-//
-//        List<Map<String, String>> messages = new ArrayList<>();
-//        messages.add(Map.of("role", "system", "content", "너는 콘텐츠 마크다운 에디터야. 내가 제공하는 서비스 설명 텍스트를 마크다운 문법을 적용해서 사용자들이 읽기 쉽게 재작성해줘."));
-//        messages.add(Map.of("role", "user", "content", prompt));
-//        body.put("messages", messages);
-//
-//        String response = callOpenAI(GPT_URL, body);
-//
-//        JsonNode node;
-//        try {
-//            // 전체 GPT 응답 파싱
-//            JsonNode full = objectMapper.readTree(response);
-//            // message.content 안에 실제 JSON 문자열이 있음
-//            String innerJsonString = full.path("choices").get(0).path("message").path("content").asText();
-//            // 다시 파싱 (중첩 JSON 구조이기 때문)
-//            node = objectMapper.readTree(innerJsonString);
-//        } catch (JsonProcessingException e) {
-//            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
-//        }
-//        /*마크다운 적용된 상세 설명 반환*/
-//        return node.path("appliedDescription").asText();
-//    }
+    public String applyMarkdown(String description) {
+        String prompt = String.format(
+                "다음은 서비스 상세 설명 텍스트야. %s" +
+                        "이 내용을 사용자가 보기 좋도록 마크다운 문법을 적용해줘." +
+                        "JSON 형식으로만 응답해줘. 코드 블록 없이 말야.\n" +
+                        "반환 예시: \n" +
+                        "{\n \"appliedDescription\": \"여기에 마크다운 적용된 설명\"\n}",
+                description
+        );
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", "gpt-4o");
+        body.put("temperature", 0.9);
+        body.put("max_tokens", 600);
+
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "system", "content", "너는 콘텐츠 마크다운 에디터야. 내가 제공하는 서비스 설명 텍스트를 마크다운 문법을 적용해서 사용자들이 읽기 쉽게 재작성해줘."));
+        messages.add(Map.of("role", "user", "content", prompt));
+        body.put("messages", messages);
+
+        String response = callOpenAI(GPT_URL, body);
+
+        JsonNode node;
+        try {
+            // 전체 GPT 응답 파싱
+            JsonNode full = objectMapper.readTree(response);
+            // message.content 안에 실제 JSON 문자열이 있음
+            String innerJsonString = full.path("choices").get(0).path("message").path("content").asText();
+            // 다시 파싱 (중첩 JSON 구조이기 때문)
+            node = objectMapper.readTree(innerJsonString);
+        } catch (JsonProcessingException e) {
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
+        }
+        /*마크다운 적용된 상세 설명 반환*/
+        return node.path("appliedDescription").asText();
+    }
     private String callOpenAI(String url, Map<String, Object> requestBody) {
         try {
             String requestJson = objectMapper.writeValueAsString(requestBody);

@@ -7,10 +7,15 @@ import com.jamjam.user.application.ReissueService;
 import com.jamjam.user.application.SmsVerificationService;
 import com.jamjam.user.application.UserService;
 import com.jamjam.user.application.dto.CustomUserDetails;
+import com.jamjam.user.domain.entity.CreditChangeType;
 import com.jamjam.user.presentation.dto.request.*;
 import com.jamjam.user.presentation.dto.response.*;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -122,5 +127,16 @@ public class UserController {
     ) {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
                 userService.checkCorrectPassword(user.getUserId(), passwordRequest.password())));
+    }
+
+    @GetMapping("/credit-history")
+    @Operation(summary = "크레딧 사용 내역 조회")
+    public ResponseEntity<ResponseDto<CreditHistoryResponse>> getCreditHistory (
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestParam CreditChangeType type,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(
+                SuccessMessage.OPERATION_SUCCESS,
+                userService.getCreditHistory(customUserDetails.getUserId(), type, pageable)));
     }
 }

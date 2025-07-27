@@ -10,26 +10,50 @@ import com.jamjam.service.dto.AiImageResponse;
 import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.OpenAiClient;
+import com.jamjam.user.domain.entity.ProviderEntity;
+import com.jamjam.user.domain.entity.SkillEntity;
+import com.jamjam.user.domain.repository.ProviderRepository;
+import com.jamjam.user.domain.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class AiGenerationService {
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
+    private final ProviderRepository providerRepository;
 
-    public AiGenerationService(OpenAiClient openAiClient, ObjectMapper objectMapper) {
+    public AiGenerationService(OpenAiClient openAiClient, ObjectMapper objectMapper, ProviderRepository providerRepository) {
         this.openAiClient = openAiClient;
         this.objectMapper = objectMapper;
+        this.providerRepository = providerRepository;
     }
     /*Gpt로부터 서비스명, 서비스 설명, 카테고리 요청 후 결과 반환*/
-    public AiServiceResponse generateService(AiServiceRequest request) {
+    public AiServiceResponse generateService(Long userId, AiServiceRequest request) {
+        ProviderEntity provider = providerRepository.findByUserId(userId)
+                .orElseThrow(() -> new ApiException(ServiceError.USER_NOT_FOUND));
+
+        List<String> skills = provider.getSkills().stream()
+                .map(SkillEntity::getName)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<String> careers = provider.getCareers().stream()
+                .map(c -> {
+                    String company = Optional.ofNullable(c.getCompany()).orElse("회사명 없음");
+                    String position = Optional.ofNullable(c.getPosition()).orElse("직무 없음");
+                    return company + "-" + position;
+                })
+                .toList();
+
         /*gpt api 요청*/
-        String content = openAiClient.requestGptForServiceElements(request);
+        String content = openAiClient.requestGptForServiceElements(skills, careers, request.getDescription());
         log.info(content);
 
         JsonNode node;
@@ -71,21 +95,46 @@ public class AiGenerationService {
     /*이미지 프롬프트 생성 후
     * Gpt-image-1에 이미지 생성 요청*/
     public AiImageResponse generateImage(AiImageRequest request) {
+        String content = openAiClient.requestGptForThumbnail(request);
+
+        JsonNode node;
+        try {
+            // 전체 GPT 응답 파싱
+            JsonNode full = objectMapper.readTree(content);
+            // message.content 안에 실제 JSON 문자열이 있음
+            String innerJsonString = full.path("choices").get(0).path("message").path("content").asText();
+            innerJsonString = innerJsonString.replaceAll("^```json\\s*", "").replaceAll("```$", "").trim();
+            log.info(innerJsonString);
+            // 다시 파싱 (중첩 JSON 구조이기 때문)
+            node = objectMapper.readTree(innerJsonString);
+        } catch (JsonProcessingException e) {
+            log.error("JSON 파싱 실패: " + e.getMessage());
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
+        }
+
+        String visualElements = node.path("visual_elements").asText();
+        String toneStyle = node.path("tone_style").asText();
+        String typographyStyle = node.path("typography_style").asText();
+
         String imagePrompt;
         if (request.isTypography()) {
             imagePrompt = String.format(
-                    "이 이미지는 정사각형 썸네일로, 중앙에는 \"%s\"라는 문구가 선명한 한글 타이포그래피로 배치되어 있습니다. " +
-                            "전체 구도는 시각적으로 조화롭고 시선을 끌 수 있도록 구성되어야 합니다. " +
-                            "이 서비스는 \"%s\"와 같은 특징을 가지고 있으므로, 이미지 분위기나 색감, 스타일은 이를 반영해야 합니다.",
+                    "%s.\n" +
+                            "이미지 중앙에는 \"%s\"라는 문구가  %s 스타일의 한글 타이포그래피로 선명하고 정확하게 배치되어 있으며," +
+                            "%s 분위기의 정사각형 썸네일입니다." +
+                            "전체적인 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
+                    visualElements,
                     request.getServiceName(),
-                    request.getDescription()
+                    typographyStyle,
+                    toneStyle
             );
         } else {
             imagePrompt = String.format(
-                    "이 이미지는 정사각형 썸네일입니다. 문구는 없어야 합니다." +
-                            "전체 구도는 시각적으로 조화롭고 시선을 끌 수 있도록 구성되어야 합니다. " +
-                            "이 서비스는 \"%s\"와 같은 특징을 가지고 있으므로, 이미지 분위기나 색감, 스타일은 이를 반영해야 합니다.",
-                    request.getDescription()
+                    "%s.\n" +
+                            "이를 반영한 %s 분위기의 정사각형 썸네일입니다." +
+                            "전체적인 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
+                    visualElements,
+                    toneStyle
             );
         }
         /*프론트에 ai 생성 결과를 보낼 때는 base64

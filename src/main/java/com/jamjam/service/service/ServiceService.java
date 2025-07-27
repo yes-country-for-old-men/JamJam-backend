@@ -3,11 +3,8 @@ package com.jamjam.service.service;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.service.domain.entity.ServiceInfoImageEntity;
 import com.jamjam.service.domain.repository.ServiceInfoImageRepository;
-import com.jamjam.service.dto.ServiceEditRequest;
-import com.jamjam.service.dto.ServiceInfoDTO;
-import com.jamjam.service.dto.ServiceSummaryDTO;
+import com.jamjam.service.dto.*;
 import com.jamjam.service.exception.ServiceError;
-import com.jamjam.service.dto.ServiceRegisterRequest;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
 import com.jamjam.service.util.OpenAiClient;
@@ -18,6 +15,7 @@ import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,9 +53,13 @@ public class ServiceService {
             String thumbnailUrl = s3Uploader.upload(thumbnail, "thumbnails");
             log.info("썸네일 저장 완료: " + thumbnailUrl);
 
+            String description = request.getDescription();
+            String descriptionPlainText = Jsoup.parse(description).text();
+
             ServiceEntity service = ServiceEntity.builder()
                     .serviceName(request.getServiceName())
-                    .description(request.getDescription())
+                    .description(description)
+                    .descriptionPlainText(descriptionPlainText)
                     .categoryId(request.getCategoryId())
                     .salary(request.getSalary())
                     .thumbnail(thumbnailUrl)
@@ -67,7 +69,6 @@ public class ServiceService {
             serviceRepository.save(service);
             log.info("서비스 등록 완료");
 
-            List<String> infoImageUrls = new ArrayList<>();
             if (portfolioImages != null) {
                 for (MultipartFile image : portfolioImages) {
                     if (!image.isEmpty()) {
@@ -88,7 +89,7 @@ public class ServiceService {
     }
     /*분류 별 서비스 리스트 반환 (카테고리, 제공자)*/
     @Transactional
-    public Page<ServiceSummaryDTO> getFilteredServices(Integer categoryId, Long providerId, Pageable pageable) {
+    public ServiceListResponse getFilteredServices(Integer categoryId, Long providerId, Pageable pageable) {
         Page<ServiceEntity> entities;
 
         if (categoryId != null) {
@@ -98,8 +99,16 @@ public class ServiceService {
         } else {
             entities = serviceRepository.findAll(pageable);
         }
+        List<ServiceSummaryDTO> dtoList = entities.stream()
+                .map(ServiceSummaryDTO::from)
+                .toList();
 
-        return entities.map(ServiceSummaryDTO::from);
+        return ServiceListResponse.builder()
+                .services(dtoList)
+                .currentPage(entities.getNumber() + 1)
+                .totalPages(entities.getTotalPages())
+                .hasNext(entities.hasNext())
+                .build();
     }
     /*서비스 상세 내용 조회*/
     @Transactional

@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 public enum ChatError implements ErrorCode {
     ACCESS_EXPIRED(HttpStatus.BAD_REQUEST,"토큰이 만료되었습니다.", "ACCESS_EXPIRED"),
     ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방이 존재하지 않습니다." ,"ROOM_NOT_FOUND"),
-    NOT_PARTICIPANT(HttpStatus.BAD_REQUEST, "해당 채팅방의 참가자가 아닙니다.", "NOT_PARTICIPANT"),;
+    NOT_PARTICIPANT(HttpStatus.BAD_REQUEST, "해당 채팅방의 참가자가 아닙니다.", "NOT_PARTICIPANT");
 
     private final HttpStatus httpStatus;
     private final String message;

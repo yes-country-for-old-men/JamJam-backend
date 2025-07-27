@@ -63,5 +63,9 @@ port-one:
     base-url: https://api.portone.io/payments/
     secret-key: ${PORTONE_SECRET_KEY}
 
+firebase:
+  project-id: jamjam-bc91b
+  key-path: ${FIREBASE_KEY}
+
 server:
   forward-headers-strategy: native

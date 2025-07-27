@@ -6,9 +6,11 @@ import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.service.dto.*;
 import com.jamjam.service.service.AiGenerationService;
 import com.jamjam.service.service.ServiceService;
+import com.jamjam.service.util.OpenAiClient;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.Current;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,16 +28,20 @@ import java.util.List;
 public class ServiceController {
     private final AiGenerationService aiGenerationService;
     private final ServiceService serviceService;
+    private final OpenAiClient openAiClient;
 
-    public ServiceController(AiGenerationService aiGenerationService, ServiceService serviceService) {
+    public ServiceController(AiGenerationService aiGenerationService, ServiceService serviceService, OpenAiClient openAiClient) {
         this.aiGenerationService = aiGenerationService;
         this.serviceService = serviceService;
+        this.openAiClient = openAiClient;
     }
     /*GPT에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
     @PostMapping("/generate")
     @Operation(summary = "서비스 초안 생성", description = "gpt에 서비스 명, 서비스 상세 설명, 카테고리 요청")
-    public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(@RequestBody AiServiceRequest request) {
-        AiServiceResponse response = aiGenerationService.generateService(request);
+    public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestBody AiServiceRequest request) {
+        AiServiceResponse response = aiGenerationService.generateService(customUserDetails.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
@@ -62,11 +68,11 @@ public class ServiceController {
     /*서비스 목록 가져오기(카테고리, 제공자 별)*/
     @GetMapping("/service-list")
     @Operation(summary = "서비스 목록 조회", description = "카테고리, 제공자 별")
-    public ResponseEntity<ResponseDto<Page<ServiceSummaryDTO>>> getServiceList(
+    public ResponseEntity<ResponseDto<ServiceListResponse>> getServiceList(
             @RequestParam(required = false) Integer category,
             @RequestParam(required = false) Long providerId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ServiceSummaryDTO> responses = serviceService.getFilteredServices(category, providerId, pageable);
+        ServiceListResponse responses = serviceService.getFilteredServices(category, providerId, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, responses));
     }
@@ -101,5 +107,14 @@ public class ServiceController {
         serviceService.editService(customUserDetails, serviceId, request, thumbnail, portfolioImages);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
+    }
+    @PostMapping("/test")
+    public ResponseEntity<ResponseDto<String>> markdown(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestBody ServiceRegisterRequest request) {
+
+        String response = openAiClient.applyMarkdown(request.getDescription());
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 }

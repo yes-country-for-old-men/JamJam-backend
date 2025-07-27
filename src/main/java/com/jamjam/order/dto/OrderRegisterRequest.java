@@ -6,15 +6,15 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class OrderRegisterRequest {
     private String title;
-    private LocalDate deadline;
+    private LocalDateTime deadline;
     private String description;
-    private String additionalRequest;
     private BigDecimal price;
     private Long serviceId;
 }

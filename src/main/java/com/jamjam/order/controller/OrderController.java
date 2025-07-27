@@ -4,13 +4,14 @@ import com.jamjam.global.annotation.CurrentUser;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.order.domain.entity.OrderStatus;
-import com.jamjam.order.dto.OrderInfoDTO;
-import com.jamjam.order.dto.OrderRegisterRequest;
-import com.jamjam.order.dto.OrderStatusRequest;
-import com.jamjam.order.dto.OrderSummaryDTO;
+import com.jamjam.order.dto.*;
+import com.jamjam.order.scheduler.OrderStatusScheduler;
 import com.jamjam.order.service.OrderService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,11 @@ import java.util.List;
 @RequestMapping("/api/order")
 public class OrderController {
     private final OrderService orderService;
+    private final OrderStatusScheduler orderStatusScheduler;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, OrderStatusScheduler orderStatusScheduler) {
         this.orderService = orderService;
+        this.orderStatusScheduler = orderStatusScheduler;
     }
 
     /*서비스 신청*/
@@ -33,8 +36,8 @@ public class OrderController {
     public ResponseEntity<ResponseDto<Void>> registerOrder(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestPart("request") OrderRegisterRequest request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        orderService.registerService(request, customUserDetails.getUserId(), images);
+            @RequestPart(value = "referenceFiles", required = false) List<MultipartFile> referenceFiles) {
+        orderService.registerService(request, customUserDetails.getUserId(), referenceFiles);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.CREATE_SUCCESS));
     }
@@ -46,6 +49,17 @@ public class OrderController {
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody OrderStatusRequest request) {
         orderService.changeStatusOrder(customUserDetails.getUserId(), request);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
+    }
+    /*서비스 취소 - 구매자
+    * 주문 수락 전에만 취소 가능*/
+    @PatchMapping("/client/cancel")
+    @Operation(summary = "구매자가 주문 수락 전 취소")
+    public ResponseEntity<ResponseDto<Void>> cancelPurchase(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestBody OrderStatusRequest request) {
+        orderService.cancelPurchase(customUserDetails.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
@@ -63,10 +77,11 @@ public class OrderController {
     /*주문 내역*/
     @GetMapping("/order-list")
     @Operation(summary = "주문 내역")
-    public ResponseEntity<ResponseDto<List<OrderSummaryDTO>>> getOrders(
+    public ResponseEntity<ResponseDto<OrderListResponse>> getOrders(
             @CurrentUser CustomUserDetails customUserDetails,
-            @RequestParam OrderStatus orderStatus) {
-        List<OrderSummaryDTO> response = orderService.getOrders(customUserDetails, orderStatus);
+            @RequestParam OrderStatus orderStatus,
+            @PageableDefault(sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        OrderListResponse response = orderService.getOrders(customUserDetails, orderStatus, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
@@ -74,9 +89,17 @@ public class OrderController {
     @GetMapping("/detail")
     @Operation(summary = "주문 상세 정보")
     public ResponseEntity<ResponseDto<OrderInfoDTO>> getOrderDetail(
-            @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam Long orderId) {
         OrderInfoDTO response = orderService.getOrderDetail(orderId);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+    /*주문 상태 별 개수 반환*/
+    @GetMapping("/count")
+    @Operation(summary = "주문 상태 별 개수")
+    public ResponseEntity<ResponseDto<OrderCountResponse>> getOrderCount(
+            @CurrentUser CustomUserDetails customUserDetails) {
+        OrderCountResponse response = orderService.getOrderCount(customUserDetails);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }

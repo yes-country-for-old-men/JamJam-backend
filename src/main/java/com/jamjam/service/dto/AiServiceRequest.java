@@ -9,6 +9,4 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AiServiceRequest {
     private String description;
-    private String skills;
-    private String career;
 }
