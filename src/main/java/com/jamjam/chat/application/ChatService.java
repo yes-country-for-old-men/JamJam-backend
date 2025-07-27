@@ -128,7 +128,7 @@ public class ChatService {
     @Transactional
     public void markRoomAsRead(Long roomId, String userId, Long lastReadMessageId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
         ChatRoomReadStatusEntity status = readStatusRepo.findByChatRoomAndUserId(room, userId)
                 .orElse(ChatRoomReadStatusEntity.builder()
                         .chatRoom(room)
@@ -143,7 +143,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public ChatRoomListRes.ChatRoomSummary getChatRoomSummary(Long roomId, String userId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
 
         String opponentId = room.getParticipants().stream()
                 .map(ChatRoomParticipantEntity::getUserId)
@@ -178,10 +178,10 @@ public class ChatService {
     @Transactional
     public void leaveRoom(Long roomId, String userId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
 
         ChatRoomParticipantEntity participant = partRepo.findByRoomIdAndUserId(roomId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("참가자가 아닙니다"));
+                .orElseThrow(() -> new ApiException(ChatError.NOT_PARTICIPANT));
         partRepo.delete(participant);
 
         readStatusRepo.findByChatRoomAndUserId(room, userId)
