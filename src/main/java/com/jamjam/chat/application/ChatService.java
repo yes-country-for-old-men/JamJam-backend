@@ -18,6 +18,7 @@ import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
+import com.jamjam.user.exception.UserError;
 import com.jamjam.util.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +60,8 @@ public class ChatService {
                 .build();
         /*채팅방 참여자에게 푸시 알림 web 제외*/
         for (ChatRoomParticipantEntity participant : room.getParticipants()) {
-            UserEntity receiver = userRepository.findById(participant.getId())
-                    .orElseThrow(() -> new ApiException(ChatError.USER_NOT_FOUND));
+            UserEntity receiver = userRepository.findById(Long.valueOf(participant.getUserId()))
+                    .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
             notificationSender.sendToUser(
                     receiver,
