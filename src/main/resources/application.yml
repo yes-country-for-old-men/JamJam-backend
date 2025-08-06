@@ -51,10 +51,10 @@ aws:
 
 logging:
   level:
-    root: DEBUG
+    root: WARN
     org.springframework.messaging.simp: WARN
     org.springframework.web.socket: WARN
-    com.jamjam: DEBUG
+    com.jamjam: WARN
     com.jamjam.chat.interceptor: INFO
     org.springframework.messaging: WARN
 
