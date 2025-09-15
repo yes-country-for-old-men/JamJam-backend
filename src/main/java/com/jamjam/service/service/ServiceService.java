@@ -7,7 +7,6 @@ import com.jamjam.service.dto.*;
 import com.jamjam.service.exception.ServiceError;
 import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.domain.repository.ServiceRepository;
-import com.jamjam.service.util.OpenAiClient;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import com.jamjam.user.domain.entity.UserEntity;
