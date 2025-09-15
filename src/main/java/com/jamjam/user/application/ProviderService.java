@@ -66,7 +66,6 @@ public class ProviderService {
             }
         }
 
-        // careers proof 파일 매핑
         List<CareerEntity> careers = new ArrayList<>();
         if (request.careers() != null) {
             for (int i = 0; i < request.careers().size(); i++) {
@@ -87,7 +86,6 @@ public class ProviderService {
             }
         }
 
-        // educations proof 파일 매핑
         List<EducationEntity> educations = new ArrayList<>();
         if (request.educations() != null) {
             for (int i = 0; i < request.educations().size(); i++) {
@@ -109,7 +107,6 @@ public class ProviderService {
             }
         }
 
-        // licenses proof 파일 매핑
         List<LicenseEntity> licenses = new ArrayList<>();
         if (request.licenses() != null) {
             for (int i = 0; i < request.licenses().size(); i++) {
@@ -267,9 +264,12 @@ public class ProviderService {
                 throw new ApiException(UserError.INVALID_CONTACT_TIME);
             }
 
+            Integer currentStartHour = entity.getContactHours() != null ? entity.getContactHours().startHour() : null;
+            Integer currentEndHour = entity.getContactHours() != null ? entity.getContactHours().endHour() : null;
+
             updatedContactHours = new ContactHours(
-                    startHour != null ? startHour : entity.getContactHours().startHour(),
-                    endHour != null ? endHour : entity.getContactHours().endHour()
+                    startHour != null ? startHour : currentStartHour,
+                    endHour != null ? endHour : currentEndHour
             );
         }
 
@@ -280,74 +280,66 @@ public class ProviderService {
                 updatedContactHours
         );
 
-        if (request.skills() != null && !request.skills().isEmpty()) {
+        if (request.skills() != null) {
             entity.getSkills().clear();
+            
+            if (!request.skills().isEmpty()) {
+                for (int i = 0; i < request.skills().size(); i++) {
+                    ProviderRequest.SkillDto dto = request.skills().get(i);
 
-            for (int i = 0; i < request.skills().size(); i++) {
-                ProviderRequest.SkillDto dto = request.skills().get(i);
+                    String proofUrl = null;
+                    if (skillFiles != null && skillFiles.size() > i && !skillFiles.get(i).isEmpty()) {
+                        proofUrl = s3Uploader.upload(skillFiles.get(i), "skills");
+                    }
 
-                String proofUrl = null;
-                if (skillFiles != null && skillFiles.size() > i && !skillFiles.get(i).isEmpty()) {
-                    proofUrl = s3Uploader.upload(skillFiles.get(i), "skills");
-                }
-
-                SkillEntity skill = SkillEntity.builder()
-                        .name(dto.name())
-                        .proofUrl(proofUrl)
-                        .provider(entity)
-                        .clientSkillId(dto.id())
-                        .build();
-                entity.getSkills().add(skill);
-            }
-            log.info("[updateProvider] skills replaced with new list");
-        }
-
-        // ✅ careers update
-        if (request.careers() != null) {
-            for (int i = 0; i < request.careers().size(); i++) {
-                ProviderRequest.CareerDto dto = request.careers().get(i);
-                CareerEntity career = entity.getCareers().stream()
-                        .filter(c -> Objects.equals(c.getClientCareerId(), dto.id()))
-                        .findFirst()
-                        .orElse(null);
-
-                String proofUrl = null;
-                if (careerFiles != null && careerFiles.size() > i && !careerFiles.get(i).isEmpty()) {
-                    proofUrl = s3Uploader.upload(careerFiles.get(i), "careers");
-                }
-
-                if (career == null) {
-                    career = CareerEntity.builder()
-                            .company(dto.company())
-                            .position(dto.position())
+                    SkillEntity skill = SkillEntity.builder()
+                            .name(dto.name())
                             .proofUrl(proofUrl)
                             .provider(entity)
-                            .clientCareerId(dto.id())
+                            .clientSkillId(dto.id())
                             .build();
-                    entity.getCareers().add(career);
-                } else {
-                    career.updatePartial(dto.company(), dto.position(), proofUrl, dto.id());
+                    entity.getSkills().add(skill);
                 }
             }
-            log.info("[updateProvider] careers add/update done");
         }
 
-        // ✅ educations update
-        if (request.educations() != null) {
-            for (int i = 0; i < request.educations().size(); i++) {
-                ProviderRequest.EducationDto dto = request.educations().get(i);
-                EducationEntity education = entity.getEducations().stream()
-                        .filter(e -> Objects.equals(e.getClientEducationId(), dto.id()))
-                        .findFirst()
-                        .orElse(null);
+        if (request.careers() != null) {
+            entity.getCareers().clear();
+            
+            if (!request.careers().isEmpty()) {
+                for (int i = 0; i < request.careers().size(); i++) {
+                    ProviderRequest.CareerDto dto = request.careers().get(i);
 
-                String proofUrl = null;
-                if (educationFiles != null && educationFiles.size() > i && !educationFiles.get(i).isEmpty()) {
-                    proofUrl = s3Uploader.upload(educationFiles.get(i), "educations");
+                    String proofUrl = null;
+                    if (careerFiles != null && careerFiles.size() > i && !careerFiles.get(i).isEmpty()) {
+                        proofUrl = s3Uploader.upload(careerFiles.get(i), "careers");
+                    }
+
+                    CareerEntity career = CareerEntity.builder()
+                                .company(dto.company())
+                                .position(dto.position())
+                                .proofUrl(proofUrl)
+                                .provider(entity)
+                                .clientCareerId(dto.id())
+                                .build();
+                    entity.getCareers().add(career);
                 }
+            }
+        }
 
-                if (education == null) {
-                    education = EducationEntity.builder()
+        if (request.educations() != null) {
+            entity.getEducations().clear();
+            
+            if (!request.educations().isEmpty()) {
+                for (int i = 0; i < request.educations().size(); i++) {
+                    ProviderRequest.EducationDto dto = request.educations().get(i);
+
+                    String proofUrl = null;
+                    if (educationFiles != null && educationFiles.size() > i && !educationFiles.get(i).isEmpty()) {
+                        proofUrl = s3Uploader.upload(educationFiles.get(i), "educations");
+                    }
+
+                    EducationEntity education = EducationEntity.builder()
                             .school(dto.school())
                             .major(dto.major())
                             .degree(dto.degree())
@@ -356,60 +348,34 @@ public class ProviderService {
                             .clientEducationId(dto.id())
                             .build();
                     entity.getEducations().add(education);
-                } else {
-                    education.updatePartial(dto.school(), dto.major(), dto.degree(), proofUrl, dto.id());
                 }
             }
-            log.info("[updateProvider] educations add/update done");
         }
 
-        // ✅ licenses update
         if (request.licenses() != null) {
-            for (int i = 0; i < request.licenses().size(); i++) {
-                ProviderRequest.LicenseDto dto = request.licenses().get(i);
-                LicenseEntity license = entity.getLicenses().stream()
-                        .filter(l -> Objects.equals(l.getClientLicenseId(), dto.id()))
-                        .findFirst()
-                        .orElse(null);
+            entity.getLicenses().clear();
+            
+            if (!request.licenses().isEmpty()) {
+                for (int i = 0; i < request.licenses().size(); i++) {
+                    ProviderRequest.LicenseDto dto = request.licenses().get(i);
 
-                String proofUrl = null;
-                if (licenseFiles != null && licenseFiles.size() > i && !licenseFiles.get(i).isEmpty()) {
-                    proofUrl = s3Uploader.upload(licenseFiles.get(i), "licenses");
-                }
+                    String proofUrl = null;
+                    if (licenseFiles != null && licenseFiles.size() > i && !licenseFiles.get(i).isEmpty()) {
+                        proofUrl = s3Uploader.upload(licenseFiles.get(i), "licenses");
+                    }
 
-                if (license == null) {
-                    license = LicenseEntity.builder()
-                            .name(dto.name())
-                            .proofUrl(proofUrl)
-                            .provider(entity)
-                            .clientLicenseId(dto.id())
-                            .build();
-                    entity.getLicenses().add(license);
-                } else {
-                    license.updatePartial(dto.name(), proofUrl, dto.id());
+                    LicenseEntity license = LicenseEntity.builder()
+                                .name(dto.name())
+                                .proofUrl(proofUrl)
+                                .provider(entity)
+                                .clientLicenseId(dto.id())
+                                .build();
+                        entity.getLicenses().add(license);
                 }
             }
-            log.info("[updateProvider] licenses add/update done");
         }
-
-        if (request.deletedCareerIds() != null && !request.deletedCareerIds().isEmpty()) {
-            entity.getCareers().removeIf(career -> request.deletedCareerIds().contains(career.getClientCareerId()));
-            log.info("[updateProvider] careers deleted: {}", request.deletedCareerIds());
-        }
-        if (request.deletedEducationIds() != null && !request.deletedEducationIds().isEmpty()) {
-            entity.getEducations().removeIf(education -> request.deletedEducationIds().contains(education.getClientEducationId()));
-            log.info("[updateProvider] educations deleted: {}", request.deletedEducationIds());
-        }
-        if (request.deletedLicenseIds() != null && !request.deletedLicenseIds().isEmpty()) {
-            entity.getLicenses().removeIf(license -> request.deletedLicenseIds().contains(license.getClientLicenseId()));
-            log.info("[updateProvider] licenses deleted: {}", request.deletedLicenseIds());
-        }
-
-        log.info("[updateProvider] entity fully updated");
         return mapToResponse(entity);
-
     }
-
 
     @Transactional
     public void deleteProvider(Long id) {

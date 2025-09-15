@@ -18,6 +18,7 @@ import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
+import com.jamjam.user.exception.UserError;
 import com.jamjam.util.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +60,8 @@ public class ChatService {
                 .build();
         /*채팅방 참여자에게 푸시 알림 web 제외*/
         for (ChatRoomParticipantEntity participant : room.getParticipants()) {
-            UserEntity receiver = userRepository.findById(participant.getId())
-                    .orElseThrow(() -> new ApiException(ChatError.USER_NOT_FOUND));
+            UserEntity receiver = userRepository.findById(Long.valueOf(participant.getUserId()))
+                    .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
             notificationSender.sendToUser(
                     receiver,
@@ -128,7 +129,7 @@ public class ChatService {
     @Transactional
     public void markRoomAsRead(Long roomId, String userId, Long lastReadMessageId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
         ChatRoomReadStatusEntity status = readStatusRepo.findByChatRoomAndUserId(room, userId)
                 .orElse(ChatRoomReadStatusEntity.builder()
                         .chatRoom(room)
@@ -143,7 +144,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public ChatRoomListRes.ChatRoomSummary getChatRoomSummary(Long roomId, String userId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
 
         String opponentId = room.getParticipants().stream()
                 .map(ChatRoomParticipantEntity::getUserId)
@@ -178,10 +179,10 @@ public class ChatService {
     @Transactional
     public void leaveRoom(Long roomId, String userId) {
         ChatRoomEntity room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
 
         ChatRoomParticipantEntity participant = partRepo.findByRoomIdAndUserId(roomId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("참가자가 아닙니다"));
+                .orElseThrow(() -> new ApiException(ChatError.NOT_PARTICIPANT));
         partRepo.delete(participant);
 
         readStatusRepo.findByChatRoomAndUserId(room, userId)

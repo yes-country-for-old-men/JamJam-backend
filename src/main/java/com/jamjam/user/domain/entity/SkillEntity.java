@@ -13,7 +13,9 @@ public class SkillEntity {
     private Long id;
 
     private String name;
+
     private String proofUrl;
+
     private Long clientSkillId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -21,16 +23,12 @@ public class SkillEntity {
     private ProviderEntity provider;
 
     @Builder
-    public SkillEntity(String name, ProviderEntity provider, String proofUrl, Long clientSkillId) {
+    public SkillEntity(
+            String name, ProviderEntity provider,
+            String proofUrl, Long clientSkillId) {
         this.name = name;
-        this.provider = provider;
         this.proofUrl = proofUrl;
+        this.provider = provider;
         this.clientSkillId = clientSkillId;
-    }
-
-    public void updatePartial(String name, String proofUrl, Long clientSkillId) {
-        if (name != null) this.name = name;
-        if (proofUrl != null) this.proofUrl = proofUrl;
-        if (clientSkillId != null) this.clientSkillId = clientSkillId;
     }
 } 

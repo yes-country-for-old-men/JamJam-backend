@@ -6,10 +6,9 @@ on:
 
 permissions:
   contents: read
-  id-token: write               # if needed for OIDC; safe default
+  id-token: write
 
 jobs:
-  # ① Build & Push
   build:
     runs-on: ubuntu-latest
     outputs:
@@ -18,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (멀티 아키 빌드용)
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
@@ -36,8 +35,8 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/jamjam-backend
           tags: |
-            type=raw,value=latest                # 항상 latest
-            type=sha                             # 8자리 커밋 SHA (보관용)
+            type=raw,value=latest
+            type=sha
 
       - name: Build & push
         uses: docker/build-push-action@v5
@@ -51,7 +50,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: staging      # GitHub UI “환경” 사용 시
+    environment: staging
     steps:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1
@@ -63,7 +62,7 @@ jobs:
             set -e
             cd /home/ubuntu/jamjam
             echo "▶ pulling latest image"
-            sudo docker compose pull        # :latest 이미지 갱신
+            sudo docker compose pull
             echo "▶ restarting containers"
             sudo docker compose up -d --remove-orphans
             echo "▶ cleanup old images"
