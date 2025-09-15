@@ -245,7 +245,7 @@ public class OrderService {
 
         return OrderListResponse.builder()
                 .orders(dtoList)
-                .currentPage(entities.getNumber() + 1)
+                .currentPage(entities.getNumber())
                 .totalPages(entities.getTotalPages())
                 .hasNext(entities.hasNext())
                 .build();

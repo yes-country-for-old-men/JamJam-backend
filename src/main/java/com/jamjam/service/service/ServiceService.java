@@ -105,7 +105,7 @@ public class ServiceService {
 
         return ServiceListResponse.builder()
                 .services(dtoList)
-                .currentPage(entities.getNumber() + 1)
+                .currentPage(entities.getNumber())
                 .totalPages(entities.getTotalPages())
                 .hasNext(entities.hasNext())
                 .build();
