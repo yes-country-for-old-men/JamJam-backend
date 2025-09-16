@@ -60,6 +60,8 @@ public class OrderService {
                 .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
         ServiceEntity service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new ApiException(OrderError.SERVICE_NOT_FOUND));
+        /*본인 서비스에 신청 시*/
+        if (service.getUser().getId().equals(user.getId())) throw new ApiException(OrderError.SELF_ORDER_NOT_ALLOWED);
         /*보유 크레딧과 주문 가격 비교*/
         if (user.getCredit().compareTo(request.getPrice()) < 0) throw new ApiException(OrderError.CREDIT_NOT_ENOUGH);
 
@@ -67,7 +69,7 @@ public class OrderService {
         log.info("client {} 크레딧 차감", request.getPrice());
 
         saveCreditHistory(
-                request.getPrice(), CreditChangeType.WITHDRAW,
+                request.getPrice().negate(), CreditChangeType.WITHDRAW,
                 "서비스 의뢰로 인한 크레딧 차감", user);
 
         OrderEntity order = OrderEntity.builder()
@@ -243,7 +245,7 @@ public class OrderService {
 
         return OrderListResponse.builder()
                 .orders(dtoList)
-                .currentPage(entities.getNumber() + 1)
+                .currentPage(entities.getNumber())
                 .totalPages(entities.getTotalPages())
                 .hasNext(entities.hasNext())
                 .build();

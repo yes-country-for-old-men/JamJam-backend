@@ -14,7 +14,7 @@ public record OrderSummaryDTO(
     public static OrderSummaryDTO from(OrderEntity entity) {
         return new OrderSummaryDTO(
                 entity.getId(),
-                entity.getService().getServiceName(),
+                entity.getTitle(),
                 entity.getClient().getNickname(),
                 entity.getOrderedAt()
         );

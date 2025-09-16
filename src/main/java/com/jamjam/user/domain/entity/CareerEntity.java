@@ -10,19 +10,19 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CareerEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    private String company;
+        private String company;
 
-    private String position;
-    private String proofUrl;
-    private Long clientCareerId;
+        private String position;
+        private String proofUrl;
+        private Long clientCareerId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "provider_id")
-    private ProviderEntity provider;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "provider_id")
+        private ProviderEntity provider;
 
     public void updatePartial(String company, String position, String proofUrl, Long clientCareerId) {
         if (company != null) {
