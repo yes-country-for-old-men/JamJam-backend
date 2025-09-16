@@ -7,14 +7,16 @@ import java.time.LocalDateTime;
 
 public record CreditHistorySummary(
         Long id,
-        BigDecimal amount,
+        String amount,
         String reason,
         LocalDateTime createdAt
 ) {
     public static CreditHistorySummary from(CreditHistoryEntity entity) {
+        BigDecimal amt = entity.getAmount();
+        String formatted = (amt.compareTo(BigDecimal.ZERO) >= 0 ? "+" : "") + amt.toPlainString();
         return new CreditHistorySummary(
                 entity.getId(),
-                entity.getAmount(),
+                formatted,
                 entity.getReason(),
                 entity.getCreatedAt()
         );
