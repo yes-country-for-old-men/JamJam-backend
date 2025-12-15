@@ -47,6 +47,8 @@ public class SecurityConfig {
             "/webjars/**",
             "/api/user/sms/**",
             "/api/user/check/**",
+            "/api/user/search-login-id",
+            "/api/user/reset-password",
             "/ws-chat/**",
             "/ws-chat",
             "/api/service/service-list",

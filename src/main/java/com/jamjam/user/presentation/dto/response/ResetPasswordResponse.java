@@ -1,0 +1,6 @@
+package com.jamjam.user.presentation.dto.response;
+
+public record ResetPasswordResponse(
+        String temporaryPassword
+) {
+}
