@@ -254,6 +254,15 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
+    public void withdrawUser(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        refreshRepository.deleteByUserId(userId);
+        userRepository.delete(user);
+    }
+  
     public FindLoginIdResponse findLoginId(FindLoginIdRequest request) {
         String purePhoneNumber = removeHyphens(request.phoneNumber());
 

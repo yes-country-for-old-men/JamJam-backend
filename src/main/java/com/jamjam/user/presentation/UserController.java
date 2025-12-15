@@ -140,6 +140,15 @@ public class UserController {
                 userService.getCreditHistory(customUserDetails.getUserId(), type, pageable)));
     }
 
+    @DeleteMapping
+    @Operation(summary = "회원 탈퇴")
+    public ResponseEntity<ResponseDto<Void>> withdrawUser(
+            @CurrentUser CustomUserDetails user
+    ) {
+        userService.withdrawUser(user.getUserId());
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
+    }
+  
     @PostMapping("/search-login-id")
     @Operation(summary = "아이디 찾기")
     public ResponseEntity<ResponseDto<FindLoginIdResponse>> findLoginId(
