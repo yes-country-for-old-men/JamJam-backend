@@ -139,4 +139,13 @@ public class UserController {
                 SuccessMessage.OPERATION_SUCCESS,
                 userService.getCreditHistory(customUserDetails.getUserId(), type, pageable)));
     }
+
+    @DeleteMapping
+    @Operation(summary = "회원 탈퇴")
+    public ResponseEntity<ResponseDto<Void>> withdrawUser(
+            @CurrentUser CustomUserDetails user
+    ) {
+        userService.withdrawUser(user.getUserId());
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
+    }
 }
