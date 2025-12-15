@@ -10,7 +10,9 @@ import com.jamjam.user.domain.repository.CreditHistoryRepository;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ClientJoinRequest;
+import com.jamjam.user.presentation.dto.request.FindLoginIdRequest;
 import com.jamjam.user.presentation.dto.request.ProviderJoinRequest;
+import com.jamjam.user.presentation.dto.request.ResetPasswordRequest;
 import com.jamjam.user.presentation.dto.request.UserUpdateRequest;
 import com.jamjam.user.presentation.dto.response.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
@@ -258,5 +261,68 @@ public class UserService {
 
         refreshRepository.deleteByUserId(userId);
         userRepository.delete(user);
+    }
+  
+    public FindLoginIdResponse findLoginId(FindLoginIdRequest request) {
+        String purePhoneNumber = removeHyphens(request.phoneNumber());
+
+        UserEntity user = userRepository.findByNameAndBirthAndPhoneNumber(
+                request.name(),
+                request.birth(),
+                purePhoneNumber
+        ).orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        return new FindLoginIdResponse(user.getLoginId());
+    }
+
+    @Transactional
+    public ResetPasswordResponse resetPassword(ResetPasswordRequest request) {
+        String purePhoneNumber = removeHyphens(request.phoneNumber());
+
+        UserEntity user = userRepository.findByLoginIdAndNameAndBirthAndPhoneNumber(
+                request.loginId(),
+                request.name(),
+                request.birth(),
+                purePhoneNumber
+        ).orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        String temporaryPassword = generateTemporaryPassword();
+        user.changePassword(bCryptPasswordEncoder.encode(temporaryPassword));
+
+        return new ResetPasswordResponse(temporaryPassword);
+    }
+
+    private String removeHyphens(String phoneNumber) {
+        return phoneNumber.replace("-", "");
+    }
+
+    private String generateTemporaryPassword() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder();
+
+        String upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lowerChars = "abcdefghijklmnopqrstuvwxyz";
+        String numbers = "0123456789";
+        String specialChars = "!@#$%^&*";
+        String allChars = upperChars + lowerChars + numbers + specialChars;
+
+        password.append(upperChars.charAt(random.nextInt(upperChars.length())));
+        password.append(lowerChars.charAt(random.nextInt(lowerChars.length())));
+        password.append(numbers.charAt(random.nextInt(numbers.length())));
+        password.append(specialChars.charAt(random.nextInt(specialChars.length())));
+
+        for (int i = 4; i < 12; i++) {
+            password.append(allChars.charAt(random.nextInt(allChars.length())));
+        }
+
+        char[] passwordArray = password.toString().toCharArray();
+        for (int i = passwordArray.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = passwordArray[i];
+            passwordArray[i] = passwordArray[j];
+            passwordArray[j] = temp;
+        }
+
+        return new String(passwordArray);
     }
 }

@@ -148,4 +148,24 @@ public class UserController {
         userService.withdrawUser(user.getUserId());
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
+  
+    @PostMapping("/search-login-id")
+    @Operation(summary = "아이디 찾기")
+    public ResponseEntity<ResponseDto<FindLoginIdResponse>> findLoginId(
+            @RequestBody FindLoginIdRequest request
+    ) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(
+                SuccessMessage.OPERATION_SUCCESS,
+                userService.findLoginId(request)));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "비밀번호 재설정 (임시 비밀번호 발급)")
+    public ResponseEntity<ResponseDto<ResetPasswordResponse>> resetPassword(
+            @RequestBody ResetPasswordRequest request
+    ) {
+        return ResponseEntity.ok(ResponseDto.ofSuccess(
+                SuccessMessage.OPERATION_SUCCESS,
+                userService.resetPassword(request)));
+    }
 }
