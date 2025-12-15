@@ -250,4 +250,13 @@ public class UserService {
                 .hasNext(entities.hasNext())
                 .build();
     }
+
+    @Transactional
+    public void withdrawUser(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        refreshRepository.deleteByUserId(userId);
+        userRepository.delete(user);
+    }
 }
