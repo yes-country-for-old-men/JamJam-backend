@@ -2,6 +2,7 @@ package com.jamjam.payment.util;
 
 import com.jamjam.payment.dto.CancellationResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -12,9 +13,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class PortOneApiClient {
+
     private final WebClient portOneWebClient;
+
+    public PortOneApiClient(
+            @Qualifier("portOneWebClient") WebClient portOneWebClient
+    ) {
+        this.portOneWebClient = portOneWebClient;
+    }
 
     @Value("${port-one.api.secret-key}")
     private String apiToken;
