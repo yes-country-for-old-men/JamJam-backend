@@ -35,8 +35,7 @@ public class ProviderController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
         summary = "Provider 프로필 생성",
-        description = "Provider 프로필을 생성합니다. 기술, 경력, 학력, 자격증 정보와 증빙자료를 함께 업로드할 수 있습니다. " +
-                     "증빙자료는 S3에 저장되며 URL이 반환됩니다.",
+        description = "Provider 프로필을 생성합니다. 기술, 경력, 학력, 자격증 정보와 증빙자료를 함께 업로드할 수 있습니다. ",
         responses = {
             @ApiResponse(responseCode = "200", description = "프로필 생성 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
