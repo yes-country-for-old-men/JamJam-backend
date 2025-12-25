@@ -48,7 +48,7 @@ public class ProviderPageResponse {
     private List<ServiceSummaryDTO> services;
 
     @Getter @Builder
-    @Schema(description = "기술 정보")
+    @Schema(name = "ProviderPageSkill", description = "기술 정보")
     public static class SkillDto {
         @Schema(description = "기술 ID", example = "1")
         private Long id;
@@ -71,7 +71,7 @@ public class ProviderPageResponse {
     ) {}
 
     @Builder
-    @Schema(description = "경력 정보")
+    @Schema(name = "ProviderPageCareer", description = "경력 정보")
     public record CareerDto(
             @Schema(description = "경력 ID", example = "1")
             Long id,
@@ -87,7 +87,7 @@ public class ProviderPageResponse {
     ) {}
 
     @Getter @Builder
-    @Schema(description = "학력 정보")
+    @Schema(name = "ProviderPageEducation", description = "학력 정보")
     public static class EducationDto {
         @Schema(description = "학력 ID", example = "1")
         private Long id;
@@ -106,7 +106,7 @@ public class ProviderPageResponse {
     }
 
     @Getter @Builder
-    @Schema(description = "자격증 정보")
+    @Schema(name = "ProviderPageLicense", description = "자격증 정보")
     public static class LicenseDto {
         @Schema(description = "자격증 ID", example = "1")
         private Long id;
