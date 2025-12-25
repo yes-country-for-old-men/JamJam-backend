@@ -37,7 +37,7 @@ public class ProviderResponse {
     private List<LicenseDto> licenses;
 
     @Getter @Builder
-    @Schema(description = "기술 정보")
+    @Schema(name = "ProviderSkill", description = "기술 정보")
     public static class SkillDto {
         @Schema(description = "기술 ID", example = "1")
         private Long id;
@@ -60,7 +60,7 @@ public class ProviderResponse {
     ) {}
 
     @Builder
-    @Schema(description = "경력 정보")
+    @Schema(name = "ProviderCareer", description = "경력 정보")
     public record CareerDto(
             @Schema(description = "경력 ID", example = "1")
             Long id,
@@ -76,7 +76,7 @@ public class ProviderResponse {
     ) {}
 
     @Getter @Builder
-    @Schema(description = "학력 정보")
+    @Schema(name = "ProviderEducation", description = "학력 정보")
     public static class EducationDto {
         @Schema(description = "학력 ID", example = "1")
         private Long id;
@@ -95,7 +95,7 @@ public class ProviderResponse {
     }
 
     @Getter @Builder
-    @Schema(description = "자격증 정보")
+    @Schema(name = "ProviderLicense", description = "자격증 정보")
     public static class LicenseDto {
         @Schema(description = "자격증 ID", example = "1")
         private Long id;
