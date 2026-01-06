@@ -34,7 +34,7 @@ public class GeminiClient {
         this.objectMapper = objectMapper;
     }
 
-    public JsonNode generateServiceInfo(String prompt) {
+    public JsonNode generateTextContent(String prompt) {
         GeminiRequest request = GeminiRequest.builder()
                 .contents(List.of(
                         Content.builder()

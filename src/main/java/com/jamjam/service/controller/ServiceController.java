@@ -38,15 +38,23 @@ public class ServiceController {
         this.openAiClient = openAiClient;
     }
 
-    /*GPT에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
+    /*AI에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
     @PostMapping("/generate")
-    @Operation(summary = "서비스 초안 생성", description = "gemini에 서비스 명, 서비스 상세 설명, 카테고리 요청")
+    @Operation(summary = "서비스 초안 생성", description = "AI에 서비스 명, 서비스 상세 설명, 카테고리 요청")
     public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody AiServiceRequest request) {
         AiServiceResponse response = geminiService.generateService(customUserDetails.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+    /*썸네일 테스트용 api
+    * TODO: 지우쇼*/
+    @PostMapping("/test")
+    public ResponseEntity<ResponseDto<Void>> testGenerateThumbnail(@RequestBody AiImageRequest request) {
+        geminiService.generateThumbnail(request);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
     /*Gpt-image-1에 썸네일 생성 요청*/
     @PostMapping("/ai-thumbnail")
@@ -110,14 +118,5 @@ public class ServiceController {
         serviceService.editService(customUserDetails, serviceId, request, thumbnail, portfolioImages);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
-    }
-    @PostMapping("/test")
-    public ResponseEntity<ResponseDto<String>> markdown(
-            @CurrentUser CustomUserDetails customUserDetails,
-            @RequestBody ServiceRegisterRequest request) {
-
-        String response = openAiClient.applyMarkdown(request.getDescription());
-
-        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 }

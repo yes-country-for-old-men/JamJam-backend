@@ -1,6 +1,7 @@
 package com.jamjam.service.service;
 
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.service.dto.AiImageRequest;
 import com.jamjam.service.exception.ServiceError;
 import com.jamjam.user.domain.entity.ProviderEntity;
 import com.jamjam.user.domain.entity.SkillEntity;
@@ -76,6 +77,26 @@ public class PromptService {
                 description,
                 skills,
                 careers
+        );
+    }
+    // 썸네일 디자인 요소 추출용 프롬프트 생성
+    public String buildDesignElementPrompt(String description, String serviceName) {
+        return String.format(
+                "외주 서비스 분야와 메인 문구를 바탕으로 시각 요소를 제안해줘.\n" +
+                        "서비스 분야: %s\n" +
+                        "메인 문구: %s\n" +
+                        "아래 세 가지 요소만 코드 블럭 없이 JSON 형식으로 생성해줘.\n" +
+                        "1. visual_elements: 배경과 주변에 배치된 시각 요소 (한 문장)\n" +
+                        "2. tone_style: 전체 분위기와 스타일 (예: 따뜻하고 빈티지한 느낌)\n" +
+                        "3. typography_style: 타이포그래피 느낌 (예: 손글씨, 산세리프, 고딕체 등)\n" +
+                        "JSON 형식 예시:\n" +
+                        "{\n" +
+                        "\"visual_elements\":\"우드톤 책상 위에 놓인 향기 나는 커피잔과 노트북\",\n" +
+                        "\"tone_style\":\"차분하고 전문적인 블로그 느낌\",\n" +
+                        "\"typography_style\":\"모던한 산세리프\"\n" +
+                        "}",
+                description,
+                serviceName
         );
     }
 }
