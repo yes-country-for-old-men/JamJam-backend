@@ -39,4 +39,4 @@ src/main/resources/firebase
 
 ### VS Code ###
 .vscode/
-/application-secret.yml
+/src/main/resources/application-secret.yml

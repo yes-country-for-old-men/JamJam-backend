@@ -19,7 +19,7 @@ public class GeminiConfig {
     @Qualifier("geminiWebClient")
     public WebClient geminiWebClient(
             @Value("${gemini.api.base-url}") String baseUrl,
-            @Value("${gemini,api.key}") String apiKey
+            @Value("${gemini.api.key}") String apiKey
     ) {
         return WebClient.builder()
                 .baseUrl(baseUrl)
