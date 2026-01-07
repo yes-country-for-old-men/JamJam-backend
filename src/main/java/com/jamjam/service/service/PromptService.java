@@ -25,7 +25,7 @@ public class PromptService {
         this.providerRepository = providerRepository;
     }
 
-    // 서비스 내용 생성 프롬프트 빌드
+    /* 서비스 내용 생성 프롬프트 빌드 */
     public String buildServicePrompt(Long userId, String description) {
         ProviderEntity provider = providerRepository.findByUserId(userId)
                 .orElseThrow(() -> new ApiException(ServiceError.PROVIDER_NOT_FOUND));
@@ -79,7 +79,7 @@ public class PromptService {
                 careers
         );
     }
-    // 썸네일 디자인 요소 추출용 프롬프트 생성
+    /* 썸네일 디자인 요소 추출용 프롬프트 생성 */
     public String buildDesignElementPrompt(String description, String serviceName) {
         return String.format(
                 "외주 서비스 분야와 메인 문구를 바탕으로 시각 요소를 제안해줘.\n" +
@@ -97,6 +97,30 @@ public class PromptService {
                         "}",
                 description,
                 serviceName
+        );
+    }
+    /* 타이포그래피 있는 썸네일 요청 프롬프트 */
+    public String buildThumbnailPromptWithTypography(String visualElements, String serviceName,
+                                                     String typographyStyle, String toneStyle) {
+        return  String.format(
+                "%s.\n" +
+                        "이미지 중앙에는 \"%s\"라는 문구가  %s 스타일의 한글 타이포그래피로 선명하고 정확하게 배치되어 있으며," +
+                        "%s 분위기의 정사각형 썸네일입니다." +
+                        "전체적인 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
+                visualElements,
+                serviceName,
+                typographyStyle,
+                toneStyle
+        );
+    }
+    /* 타이포그래피 없는 썸네일 요청 프롬프트 */
+    public String buildThumbnailPromptWithoutTypography(String visualElements, String toneStyle) {
+        return String.format(
+                "%s.\n" +
+                        "이를 반영한 %s 분위기의 정사각형 썸네일입니다." +
+                        "전체적인 구도는 시각적으로 조화롭고 집중을 끌 수 있게 설계되어야 합니다.",
+                visualElements,
+                toneStyle
         );
     }
 }

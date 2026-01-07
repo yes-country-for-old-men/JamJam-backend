@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.service.dto.gemini.Content;
-import com.jamjam.service.dto.gemini.GeminiRequest;
-import com.jamjam.service.dto.gemini.Part;
+import com.jamjam.service.dto.gemini.GeminiDto;
 import com.jamjam.service.exception.ServiceError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,52 +31,119 @@ public class GeminiClient {
         this.model = model;
         this.objectMapper = objectMapper;
     }
-
+    /* 텍스트 컨텐츠 생성 */
     public JsonNode generateTextContent(String prompt) {
-        GeminiRequest request = GeminiRequest.builder()
+        GeminiDto.GeminiRequest request = buildGeminiRequest(prompt, "TEXT");
+
+        String responseBody = callGeminiApi(request);
+
+        try {
+            JsonNode root =  objectMapper.readTree(responseBody);
+            String rawString = root.at("/candidates/0/content/parts/0/text").asText();
+            String cleanedString = santizeJsonString(rawString);
+
+            return objectMapper.readTree(cleanedString);
+        } catch (JsonProcessingException e) {
+            log.error("[GEMINI] Gemini 응답 JSON 파싱 실패.", e);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
+        }
+    }
+    /* 이미지 컨텐츠 생성 */
+    public JsonNode generateImageContent(String prompt) {
+        GeminiDto.GeminiRequest request = buildGeminiRequest(prompt, "IMAGE");
+
+        String responseBody = callGeminiApi(request);
+
+        try {
+            JsonNode root =  objectMapper.readTree(responseBody);
+            JsonNode partsNode = root.at("/candidates/0/content/parts");
+
+            if (partsNode.isArray()) {
+                for (JsonNode part : partsNode) {
+                    if (part.has("inlineData")) {
+                        return part.get("inlineData");
+                    }
+                }
+            }
+
+            log.error("[GEMINI] 응답에 이미지 데이터가 없음. 전체 응답: {}", shorten(responseBody, 2000));
+            throw new ApiException(ServiceError.GEMINI_API_ERROR);
+        } catch (JsonProcessingException e) {
+            log.error("[GEMINI] Gemini 응답 JSON 파싱 실패.", e);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
+        }
+    }
+    /* Gemini 요청 바디 생성
+    * 파라미터:
+    *  - 텍스트 생성: TEXT
+    *  - 이미지 생성: IMAGE */
+    private GeminiDto.GeminiRequest buildGeminiRequest(String prompt, String modality) {
+        String mimeType = modality.equals("TEXT") ? "application/json" : null;
+
+        return GeminiDto.GeminiRequest.builder()
                 .contents(List.of(
-                        Content.builder()
+                        GeminiDto.Content.builder()
                                 .parts(List.of(
-                                        Part.builder()
+                                        GeminiDto.Part.builder()
                                                 .text(prompt)
                                                 .build()
                                 ))
                                 .build()
                 ))
+                .generationConfig(GeminiDto.GenerationConfig.builder()
+                        .responseModalities(List.of(modality))
+                        .responseMimeType(mimeType)
+                        .build())
                 .build();
-
-        String responseBody;
+    }
+    /* Gemini Api 호출 */
+    private String callGeminiApi(GeminiDto.GeminiRequest request) {
         try {
             // TODO: 동기 처리 중, 비동기로 변환 필요
-            responseBody = geminiWebClient.post()
+            return geminiWebClient.post()
                     .uri("/v1beta/models/{model}:generateContent", model)
                     .bodyValue(request)
                     .retrieve()
                     // 4xx, 5xx 에러 발생 시 처리
-                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                            clientResponse.bodyToMono(String.class)
-                                    .map(body -> new RuntimeException("Gemini 4xx Error: " + body)))
-                    .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                            clientResponse.bodyToMono(String.class)
-                                    .map(body -> new RuntimeException("Gemini 5xx Error: " + body)))
+//                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+//                            clientResponse.bodyToMono(String.class)
+//                                    .map(body -> new RuntimeException("Gemini 4xx Error: " + body)))
+//                    .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+//                            clientResponse.bodyToMono(String.class)
+//                                    .map(body -> new RuntimeException("Gemini 5xx Error: " + body)))
+                    // [디버깅 1] 상태 코드 확인
+                    .onStatus(HttpStatusCode::isError, clientResponse -> {
+                        log.error("[DEBUG] 2. API 상태 코드 에러 발생: {}", clientResponse.statusCode());
+                        return clientResponse.bodyToMono(String.class)
+                                .map(body -> new RuntimeException("Gemini API Error (" + clientResponse.statusCode() + "): " + body));
+                    })
                     .bodyToMono(String.class)
+                    // [디버깅 2] 구독 시작 (요청 날아감)
+                    .doOnSubscribe(s -> log.info("[DEBUG] 3. WebClient 구독 시작 (요청 전송 중...)"))
+                    // [디버깅 3] 데이터 수신 성공 시
+                    .doOnNext(response -> log.info("[DEBUG] 4. 응답 수신 완료! (길이: {} bytes)", response.length()))
+                    // [디버깅 4] 리액티브 체인 내부 에러 포착 (여기가 핵심!)
+                    .doOnError(e -> log.error("[DEBUG] 💥 WebClient 내부 에러 감지!", e))
                     .block();
-
-            log.info("[SERVICE] Gemini response: {}", responseBody);
         } catch (Exception e) {
             log.error("[GEMINI] API 요청 중 에러 발생", e);
             throw new ApiException(ServiceError.GEMINI_API_ERROR);
         }
+    }
+    /* 응답 결과에 백틱 제거 */
+    private String santizeJsonString(String rawString) {
+        if (rawString == null) return "";
 
-        try {
-            JsonNode root =  objectMapper.readTree(responseBody);
-            String rawText =
-                    root.at("/candidates/0/content/parts/0/text").asText();
-
-            return objectMapper.readTree(rawText);
-        } catch (JsonProcessingException e) {
-            log.error("[GEMINI] Gemini 응답 JSON 파싱 실패.", e);
-            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
-        }
+        return rawString
+                .replaceAll("```json", "")
+                .replaceAll("```", "")
+                .trim();
+    }
+    // TODO: 제거 필요
+    private String shorten(String text, int maxLength) {
+        if (text == null) return null;
+        return text.length() <= maxLength
+                ? text
+                : text.substring(0, maxLength) + "...(truncated)";
     }
 }

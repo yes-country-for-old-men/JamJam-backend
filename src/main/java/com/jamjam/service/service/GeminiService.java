@@ -44,10 +44,10 @@ public class GeminiService {
         return new AiServiceResponse(serviceNames, description, category);
     }
     /* 썸네일 생성 */
-    public void generateThumbnail(AiImageRequest request) {
+    public AiImageResponse generateThumbnail(AiImageRequest request) {
+        log.info("[SERVICE] 썸네일 생성 시작");
         /* 디자인 요소 추출 */
         String designElementPrompt = promptService.buildDesignElementPrompt(request.getDescription(), request.getServiceName());
-        log.info("[SERVICE] 디자인 요소 프롬프트 생성 완료");
 
         JsonNode rawText = geminiClient.generateTextContent(designElementPrompt);
 
@@ -60,5 +60,19 @@ public class GeminiService {
         log.info("[SERVICE] typography style: {}", typographyStyle);
 
         /* 디자인 요소 기반 썸네일 생성 */
+        String thumbnailPrompt;
+        if (request.isTypography()) {
+            thumbnailPrompt =
+                    promptService.buildThumbnailPromptWithTypography(visualElements, request.getServiceName(), typographyStyle, toneStyle);
+        } else {
+            thumbnailPrompt = promptService.buildThumbnailPromptWithoutTypography(visualElements, toneStyle);
+        }
+        log.info("[SERVICE] 썸네일 생성 프롬프트 생성");
+
+        JsonNode inlineData = geminiClient.generateImageContent(thumbnailPrompt);
+        log.info("[SERVICE] 썸네일 생성 완료");
+
+        String thumbnailInfo = "data:image/jpeg;base64," + inlineData.get("data").asText();
+        return new AiImageResponse(thumbnailInfo);
     }
 }

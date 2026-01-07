@@ -48,19 +48,11 @@ public class ServiceController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
-    /*썸네일 테스트용 api
-    * TODO: 지우쇼*/
-    @PostMapping("/test")
-    public ResponseEntity<ResponseDto<Void>> testGenerateThumbnail(@RequestBody AiImageRequest request) {
-        geminiService.generateThumbnail(request);
-
-        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
-    }
-    /*Gpt-image-1에 썸네일 생성 요청*/
+    /*Ai에 썸네일 생성 요청*/
     @PostMapping("/ai-thumbnail")
     @Operation(summary = "ai 썸네일 생성 요청")
-    public ResponseEntity<ResponseDto<AiImageResponse>> generateThumbnail(@RequestBody AiImageRequest request) {
-        AiImageResponse response = aiGenerationService.generateImage(request);
+    public ResponseEntity<ResponseDto<AiImageResponse>> testGenerateThumbnail(@RequestBody AiImageRequest request) {
+        AiImageResponse response = geminiService.generateThumbnail(request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
