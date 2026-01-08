@@ -2,6 +2,7 @@ package com.jamjam.global.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,8 @@ public class PortOneConfig {
     private String baseUrl;
 
     @Bean
-    public WebClient webClient() {
+    @Qualifier("portOneWebClient")
+    public WebClient portOneWebClient() {
         return WebClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

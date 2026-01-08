@@ -7,6 +7,7 @@ import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.*;
 import com.jamjam.user.domain.repository.CreditHistoryRepository;
+import com.jamjam.user.domain.repository.ProviderRepository;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.user.exception.UserError;
 import com.jamjam.user.presentation.dto.request.ClientJoinRequest;
@@ -40,6 +41,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final RefreshRepository refreshRepository;
     private final JwtUtil jwtUtil;
@@ -180,19 +182,28 @@ public class UserService {
         if (userRepository.existsByPhoneNumberAndRole(request.phoneNumber(), UserRole.PROVIDER)){
             throw new ApiException(UserError.PHONE_ALREADY_REGISTERED);
         }
-        return userRepository.save(
-                UserEntity.builder()
-                        .name(request.name())
-                        .phoneNumber(request.phoneNumber())
-                        .nickname(request.nickname())
-                        .loginId(request.loginId())
-                        .password(bCryptPasswordEncoder.encode(request.password()))
-                        .birth(request.birth())
-                        .gender(request.gender())
-                        .createAt(LocalDate.now())
-                        .role(UserRole.PROVIDER)
+
+        UserEntity user = UserEntity.builder()
+                .name(request.name())
+                .phoneNumber(request.phoneNumber())
+                .nickname(request.nickname())
+                .loginId(request.loginId())
+                .password(bCryptPasswordEncoder.encode(request.password()))
+                .birth(request.birth())
+                .gender(request.gender())
+                .createAt(LocalDate.now())
+                .role(UserRole.PROVIDER)
+                .build();
+
+        userRepository.save(user);
+
+        providerRepository.save(
+                ProviderEntity.builder()
+                        .user(user)
                         .build()
         );
+
+        return user;
     }
 
     protected void addHeader(HttpServletResponse response, String refreshToken) {
