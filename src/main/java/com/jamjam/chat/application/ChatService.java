@@ -4,18 +4,20 @@ import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.ChatRoomEntity;
 import com.jamjam.chat.domain.entity.ChatRoomParticipantEntity;
 import com.jamjam.chat.domain.entity.ChatRoomReadStatusEntity;
+import com.jamjam.chat.domain.entity.MessageType;
 import com.jamjam.chat.domain.repository.ChatMessageRepository;
 import com.jamjam.chat.domain.repository.ChatRoomParticipantRepository;
 import com.jamjam.chat.domain.repository.ChatRoomRepository;
 import com.jamjam.chat.domain.repository.ChatRoomReadStatusRepository;
 import com.jamjam.chat.exception.ChatError;
+import com.jamjam.chat.presentation.dto.res.ChatFileUploadRes;
 import com.jamjam.chat.presentation.dto.res.ChatHistoryRes;
 import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
 import com.jamjam.chat.presentation.dto.res.CreateRoomRes;
 import com.jamjam.global.dto.SliceInfo;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
-import com.jamjam.service.service.ServiceService;
+import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.user.exception.UserError;
@@ -27,7 +29,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -46,27 +50,48 @@ public class ChatService {
     private final UserRepository userRepo;
     private final NotificationSender notificationSender;
     private final UserRepository userRepository;
+    private final S3Uploader s3Uploader;
 
     @Transactional
     public ChatMessageEntity sendMessage(Long roomId, String senderId, String content) {
+        return sendMessage(roomId, senderId, content, MessageType.TEXT, null, null, null);
+    }
+
+    @Transactional
+    public ChatMessageEntity sendMessage(Long roomId, String senderId, String content,
+                                         MessageType messageType, String fileUrl,
+                                         String fileName, Long fileSize) {
         ChatRoomEntity room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
+
+        UserEntity sender = userRepository.findById(Long.valueOf(senderId))
+                .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
         ChatMessageEntity msg = ChatMessageEntity.builder()
                 .room(room)
                 .senderId(senderId)
+                .senderName(sender.getNickname())
                 .content(content)
                 .sentAt(LocalDateTime.now())
+                .messageType(messageType != null ? messageType : MessageType.TEXT)
+                .fileUrl(fileUrl)
+                .fileName(fileName)
+                .fileSize(fileSize)
                 .build();
+
         /*채팅방 참여자에게 푸시 알림 web 제외*/
         for (ChatRoomParticipantEntity participant : room.getParticipants()) {
             UserEntity receiver = userRepository.findById(Long.valueOf(participant.getUserId()))
                     .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
+            String notificationContent = messageType == MessageType.TEXT
+                    ? content
+                    : "[" + messageType.name() + "] " + (fileName != null ? fileName : "파일");
+
             notificationSender.sendToUser(
                     receiver,
                     senderId,
-                    content,
+                    notificationContent,
                     NotificationType.CHAT
             );
         }
@@ -187,5 +212,75 @@ public class ChatService {
 
         readStatusRepo.findByChatRoomAndUserId(room, userId)
                 .ifPresent(readStatusRepo::delete);
+    }
+
+    @Transactional
+    public ChatFileUploadRes uploadChatFile(Long roomId, String userId, MultipartFile file) {
+        ChatRoomEntity room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
+
+        partRepo.findByRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new ApiException(ChatError.NOT_PARTICIPANT));
+
+        if (file == null || file.isEmpty()) {
+            throw new ApiException(ChatError.FILE_NOT_PROVIDED);
+        }
+
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new ApiException(ChatError.FILE_SIZE_EXCEEDED);
+        }
+
+        MessageType messageType = validateAndGetMessageType(file);
+
+        try {
+            String fileUrl = s3Uploader.upload(file, "chat-files");
+            return new ChatFileUploadRes(
+                    fileUrl,
+                    file.getOriginalFilename(),
+                    file.getSize(),
+                    messageType
+            );
+        } catch (IOException e) {
+            log.error("파일 업로드 실패: {}", e.getMessage());
+            throw new ApiException(ChatError.FILE_UPLOAD_FAILED);
+        }
+    }
+
+    private MessageType validateAndGetMessageType(MultipartFile file) {
+        String contentType = file.getContentType();
+        String fileName = file.getOriginalFilename();
+
+        if (contentType == null || fileName == null) {
+            throw new ApiException(ChatError.INVALID_FILE_TYPE);
+        }
+
+        String extension = getFileExtension(fileName).toLowerCase();
+
+        if (isImageType(contentType, extension)) {
+            return MessageType.IMAGE;
+        }
+
+        if (isDocumentType(extension)) {
+            return MessageType.FILE;
+        }
+
+        throw new ApiException(ChatError.INVALID_FILE_TYPE);
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return "";
+        }
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
+    }
+
+    private boolean isImageType(String contentType, String extension) {
+        List<String> imageExtensions = List.of("jpg", "jpeg", "png", "gif");
+        return contentType.startsWith("image/") && imageExtensions.contains(extension);
+    }
+
+    private boolean isDocumentType(String extension) {
+        List<String> documentExtensions = List.of("pdf", "doc", "docx", "xls", "xlsx", "zip", "txt");
+        return documentExtensions.contains(extension);
     }
 }
