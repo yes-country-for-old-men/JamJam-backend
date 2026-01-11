@@ -22,8 +22,8 @@ public class ChatMessageEntity {
     private String content;
     private LocalDateTime sentAt;
 
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'TEXT'")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     @Builder.Default
     private MessageType messageType = MessageType.TEXT;
 
