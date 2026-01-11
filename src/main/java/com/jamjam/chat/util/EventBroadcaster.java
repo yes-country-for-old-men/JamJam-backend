@@ -34,7 +34,11 @@ public class EventBroadcaster {
                 savedMsg.getSenderId(),
                 senderNickname,
                 savedMsg.getContent(),
-                savedMsg.getSentAt()
+                savedMsg.getSentAt(),
+                savedMsg.getMessageType(),
+                savedMsg.getFileUrl(),
+                savedMsg.getFileName(),
+                savedMsg.getFileSize()
         );
 
         messagingTemplate.convertAndSend(

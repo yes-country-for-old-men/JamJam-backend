@@ -22,6 +22,15 @@ public class ChatMessageEntity {
     private String content;
     private LocalDateTime sentAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private MessageType messageType = MessageType.TEXT;
+
+    private String fileUrl;
+    private String fileName;
+    private Long fileSize;
+
     public static ChatMessageEntity of(ChatRoomEntity room,
                                        String senderId,
                                        String content,
