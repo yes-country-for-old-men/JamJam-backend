@@ -22,6 +22,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -62,7 +63,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "test-image.jpg",
                 "image/jpeg",
                 "test image content".getBytes()
@@ -75,7 +76,7 @@ class ChatControllerTest {
                 MessageType.IMAGE
         );
 
-        given(chatService.uploadChatFile(eq(roomId), anyString(), any())).willReturn(response);
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(List.of(response));
 
         // when & then
         mockMvc.perform(multipart("/api/chat/upload-file")
@@ -86,12 +87,12 @@ class ChatControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.fileUrl").value("https://jamjam2025.s3.amazonaws.com/chat-files/test-image.jpg"))
-                .andExpect(jsonPath("$.data.fileName").value("test-image.jpg"))
-                .andExpect(jsonPath("$.data.messageType").value("IMAGE"))
-                .andExpect(jsonPath("$.data.fileSize").value(file.getSize()));
+                .andExpect(jsonPath("$.data[0].fileUrl").value("https://jamjam2025.s3.amazonaws.com/chat-files/test-image.jpg"))
+                .andExpect(jsonPath("$.data[0].fileName").value("test-image.jpg"))
+                .andExpect(jsonPath("$.data[0].messageType").value("IMAGE"))
+                .andExpect(jsonPath("$.data[0].fileSize").value(file.getSize()));
 
-        verify(chatService, times(1)).uploadChatFile(eq(roomId), anyString(), any());
+        verify(chatService, times(1)).uploadChatFiles(eq(roomId), anyString(), anyList());
     }
 
     @Test
@@ -101,7 +102,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "document.pdf",
                 "application/pdf",
                 "test pdf content".getBytes()
@@ -114,7 +115,7 @@ class ChatControllerTest {
                 MessageType.FILE
         );
 
-        given(chatService.uploadChatFile(eq(roomId), anyString(), any())).willReturn(response);
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(List.of(response));
 
         // when & then
         mockMvc.perform(multipart("/api/chat/upload-file")
@@ -125,11 +126,11 @@ class ChatControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.fileUrl").value("https://jamjam2025.s3.amazonaws.com/chat-files/document.pdf"))
-                .andExpect(jsonPath("$.data.fileName").value("document.pdf"))
-                .andExpect(jsonPath("$.data.messageType").value("FILE"));
+                .andExpect(jsonPath("$.data[0].fileUrl").value("https://jamjam2025.s3.amazonaws.com/chat-files/document.pdf"))
+                .andExpect(jsonPath("$.data[0].fileName").value("document.pdf"))
+                .andExpect(jsonPath("$.data[0].messageType").value("FILE"));
 
-        verify(chatService, times(1)).uploadChatFile(eq(roomId), anyString(), any());
+        verify(chatService, times(1)).uploadChatFiles(eq(roomId), anyString(), anyList());
     }
 
     @Test
@@ -138,7 +139,7 @@ class ChatControllerTest {
     void uploadChatFile_MissingRoomId() throws Exception {
         // given
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "test.jpg",
                 "image/jpeg",
                 "test".getBytes()
@@ -175,7 +176,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "test.jpg",
                 "image/jpeg",
                 "test".getBytes()
@@ -197,7 +198,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "screenshot.png",
                 "image/png",
                 "png content".getBytes()
@@ -210,7 +211,7 @@ class ChatControllerTest {
                 MessageType.IMAGE
         );
 
-        given(chatService.uploadChatFile(eq(roomId), anyString(), any())).willReturn(response);
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(List.of(response));
 
         // when & then
         mockMvc.perform(multipart("/api/chat/upload-file")
@@ -220,7 +221,7 @@ class ChatControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.messageType").value("IMAGE"));
+                .andExpect(jsonPath("$.data[0].messageType").value("IMAGE"));
     }
 
     @Test
@@ -230,7 +231,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "report.docx",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "docx content".getBytes()
@@ -243,7 +244,7 @@ class ChatControllerTest {
                 MessageType.FILE
         );
 
-        given(chatService.uploadChatFile(eq(roomId), anyString(), any())).willReturn(response);
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(List.of(response));
 
         // when & then
         mockMvc.perform(multipart("/api/chat/upload-file")
@@ -253,7 +254,7 @@ class ChatControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.messageType").value("FILE"));
+                .andExpect(jsonPath("$.data[0].messageType").value("FILE"));
     }
 
     @Test
@@ -263,7 +264,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "archive.zip",
                 "application/zip",
                 "zip content".getBytes()
@@ -276,7 +277,7 @@ class ChatControllerTest {
                 MessageType.FILE
         );
 
-        given(chatService.uploadChatFile(eq(roomId), anyString(), any())).willReturn(response);
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(List.of(response));
 
         // when & then
         mockMvc.perform(multipart("/api/chat/upload-file")
@@ -286,7 +287,7 @@ class ChatControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.messageType").value("FILE"));
+                .andExpect(jsonPath("$.data[0].messageType").value("FILE"));
     }
 
     @Test
@@ -296,7 +297,7 @@ class ChatControllerTest {
         // given
         Long roomId = 1L;
         MockMultipartFile file = new MockMultipartFile(
-                "file",
+                "files",
                 "채팅_이미지.jpg",
                 "image/jpeg",
                 "image content".getBytes()
@@ -309,7 +310,7 @@ class ChatControllerTest {
                 MessageType.IMAGE
         );
 
-        given(chatService.uploadChatFile(eq(roomId), anyString(), any())).willReturn(response);
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(List.of(response));
 
         // when & then
         mockMvc.perform(multipart("/api/chat/upload-file")
@@ -319,6 +320,76 @@ class ChatControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.fileName").value("채팅_이미지.jpg"));
+                .andExpect(jsonPath("$.data[0].fileName").value("채팅_이미지.jpg"));
+    }
+
+    @Test
+    @DisplayName("채팅 파일 업로드 API - 여러 파일 업로드 성공")
+    @WithMockUser
+    void uploadChatFiles_Multiple_Success() throws Exception {
+        // given
+        Long roomId = 1L;
+        MockMultipartFile file1 = new MockMultipartFile(
+                "files",
+                "image1.jpg",
+                "image/jpeg",
+                "image1 content".getBytes()
+        );
+        MockMultipartFile file2 = new MockMultipartFile(
+                "files",
+                "image2.png",
+                "image/png",
+                "image2 content".getBytes()
+        );
+        MockMultipartFile file3 = new MockMultipartFile(
+                "files",
+                "document.pdf",
+                "application/pdf",
+                "pdf content".getBytes()
+        );
+
+        List<ChatFileUploadRes> responses = List.of(
+                new ChatFileUploadRes(
+                        "https://jamjam2025.s3.amazonaws.com/chat-files/image1.jpg",
+                        "image1.jpg",
+                        file1.getSize(),
+                        MessageType.IMAGE
+                ),
+                new ChatFileUploadRes(
+                        "https://jamjam2025.s3.amazonaws.com/chat-files/image2.png",
+                        "image2.png",
+                        file2.getSize(),
+                        MessageType.IMAGE
+                ),
+                new ChatFileUploadRes(
+                        "https://jamjam2025.s3.amazonaws.com/chat-files/document.pdf",
+                        "document.pdf",
+                        file3.getSize(),
+                        MessageType.FILE
+                )
+        );
+
+        given(chatService.uploadChatFiles(eq(roomId), anyString(), anyList())).willReturn(responses);
+
+        // when & then
+        mockMvc.perform(multipart("/api/chat/upload-file")
+                        .file(file1)
+                        .file(file2)
+                        .file(file3)
+                        .param("roomId", roomId.toString())
+                        .with(user(mockUser))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].fileName").value("image1.jpg"))
+                .andExpect(jsonPath("$.data[0].messageType").value("IMAGE"))
+                .andExpect(jsonPath("$.data[1].fileName").value("image2.png"))
+                .andExpect(jsonPath("$.data[1].messageType").value("IMAGE"))
+                .andExpect(jsonPath("$.data[2].fileName").value("document.pdf"))
+                .andExpect(jsonPath("$.data[2].messageType").value("FILE"));
+
+        verify(chatService, times(1)).uploadChatFiles(eq(roomId), anyString(), anyList());
     }
 }

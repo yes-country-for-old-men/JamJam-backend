@@ -86,7 +86,9 @@
                         - 이미지: jpg, jpeg, png, gif
                         - 문서: pdf, doc, docx, xls, xlsx, zip, txt
 
-                        **파일 크기 제한:** 최대 10MB
+                        **파일 크기 제한:** 각 파일 최대 10MB
+
+                        **파일 개수:** 한 번에 최대 10개까지 업로드 가능
 
                         **사용 방법:**
                         1. 이 API로 파일을 업로드하여 fileUrl, fileName, fileSize, messageType을 받습니다
@@ -124,31 +126,33 @@
                                                 {
                                                   "success": true,
                                                   "message": "작업이 성공적으로 완료되었습니다.",
-                                                  "data": {
-                                                    "fileUrl": "https://jamjam2025.s3.amazonaws.com/chat-files/550e8400-e29b-41d4-a716-446655440000_photo.jpg",
-                                                    "fileName": "photo.jpg",
-                                                    "fileSize": 102400,
-                                                    "messageType": "IMAGE"
-                                                  }
+                                                  "data": [
+                                                    {
+                                                      "fileUrl": "https://jamjam2025.s3.amazonaws.com/chat-files/550e8400-e29b-41d4-a716-446655440000_photo.jpg",
+                                                      "fileName": "photo.jpg",
+                                                      "fileSize": 102400,
+                                                      "messageType": "IMAGE"
+                                                    }
+                                                  ]
                                                 }
                                                 """
                                 )
                         )
                 )
         })
-        public ResponseEntity<ResponseDto<ChatFileUploadRes>> uploadChatFile(
+        public ResponseEntity<ResponseDto<List<ChatFileUploadRes>>> uploadChatFile(
                 @Parameter(hidden = true) @CurrentUser CustomUserDetails user,
                 @Parameter(
-                        description = "업로드할 파일 (이미지: jpg/jpeg/png/gif, 문서: pdf/doc/docx/xls/xlsx/zip/txt)",
+                        description = "업로드할 파일들 (이미지: jpg/jpeg/png/gif, 문서: pdf/doc/docx/xls/xlsx/zip/txt)",
                         required = true,
                         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
                 )
-                @RequestPart("file") MultipartFile file,
+                @RequestPart("files") List<MultipartFile> files,
                 @Parameter(description = "채팅방 ID", required = true, example = "1")
                 @RequestParam Long roomId
         ) {
-            ChatFileUploadRes res = chatService.uploadChatFile(roomId, String.valueOf(user.getUserId()), file);
-            return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, res));
+            List<ChatFileUploadRes> results = chatService.uploadChatFiles(roomId, String.valueOf(user.getUserId()), files);
+            return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, results));
         }
 
         @PostMapping("/room")

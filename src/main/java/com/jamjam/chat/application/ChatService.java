@@ -246,6 +246,50 @@ public class ChatService {
         }
     }
 
+    @Transactional
+    public List<ChatFileUploadRes> uploadChatFiles(Long roomId, String userId, List<MultipartFile> files) {
+        ChatRoomEntity room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
+
+        partRepo.findByRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new ApiException(ChatError.NOT_PARTICIPANT));
+
+        if (files == null || files.isEmpty()) {
+            throw new ApiException(ChatError.FILE_NOT_PROVIDED);
+        }
+
+        if (files.size() > 10) {
+            throw new ApiException(ChatError.TOO_MANY_FILES);
+        }
+
+        return files.stream()
+                .map(file -> {
+                    if (file.isEmpty()) {
+                        throw new ApiException(ChatError.FILE_NOT_PROVIDED);
+                    }
+
+                    if (file.getSize() > 10 * 1024 * 1024) {
+                        throw new ApiException(ChatError.FILE_SIZE_EXCEEDED);
+                    }
+
+                    MessageType messageType = validateAndGetMessageType(file);
+
+                    try {
+                        String fileUrl = s3Uploader.upload(file, "chat-files");
+                        return new ChatFileUploadRes(
+                                fileUrl,
+                                file.getOriginalFilename(),
+                                file.getSize(),
+                                messageType
+                        );
+                    } catch (IOException e) {
+                        log.error("파일 업로드 실패: {}", e.getMessage());
+                        throw new ApiException(ChatError.FILE_UPLOAD_FAILED);
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
     private MessageType validateAndGetMessageType(MultipartFile file) {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
