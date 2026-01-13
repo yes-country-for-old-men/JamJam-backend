@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -27,9 +29,10 @@ public class ChatMessageEntity {
     @Builder.Default
     private MessageType messageType = MessageType.TEXT;
 
-    private String fileUrl;
-    private String fileName;
-    private Long fileSize;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "chat_message_files", joinColumns = @JoinColumn(name = "message_id"))
+    @Builder.Default
+    private List<ChatFileInfo> files = new ArrayList<>();
 
     public static ChatMessageEntity of(ChatRoomEntity room,
                                        String senderId,

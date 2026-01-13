@@ -29,17 +29,7 @@ public class EventBroadcaster {
         UserEntity sender = userRepo.findById(Long.valueOf(senderId)).orElse(null);
         String senderNickname = sender != null ? sender.getNickname() : null;
 
-        ChatSocketRes dto = new ChatSocketRes(
-                savedMsg.getId(),
-                savedMsg.getSenderId(),
-                senderNickname,
-                savedMsg.getContent(),
-                savedMsg.getSentAt(),
-                savedMsg.getMessageType(),
-                savedMsg.getFileUrl(),
-                savedMsg.getFileName(),
-                savedMsg.getFileSize()
-        );
+        ChatSocketRes dto = ChatSocketRes.from(savedMsg, senderNickname);
 
         messagingTemplate.convertAndSend(
                 "/topic/room/" + roomId,
