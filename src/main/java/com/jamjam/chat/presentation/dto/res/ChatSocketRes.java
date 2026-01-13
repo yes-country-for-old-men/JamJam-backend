@@ -4,6 +4,8 @@ import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.MessageType;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public record ChatSocketRes(
         Long messageId,
@@ -12,11 +14,13 @@ public record ChatSocketRes(
         String content,
         LocalDateTime sentAt,
         MessageType messageType,
-        String fileUrl,
-        String fileName,
-        Long fileSize
+        List<FileInfo> files
 ) {
     public static ChatSocketRes from(ChatMessageEntity entity, String senderNickname) {
+        List<FileInfo> files = entity.getFiles().stream()
+                .map(f -> new FileInfo(f.getFileUrl(), f.getFileName(), f.getFileSize(), f.getFileType()))
+                .collect(Collectors.toList());
+
         return new ChatSocketRes(
                 entity.getId(),
                 entity.getSenderId(),
@@ -24,9 +28,14 @@ public record ChatSocketRes(
                 entity.getContent(),
                 entity.getSentAt(),
                 entity.getMessageType(),
-                entity.getFileUrl(),
-                entity.getFileName(),
-                entity.getFileSize()
+                files
         );
     }
+
+    public record FileInfo(
+            String fileUrl,
+            String fileName,
+            Long fileSize,
+            MessageType fileType
+    ) {}
 }

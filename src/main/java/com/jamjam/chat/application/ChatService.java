@@ -14,6 +14,8 @@ import com.jamjam.chat.presentation.dto.res.ChatFileUploadRes;
 import com.jamjam.chat.presentation.dto.res.ChatHistoryRes;
 import com.jamjam.chat.presentation.dto.res.ChatRoomListRes;
 import com.jamjam.chat.presentation.dto.res.CreateRoomRes;
+import com.jamjam.chat.domain.entity.ChatFileInfo;
+import com.jamjam.chat.presentation.dto.req.SendMessageReq.FileInfo;
 import com.jamjam.global.dto.SliceInfo;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
@@ -33,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,18 +57,30 @@ public class ChatService {
 
     @Transactional
     public ChatMessageEntity sendMessage(Long roomId, String senderId, String content) {
-        return sendMessage(roomId, senderId, content, MessageType.TEXT, null, null, null);
+        return sendMessage(roomId, senderId, content, MessageType.TEXT, null);
     }
 
     @Transactional
     public ChatMessageEntity sendMessage(Long roomId, String senderId, String content,
-                                         MessageType messageType, String fileUrl,
-                                         String fileName, Long fileSize) {
+                                         MessageType messageType,
+                                         List<FileInfo> fileInfos) {
         ChatRoomEntity room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new ApiException(ChatError.ROOM_NOT_FOUND));
 
         UserEntity sender = userRepository.findById(Long.valueOf(senderId))
                 .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
+
+        List<ChatFileInfo> files = new ArrayList<>();
+        if (fileInfos != null && !fileInfos.isEmpty()) {
+            files = fileInfos.stream()
+                    .map(f -> ChatFileInfo.builder()
+                            .fileUrl(f.fileUrl())
+                            .fileName(f.fileName())
+                            .fileSize(f.fileSize())
+                            .fileType(f.fileType())
+                            .build())
+                    .collect(Collectors.toList());
+        }
 
         ChatMessageEntity msg = ChatMessageEntity.builder()
                 .room(room)
@@ -74,9 +89,7 @@ public class ChatService {
                 .content(content)
                 .sentAt(LocalDateTime.now())
                 .messageType(messageType != null ? messageType : MessageType.TEXT)
-                .fileUrl(fileUrl)
-                .fileName(fileName)
-                .fileSize(fileSize)
+                .files(files)
                 .build();
 
         /*채팅방 참여자에게 푸시 알림 web 제외*/
@@ -84,9 +97,17 @@ public class ChatService {
             UserEntity receiver = userRepository.findById(Long.valueOf(participant.getUserId()))
                     .orElseThrow(() -> new ApiException(UserError.USER_NOT_FOUND));
 
-            String notificationContent = messageType == MessageType.TEXT
-                    ? content
-                    : "[" + messageType.name() + "] " + (fileName != null ? fileName : "파일");
+            String notificationContent;
+            if (messageType == MessageType.TEXT) {
+                notificationContent = content;
+            } else if (!files.isEmpty()) {
+                notificationContent = "[" + messageType.name() + "] " + files.get(0).getFileName();
+                if (files.size() > 1) {
+                    notificationContent += " 외 " + (files.size() - 1) + "개";
+                }
+            } else {
+                notificationContent = "[" + messageType.name() + "] 파일";
+            }
 
             notificationSender.sendToUser(
                     receiver,

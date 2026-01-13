@@ -62,9 +62,7 @@
                             userId,
                             req.message(),
                             req.messageType() != null ? req.messageType() : MessageType.TEXT,
-                            req.fileUrl(),
-                            req.fileName(),
-                            req.fileSize()
+                            req.files()
                     );
                     eventBroadcaster.broadcastNewMessage(savedMsg, userId);
                 }
@@ -105,9 +103,20 @@
                             "roomId": 1,
                             "message": "사진 보냅니다",
                             "messageType": "IMAGE",
-                            "fileUrl": "https://jamjam2025.s3.amazonaws.com/chat-files/xxx.jpg",
-                            "fileName": "photo.jpg",
-                            "fileSize": 102400
+                            "files": [
+                              {
+                                "fileUrl": "https://jamjam2025.s3.amazonaws.com/chat-files/xxx.jpg",
+                                "fileName": "photo.jpg",
+                                "fileSize": 102400,
+                                "fileType": "IMAGE"
+                              },
+                              {
+                                "fileUrl": "https://jamjam2025.s3.amazonaws.com/chat-files/yyy.png",
+                                "fileName": "photo2.png",
+                                "fileSize": 204800,
+                                "fileType": "IMAGE"
+                              }
+                            ]
                           }
                         }
                         ```
