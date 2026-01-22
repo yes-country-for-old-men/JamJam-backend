@@ -1,5 +1,8 @@
 package com.jamjam.order.service;
 
+import com.jamjam.chat.application.ChatService;
+import com.jamjam.chat.domain.entity.ChatRoomEntity;
+import com.jamjam.chat.domain.repository.ChatRoomRepository;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.order.domain.entity.OrderEntity;
@@ -29,7 +32,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -41,10 +46,12 @@ public class OrderService {
     private final OrderReferenceFileRepository orderReferenceFileRepository;
     private final NotificationSender notificationSender;
     private final CreditHistoryRepository creditHistoryRepository;
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatService chatService;
 
     public OrderService(OrderRepository orderRepository, UserRepository userRepository,
                         S3Uploader s3Uploader, ServiceRepository serviceRepository,
-                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository) {
+                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository, ChatRoomRepository chatRoomRepository, ChatService chatService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
@@ -52,6 +59,8 @@ public class OrderService {
         this.orderReferenceFileRepository = orderReferenceFileRepository;
         this.notificationSender = notificationSender;
         this.creditHistoryRepository = creditHistoryRepository;
+        this.chatRoomRepository = chatRoomRepository;
+        this.chatService = chatService;
     }
     /*주문 신청*/
     @Transactional
@@ -60,15 +69,6 @@ public class OrderService {
         ServiceEntity service = serviceRepository.findByIdOrThrow(request.getServiceId(), OrderError.SERVICE_NOT_FOUND);
         /*본인 서비스에 신청 시*/
         if (service.getUser().getId().equals(user.getId())) throw new ApiException(OrderError.SELF_ORDER_NOT_ALLOWED);
-        /*보유 크레딧과 주문 가격 비교*/
-        if (user.getCredit().compareTo(request.getPrice()) < 0) throw new ApiException(OrderError.CREDIT_NOT_ENOUGH);
-
-        user.changeCredit(request.getPrice().negate());
-        log.info("client {} 크레딧 차감", request.getPrice());
-
-        saveCreditHistory(
-                request.getPrice().negate(), CreditChangeType.WITHDRAW,
-                "서비스 의뢰로 인한 크레딧 차감", user);
 
         OrderEntity order = OrderEntity.builder()
                 .title(request.getTitle())
@@ -81,33 +81,35 @@ public class OrderService {
                 .build();
         orderRepository.save(order);
 
-        /*주문 내용 저장*/
+        /*주문 참고 자료 이미지 저장*/
         try {
             if (referenceFiles != null) {
                 for (MultipartFile file : referenceFiles) {
                     if (!file.isEmpty()) {
                         String fileUrl = s3Uploader.upload(file, "order-request-images");
-                        OrderReferenceFileEntity fileInfo = OrderReferenceFileEntity.builder()
-                                .fileUrl(fileUrl)
-                                .order(order)
-                                .build();
+                        OrderReferenceFileEntity fileInfo = new OrderReferenceFileEntity(fileUrl, order);
+
                         orderReferenceFileRepository.save(fileInfo);
                     }
                 }
-                log.info("참고 자료 이미지 저장 완료");
+                log.info("[ORDER] 참고 자료 이미지 저장 완료");
             }
         } catch (IOException e) {
             throw new ApiException(OrderError.FILE_UPLOAD_ERROR);
         }
-        log.info("서비스 신청 완료");
+        log.info("[ORDER] 의뢰서 임시 저장 완료");
 
-        /*해당 서비스 제공자에게 푸시 알림*/
-        String body = "\"" + service.getServiceName() + "\" 서비스에 새로운 주문이 요청되었습니다.";
-        notificationSender.sendToUser(
-                service.getUser(),
-                "신규 주문 등록",
-                body,
-                NotificationType.ORDER);
+        // 서비스 제공자에게 의뢰서 송신
+        List<String> userIds = new ArrayList<>();
+        userIds.add(String.valueOf(user.getId()));
+        userIds.add(String.valueOf(service.getUser().getId()));
+
+        Long chatRoomId = chatRoomRepository
+                .findPrivateChatRoom(user.getId(), service.getUser().getId())
+                .map(ChatRoomEntity::getId)
+                .orElseGet(() -> chatService.createRoom(false, userIds));
+
+
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
