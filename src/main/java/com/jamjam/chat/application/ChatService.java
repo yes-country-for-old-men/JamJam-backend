@@ -140,7 +140,7 @@ public class ChatService {
     }
 
     @Transactional
-    public CreateRoomRes createRoom(boolean groupChat, List<String> userIds) {
+    public Long createRoom(boolean groupChat, List<String> userIds) {
 
         ChatRoomEntity room = roomRepo.save(ChatRoomEntity.builder()
                 .groupChat(groupChat)
@@ -153,7 +153,7 @@ public class ChatService {
                         .userId(uid)
                         .build()));
 
-        return new CreateRoomRes(room.getId());
+        return room.getId();
     }
 
     @Transactional(readOnly = true)
