@@ -1,8 +1,11 @@
 package com.jamjam.order.service;
 
 import com.jamjam.chat.application.ChatService;
+import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.ChatRoomEntity;
+import com.jamjam.chat.domain.entity.MessageType;
 import com.jamjam.chat.domain.repository.ChatRoomRepository;
+import com.jamjam.chat.util.EventBroadcaster;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.order.domain.entity.OrderEntity;
@@ -48,10 +51,11 @@ public class OrderService {
     private final CreditHistoryRepository creditHistoryRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatService chatService;
+    private final EventBroadcaster eventBroadcaster;
 
     public OrderService(OrderRepository orderRepository, UserRepository userRepository,
                         S3Uploader s3Uploader, ServiceRepository serviceRepository,
-                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository, ChatRoomRepository chatRoomRepository, ChatService chatService) {
+                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository, ChatRoomRepository chatRoomRepository, ChatService chatService, EventBroadcaster eventBroadcaster) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
@@ -61,6 +65,7 @@ public class OrderService {
         this.creditHistoryRepository = creditHistoryRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.chatService = chatService;
+        this.eventBroadcaster = eventBroadcaster;
     }
     /*주문 신청*/
     @Transactional
@@ -101,15 +106,18 @@ public class OrderService {
 
         // 서비스 제공자에게 의뢰서 송신
         List<String> userIds = new ArrayList<>();
-        userIds.add(String.valueOf(user.getId()));
+        userIds.add(String.valueOf(userId));
         userIds.add(String.valueOf(service.getUser().getId()));
 
         Long chatRoomId = chatRoomRepository
                 .findPrivateChatRoom(user.getId(), service.getUser().getId())
                 .map(ChatRoomEntity::getId)
                 .orElseGet(() -> chatService.createRoom(false, userIds));
+        String content = String.valueOf(order.getId());
 
-
+        ChatMessageEntity savedMsg = chatService
+                .sendMessage(chatRoomId, String.valueOf(userId), content, MessageType.REQUEST_FORM, null);
+        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(userId));
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
