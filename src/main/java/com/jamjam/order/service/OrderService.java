@@ -56,10 +56,8 @@ public class OrderService {
     /*주문 신청*/
     @Transactional
     public void registerService(OrderRegisterRequest request, Long userId, List<MultipartFile> referenceFiles) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
-        ServiceEntity service = serviceRepository.findById(request.getServiceId())
-                .orElseThrow(() -> new ApiException(OrderError.SERVICE_NOT_FOUND));
+        UserEntity user = userRepository.findByIdOrThrow(userId, OrderError.USER_NOT_FOUND);
+        ServiceEntity service = serviceRepository.findByIdOrThrow(request.getServiceId(), OrderError.SERVICE_NOT_FOUND);
         /*본인 서비스에 신청 시*/
         if (service.getUser().getId().equals(user.getId())) throw new ApiException(OrderError.SELF_ORDER_NOT_ALLOWED);
         /*보유 크레딧과 주문 가격 비교*/
@@ -188,10 +186,8 @@ public class OrderService {
     }
     /*수락하는 user의 권한 확인 메서드*/
     public OrderEntity verifyProvider(Long userId, Long orderId) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
-        OrderEntity order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
+        UserEntity user = userRepository.findByIdOrThrow(userId, OrderError.USER_NOT_FOUND);
+        OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
         Long orderProviderId = order.getService().getUser().getId();
         /*수락하는 user의 권한 확인*/
         if (!user.getId().equals(orderProviderId)) {
@@ -202,8 +198,7 @@ public class OrderService {
     /*구매자 크레딧 제공자에게 전달*/
     @Transactional
     public void transferCreditOnConfirmation(Long providerId, BigDecimal price) {
-        UserEntity provider = userRepository.findById(providerId)
-                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+        UserEntity provider = userRepository.findByIdOrThrow(providerId, OrderError.USER_NOT_FOUND);
 
         provider.changeCredit(price);
         log.info("provider: {} credit: +{}", provider.getNickname(), price);
@@ -227,8 +222,7 @@ public class OrderService {
     /*유저의 주문 상태 별 주문 목록 반환*/
     @Transactional
     public OrderListResponse getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
-        UserEntity user = userRepository.findById(customUserDetails.getUserId())
-                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+        UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
         Page<OrderEntity> entities;
         if (user.getRole() == UserRole.PROVIDER) {
@@ -253,8 +247,7 @@ public class OrderService {
     /*유저의 상태 별 주문 갯수 반환*/
     @Transactional
     public OrderCountResponse getOrderCount(CustomUserDetails customUserDetails) {
-        UserEntity user = userRepository.findById(customUserDetails.getUserId())
-                .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+        UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
         int preparing = 0, requested = 0, completed = 0, cancelled = 0;
         List<Object[]> result;
@@ -285,8 +278,7 @@ public class OrderService {
     }
     /*주문 상세 정보 반환*/
     public OrderInfoDTO getOrderDetail(Long orderId) {
-        OrderEntity order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ApiException(OrderError.ORDER_NOT_FOUND));
+        OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
 
         return OrderInfoDTO.from(order);
     }

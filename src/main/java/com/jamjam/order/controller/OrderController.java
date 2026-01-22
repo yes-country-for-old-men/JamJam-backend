@@ -23,11 +23,9 @@ import java.util.List;
 @RequestMapping("/api/order")
 public class OrderController {
     private final OrderService orderService;
-    private final OrderStatusScheduler orderStatusScheduler;
 
-    public OrderController(OrderService orderService, OrderStatusScheduler orderStatusScheduler) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.orderStatusScheduler = orderStatusScheduler;
     }
 
     /*서비스 신청*/
