@@ -5,6 +5,7 @@ import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.ChatRoomEntity;
 import com.jamjam.chat.domain.entity.MessageType;
 import com.jamjam.chat.domain.repository.ChatRoomRepository;
+import com.jamjam.chat.presentation.dto.req.PaymentReq;
 import com.jamjam.chat.util.EventBroadcaster;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
@@ -119,10 +120,23 @@ public class OrderService {
                 .sendMessage(chatRoomId, String.valueOf(userId), content, MessageType.REQUEST_FORM, null);
         eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(userId));
     }
+    /*주문 결제 요청*/
+    @Transactional
+    public void requestPayment(Long userId, PaymentReq request) {
+        verifyProvider(userId, request.orderId(), OrderError.FORBIDDEN_REQUEST_PAYMENT);
+
+        ChatMessageEntity savedMsg = chatService.sendMessage(
+                request.roomId(),
+                String.valueOf(userId),
+                String.valueOf(request.price()),
+                MessageType.REQUEST_PAYMENT,
+                null);
+        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(userId));
+    }
     /*제공자의 주문 상태 변경*/
     @Transactional
     public void changeStatusOrder(Long providerId, OrderStatusRequest request) {
-        OrderEntity order = verifyProvider(providerId, request.getOrderId());
+        OrderEntity order = verifyProvider(providerId, request.getOrderId(), OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
 
         order.changeStatus(request);
         orderRepository.save(order);
@@ -194,14 +208,14 @@ public class OrderService {
                 NotificationType.ORDER
         );
     }
-    /*수락하는 user의 권한 확인 메서드*/
-    public OrderEntity verifyProvider(Long userId, Long orderId) {
+    /*주문에 관련 제공자인지 권한 확인*/
+    public OrderEntity verifyProvider(Long userId, Long orderId, OrderError error) {
         UserEntity user = userRepository.findByIdOrThrow(userId, OrderError.USER_NOT_FOUND);
         OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
         Long orderProviderId = order.getService().getUser().getId();
         /*수락하는 user의 권한 확인*/
         if (!user.getId().equals(orderProviderId)) {
-            throw new ApiException(OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
+            throw new ApiException(error);
         }
         return order;
     }

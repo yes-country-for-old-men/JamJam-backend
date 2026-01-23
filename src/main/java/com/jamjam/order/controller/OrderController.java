@@ -1,14 +1,19 @@
 package com.jamjam.order.controller;
 
+import com.jamjam.chat.domain.entity.ChatMessageEntity;
+import com.jamjam.chat.domain.entity.MessageType;
+import com.jamjam.chat.presentation.dto.req.PaymentReq;
 import com.jamjam.global.annotation.CurrentUser;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.dto.*;
+import com.jamjam.order.exception.OrderError;
 import com.jamjam.order.scheduler.OrderStatusScheduler;
 import com.jamjam.order.service.OrderService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -100,5 +105,27 @@ public class OrderController {
         OrderCountResponse response = orderService.getOrderCount(customUserDetails);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+
+    @Operation(
+            summary = "결제 요청",
+            description = """
+                        body로 채팅방 ID(roomId), 주문 ID(orderId), 결제 금액(price) 넣어 요청
+                        
+                        해당 채팅방에 다음 메시지 송신
+                        ```
+                        message_type: REQUEST_PAYMENT
+                        content: "10000" //price가 String으로 전송됨
+                        ```
+                        """
+    )
+    @PostMapping("/request_payment")
+    public ResponseEntity<ResponseDto<Void>> requestPayment(
+            @Parameter(hidden = true) @CurrentUser CustomUserDetails user,
+            @RequestBody PaymentReq request
+    ) {
+        orderService.requestPayment(user.getUserId(), request);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 }
