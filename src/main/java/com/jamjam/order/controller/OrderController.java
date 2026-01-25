@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import retrofit2.http.PartMap;
 
 import java.util.List;
 
@@ -106,11 +107,10 @@ public class OrderController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
-
     @Operation(
             summary = "결제 요청",
             description = """
-                        body로 채팅방 ID(roomId), 주문 ID(orderId), 결제 금액(price) 넣어 요청
+                        body로 주문 ID(orderId), 결제 금액(price) 넣어 요청
                         
                         해당 채팅방에 다음 메시지 송신
                         ```
@@ -125,6 +125,28 @@ public class OrderController {
             @RequestBody PaymentReq request
     ) {
         orderService.requestPayment(user.getUserId(), request);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
+    }
+    @Operation(
+            summary = "결제",
+            description = """
+                        body로 주문 ID(orderId), 결제 금액(price) 넣어 요청
+                        
+                        결제 시, provider의 추가 확인 없이
+                        주문 상태 PREPARING으로 변경
+                        -> 이후 client의 주문 취소 불가능 (REQUESTED일 때만 가능)
+                        
+                        client 크레딧 결제 금액만큼 차감
+                        (provider 크레딧 추가는 구매 확정 후)
+                        """
+    )
+    @PostMapping("/payment")
+    public ResponseEntity<ResponseDto<Void>> processPayment(
+            @Parameter(hidden = true) @CurrentUser CustomUserDetails user,
+            @RequestBody PaymentReq request
+    ) {
+        orderService.processPayment(user.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }

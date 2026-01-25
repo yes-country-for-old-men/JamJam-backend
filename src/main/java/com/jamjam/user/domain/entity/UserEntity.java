@@ -1,6 +1,9 @@
 package com.jamjam.user.domain.entity;
 
+import com.jamjam.global.exception.ApiException;
+import com.jamjam.global.exception.ErrorCode;
 import com.jamjam.notify.domain.entity.FcmTokenEntity;
+import com.jamjam.order.exception.OrderError;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -128,7 +131,15 @@ public class UserEntity {
         this.profileUrl = newProfileUrl;
     }
   
-    public void changeCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
+    public void addCredit(BigDecimal amount) { this.credit = this.credit.add(amount); }
+
+    public void reduceCredit(BigDecimal amount, ErrorCode error) {
+        if (this.credit.compareTo(amount) < 0) {
+            throw new ApiException(error);
+        }
+
+        this.credit = this.credit.subtract(amount);
+    }
 
     public void registerAccount(AccountEntity account) {
         this.account = account;
