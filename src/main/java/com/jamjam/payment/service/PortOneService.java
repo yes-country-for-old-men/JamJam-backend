@@ -100,7 +100,7 @@ public class PortOneService {
 
             UserEntity user = userRepository.findById(customUserDetails.getUserId())
                     .orElseThrow(() -> new ApiException(PaymentError.USER_NOT_FOUND));
-            user.changeCredit(orderPrice);
+            user.addCredit(orderPrice);
             userRepository.save(user);
             log.info("{} 크레딧 충전 완료", orderPrice);
             CreditHistoryEntity chargeHistory = CreditHistoryEntity.builder()

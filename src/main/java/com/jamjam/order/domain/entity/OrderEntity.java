@@ -1,8 +1,6 @@
 package com.jamjam.order.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jamjam.global.exception.ApiException;
-import com.jamjam.global.exception.ErrorCode;
 import com.jamjam.order.dto.OrderStatusRequest;
 import com.jamjam.order.exception.OrderError;
 import com.jamjam.service.domain.entity.ServiceEntity;
@@ -14,7 +12,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +33,6 @@ public class OrderEntity {
 
     @NotNull
     private LocalDateTime deadline;
-
-//    @ElementCollection
-//    @CollectionTable(name = "order_reference_files")
-//    private List<String> referenceFiles;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderReferenceFileEntity> referenceFiles = new ArrayList<>();
