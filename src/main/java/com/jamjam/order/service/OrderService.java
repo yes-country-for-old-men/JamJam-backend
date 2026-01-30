@@ -81,7 +81,7 @@ public class OrderService {
                 .deadline(request.getDeadline())
                 .description(request.getDescription())
                 .orderStatus(OrderStatus.REQUESTED)
-                .price(request.getPrice())
+                .price(BigDecimal.ZERO)
                 .client(user)
                 .service(service)
                 .build();
