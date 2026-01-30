@@ -147,7 +147,7 @@ public class ChatService {
             Optional<ChatRoomEntity> existingRoom = roomRepo.findExistingDirectChat(
                     userIds.get(0), userIds.get(1));
             if (existingRoom.isPresent()) {
-                return new CreateRoomRes(existingRoom.get().getId());
+                return existingRoom.get().getId();
             }
         }
 
