@@ -13,6 +13,8 @@ public enum OrderError implements ErrorCode {
     CANNOT_COMPLETE_ORDER(HttpStatus.BAD_REQUEST, "제공자가 직접 서비스를 구매 확정 처리할 수 없습니다.", "CANNOT_COMPLETE_ORDER"),
     CANNOT_CANCEL_AT_THIS_STATUS(HttpStatus.BAD_REQUEST, "취소할 수 있는 주문 상태가 아닙니다.", "CANNOT_CANCEL_AT_THIS_STATUS"),
     FORBIDDEN_CHANGE_ORDER_STATUS(HttpStatus.FORBIDDEN, "주문 상태를 수정할 권한이 없습니다.", "FORBIDDEN_CHANGE_ORDER_STATUS"),
+    FORBIDDEN_REQUEST_PAYMENT(HttpStatus.FORBIDDEN, "해당 주문에 결제 요청할 권한이 없습니다.", "FORBIDDEN_REQUEST_PAYMENT"),
+    FORBIDDEN_PROCESS_PAYMENT(HttpStatus.FORBIDDEN, "해당 주문에 결제할 권한이 없습니다.", "FORBIDDEN_PROCESS_PAYMENT"),
     UNKNOWN_USER_ROLE(HttpStatus.BAD_REQUEST, "유효하지 않은 사용자 역할입니다.", "UNKNOWN_USER_ROLE"),
     UNKNOWN_STATUS(HttpStatus.BAD_REQUEST, "알 수 없는 주문 상태입니다.", "UNKNOWN_STATUS"),
     CREDIT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "크레딧 부족으로 주문을 진행할 수 없습니다.", "CREDIT_NOT_ENOUGH");

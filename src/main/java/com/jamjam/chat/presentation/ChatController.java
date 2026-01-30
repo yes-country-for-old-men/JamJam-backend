@@ -172,9 +172,10 @@
             List<String> userIds = new ArrayList<>();
             userIds.add(Long.toString(otherId));
             userIds.add(String.valueOf(user.getUserId()));
-    
-            return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS,
-                    chatService.createRoom(false, userIds)));
+
+            CreateRoomRes response = new CreateRoomRes(chatService.createRoom(false, userIds));
+
+            return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
         }
 
         @GetMapping("/rooms/{chatRoomId}/messages")

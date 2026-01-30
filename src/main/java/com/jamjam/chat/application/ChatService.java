@@ -141,7 +141,7 @@ public class ChatService {
     }
 
     @Transactional
-    public CreateRoomRes createRoom(boolean groupChat, List<String> userIds) {
+    public Long createRoom(boolean groupChat, List<String> userIds) {
 
         if (userIds.size() == 2) {
             Optional<ChatRoomEntity> existingRoom = roomRepo.findExistingDirectChat(
@@ -162,7 +162,7 @@ public class ChatService {
                         .userId(uid)
                         .build()));
 
-        return new CreateRoomRes(room.getId());
+        return room.getId();
     }
 
     @Transactional(readOnly = true)

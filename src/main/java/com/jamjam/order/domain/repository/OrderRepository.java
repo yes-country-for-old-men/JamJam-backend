@@ -1,5 +1,6 @@
 package com.jamjam.order.domain.repository;
 
+import com.jamjam.global.repository.BaseRepository;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.entity.OrderStatus;
 import org.springframework.data.domain.Page;
@@ -11,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
+public interface OrderRepository extends BaseRepository<OrderEntity, Long> {
 
     @Query("SELECT o FROM OrderEntity o WHERE o.orderStatus = 3 AND o.serviceCompletedAt <= :purchaseDeadline")
     List<OrderEntity> findWaitingConfirmOrdersBefore(@Param("purchaseDeadline")LocalDateTime purchaseDeadline);

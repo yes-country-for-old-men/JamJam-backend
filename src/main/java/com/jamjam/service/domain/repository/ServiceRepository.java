@@ -1,17 +1,15 @@
 package com.jamjam.service.domain.repository;
 
+import com.jamjam.global.repository.BaseRepository;
 import com.jamjam.service.domain.entity.ServiceEntity;
-import com.jamjam.service.dto.ServiceSummaryDTO;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface ServiceRepository extends JpaRepository<ServiceEntity, Long> {
+public interface ServiceRepository extends BaseRepository<ServiceEntity, Long> {
     @Query("SELECT s FROM ServiceEntity s LEFT JOIN s.user u WHERE s.categoryId = :category")
     Page<ServiceEntity> findByCategoryId(Integer category, Pageable pageable);
 

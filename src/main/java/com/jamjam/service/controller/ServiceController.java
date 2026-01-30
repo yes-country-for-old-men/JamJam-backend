@@ -5,13 +5,12 @@ import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.service.dto.*;
 import com.jamjam.service.service.AiGenerationService;
+import com.jamjam.service.service.GeminiService;
 import com.jamjam.service.service.ServiceService;
 import com.jamjam.service.util.OpenAiClient;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.Current;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -27,29 +26,33 @@ import java.util.List;
 @RequestMapping("/api/service")
 public class ServiceController {
     private final AiGenerationService aiGenerationService;
+    private final GeminiService geminiService;
     private final ServiceService serviceService;
     private final OpenAiClient openAiClient;
 
-    public ServiceController(AiGenerationService aiGenerationService, ServiceService serviceService, OpenAiClient openAiClient) {
+    public ServiceController(AiGenerationService aiGenerationService, GeminiService geminiService,
+                             ServiceService serviceService, OpenAiClient openAiClient) {
         this.aiGenerationService = aiGenerationService;
+        this.geminiService = geminiService;
         this.serviceService = serviceService;
         this.openAiClient = openAiClient;
     }
-    /*GPT에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
+
+    /*AI에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
     @PostMapping("/generate")
-    @Operation(summary = "서비스 초안 생성", description = "gpt에 서비스 명, 서비스 상세 설명, 카테고리 요청")
+    @Operation(summary = "서비스 초안 생성", description = "AI에 서비스 명, 서비스 상세 설명, 카테고리 요청")
     public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody AiServiceRequest request) {
-        AiServiceResponse response = aiGenerationService.generateService(customUserDetails.getUserId(), request);
+        AiServiceResponse response = geminiService.generateService(customUserDetails.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
-    /*Gpt-image-1에 썸네일 생성 요청*/
+    /*Ai에 썸네일 생성 요청*/
     @PostMapping("/ai-thumbnail")
     @Operation(summary = "ai 썸네일 생성 요청")
-    public ResponseEntity<ResponseDto<AiImageResponse>> generateThumbnail(@RequestBody AiImageRequest request) {
-        AiImageResponse response = aiGenerationService.generateImage(request);
+    public ResponseEntity<ResponseDto<AiImageResponse>> testGenerateThumbnail(@RequestBody AiImageRequest request) {
+        AiImageResponse response = geminiService.generateThumbnail(request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
@@ -107,14 +110,5 @@ public class ServiceController {
         serviceService.editService(customUserDetails, serviceId, request, thumbnail, portfolioImages);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
-    }
-    @PostMapping("/test")
-    public ResponseEntity<ResponseDto<String>> markdown(
-            @CurrentUser CustomUserDetails customUserDetails,
-            @RequestBody ServiceRegisterRequest request) {
-
-        String response = openAiClient.applyMarkdown(request.getDescription());
-
-        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
 }
