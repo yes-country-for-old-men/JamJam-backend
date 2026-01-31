@@ -36,7 +36,20 @@ public class OrderController {
 
     /*서비스 신청*/
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "서비스 신청")
+    @Operation(
+            summary = "서비스 신청",
+            description = """
+                        message_type: REQUEST_FORM
+                        content: {
+                                    "serviceId": 1,
+                                    "serviceName": "서비스명",
+                                    "serviceThumbnail": "썸네일 URL",
+                                    "orderId": 2
+                                 }
+                        
+                        REQUESTED 상태로 주문이 생성됨.
+                        """
+    )
     public ResponseEntity<ResponseDto<Void>> registerOrder(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestPart("request") OrderRegisterRequest request,
@@ -48,7 +61,20 @@ public class OrderController {
     /*서비스 상태 변경 - 제공자
     * 진행 중(수락), 취소, 완료됨 */
     @PatchMapping("/provider/change-status")
-    @Operation(summary = "제공자가 주문의 상태를 변경")
+    @Operation(
+            summary = "제공자가 주문의 상태를 변경",
+            description = """
+                        message_type: ORDER_CANCELLED or WORK_COMPLETED
+                        content: {
+                                    "serviceId": 1,
+                                    "serviceName": "서비스명",
+                                    "serviceThumbnail": "썸네일 URL",
+                                    "orderId": 2
+                                 }
+                        
+                        주문 상태 CANCELLED or WAITING_CONFIRM로 변경됨.
+                        """
+    )
     public ResponseEntity<ResponseDto<Void>> acceptOrder(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody OrderStatusRequest request) {
@@ -59,7 +85,20 @@ public class OrderController {
     /*서비스 취소 - 구매자
     * 주문 수락 전에만 취소 가능*/
     @PatchMapping("/client/cancel")
-    @Operation(summary = "구매자가 주문 수락 전 취소")
+    @Operation(
+            summary = "구매자가 주문 수락 전 취소",
+            description = """
+                        message_type: ORDER_CANCELLED
+                        content: {
+                                    "serviceId": 1,
+                                    "serviceName": "서비스명",
+                                    "serviceThumbnail": "썸네일 URL",
+                                    "orderId": 2
+                                 }
+                        
+                        주문 상태 CANCELLED로 변경됨.
+                        """
+    )
     public ResponseEntity<ResponseDto<Void>> cancelPurchase(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody OrderStatusRequest request) {
@@ -110,13 +149,8 @@ public class OrderController {
     @Operation(
             summary = "결제 요청",
             description = """
-                        body로 주문 ID(orderId), 결제 금액(price) 넣어 요청
-                        
-                        해당 채팅방에 다음 메시지 송신
-                        ```
                         message_type: REQUEST_PAYMENT
-                        content: "10000" //price가 String으로 전송됨
-                        ```
+                        content: "10000" //price가 String으로 전송됨 (JSON 아님)
                         """
     )
     @PostMapping("/request_payment")
@@ -131,15 +165,20 @@ public class OrderController {
     @Operation(
             summary = "결제",
             description = """
-                        body로 주문 ID(orderId), 결제 금액(price) 넣어 요청
+                        message_type: PAYMENT_COMPLETED
+                        content: {
+                                    "serviceId": 1,
+                                    "serviceName": "서비스명",
+                                    "serviceThumbnail": "썸네일 URL",
+                                    "orderId": 2
+                                 }
                         
-                        결제 시, provider의 추가 확인 없이
-                        주문 상태 PREPARING으로 변경
-                        -> 이후 client의 주문 취소 불가능 (REQUESTED일 때만 가능)
+                        주문 상태 PREPARING로 변경됨.
+                        -> client는 이후 주문 취소 불가능
                         
-                        client 크레딧 결제 금액만큼 차감
-                        (provider 크레딧 추가는 구매 확정 후)
+                        차감된 client의 크레딧은 구매 확정 후 provider 크레딧에 추가
                         """
+
     )
     @PostMapping("/payment")
     public ResponseEntity<ResponseDto<Void>> processPayment(

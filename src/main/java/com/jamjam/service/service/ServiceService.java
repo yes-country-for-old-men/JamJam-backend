@@ -1,6 +1,13 @@
 package com.jamjam.service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jamjam.chat.application.ChatService;
+import com.jamjam.chat.domain.entity.ChatMessageEntity;
+import com.jamjam.chat.domain.entity.MessageType;
+import com.jamjam.chat.util.EventBroadcaster;
 import com.jamjam.global.exception.ApiException;
+import com.jamjam.order.exception.OrderError;
 import com.jamjam.service.domain.entity.ServiceInfoImageEntity;
 import com.jamjam.service.domain.repository.ServiceInfoImageRepository;
 import com.jamjam.service.dto.*;
@@ -13,6 +20,7 @@ import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
@@ -23,22 +31,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ServiceService {
     private final ServiceRepository serviceRepository;
     private final S3Uploader s3Uploader;
     private final UserRepository userRepository;
     private final ServiceInfoImageRepository serviceInfoImageRepository;
+    private final ChatService chatService;
+    private final EventBroadcaster eventBroadcaster;
+    private final ObjectMapper objectMapper;
 
-    public ServiceService(ServiceRepository serviceRepository, S3Uploader s3Uploader, UserRepository userRepository, ServiceInfoImageRepository serviceInfoImageRepository) {
-        this.serviceRepository = serviceRepository;
-        this.s3Uploader = s3Uploader;
-        this.userRepository = userRepository;
-        this.serviceInfoImageRepository = serviceInfoImageRepository;
-    }
     /*서비스 등록
     * 썸네일, 포트폴리오 이미지들은 S3에 저장
     * 그 후 서비스 DB에 저장*/
@@ -217,5 +225,31 @@ public class ServiceService {
         }
 
         serviceRepository.save(service);
+    }
+
+    public void makeServiceInquiry(Long userId, Long serviceId) {
+        ServiceEntity service = serviceRepository.findByIdOrThrow(serviceId, ServiceError.SERVICE_NOT_FOUND);
+
+        String content;
+        try {
+            Map<String, Object> contentMap = new HashMap<>();
+            contentMap.put("serviceId", service.getId());
+            contentMap.put("serviceName", service.getServiceName());
+
+            content = objectMapper.writeValueAsString(contentMap);
+        } catch (JsonProcessingException e) {
+            log.error("[SERVICE] 메시지 포맷 변환 실패", e);
+            throw new ApiException(ServiceError.JSON_PROCESSING_ERROR);
+        }
+
+        sendMessage(userId, service.getUser().getId(), MessageType.SERVICE_INQUIRY, content);
+    }
+
+    public void sendMessage(Long senderId, Long receiverId, MessageType type, String content) {
+        Long chatRoomId = chatService.getChatRoomId(senderId, receiverId);
+
+        ChatMessageEntity savedMsg = chatService
+                .sendMessage(chatRoomId, String.valueOf(senderId), content, type, null);
+        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(senderId));
     }
 }

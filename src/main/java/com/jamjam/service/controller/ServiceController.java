@@ -111,4 +111,25 @@ public class ServiceController {
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
+    /*서비스 문의*/
+    @PostMapping("/inquiry")
+    @Operation(
+            summary = "서비스 문의",
+            description = """
+                        message_type: SERVICE_INQUIRY
+                        content: {
+                                    "serviceId": 1,
+                                    "serviceName": "서비스명"
+                                 }
+                        """
+    )
+    public ResponseEntity<ResponseDto<Void>> makeServiceInquiry(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @RequestParam Long serviceId
+    ) {
+        serviceService.makeServiceInquiry(customUserDetails.getUserId(), serviceId);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
+    }
+
 }
