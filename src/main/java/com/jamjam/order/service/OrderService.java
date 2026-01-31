@@ -1,5 +1,7 @@
 package com.jamjam.order.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.chat.application.ChatService;
 import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.ChatRoomEntity;
@@ -36,9 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -53,10 +53,11 @@ public class OrderService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatService chatService;
     private final EventBroadcaster eventBroadcaster;
+    private final ObjectMapper objectMapper;
 
     public OrderService(OrderRepository orderRepository, UserRepository userRepository,
                         S3Uploader s3Uploader, ServiceRepository serviceRepository,
-                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository, ChatRoomRepository chatRoomRepository, ChatService chatService, EventBroadcaster eventBroadcaster) {
+                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository, ChatRoomRepository chatRoomRepository, ChatService chatService, EventBroadcaster eventBroadcaster, ObjectMapper objectMapper) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.s3Uploader = s3Uploader;
@@ -67,6 +68,7 @@ public class OrderService {
         this.chatRoomRepository = chatRoomRepository;
         this.chatService = chatService;
         this.eventBroadcaster = eventBroadcaster;
+        this.objectMapper = objectMapper;
     }
     /*주문 신청*/
     @Transactional
@@ -107,7 +109,19 @@ public class OrderService {
 
         // 서비스 제공자에게 의뢰서 송신
         Long chatRoomId = getChatRoomId(userId, order.getService().getUser().getId());
-        String content = String.valueOf(order.getId());
+        String content;
+        try {
+            Map<String, Object> contentMap = new HashMap<>();
+            contentMap.put("serviceId", service.getId());
+            contentMap.put("serviceName", service.getServiceName());
+            contentMap.put("serviceThumbnail", service.getThumbnail());
+            contentMap.put("orderId", order.getId());
+
+            content = objectMapper.writeValueAsString(contentMap);
+        } catch (JsonProcessingException e) {
+            log.error("[ORDER] 메시지 포맷 변환 실패", e);
+            throw new ApiException(OrderError.JSON_PROCESSING_ERROR);
+        }
 
         ChatMessageEntity savedMsg = chatService
                 .sendMessage(chatRoomId, String.valueOf(userId), content, MessageType.REQUEST_FORM, null);
