@@ -1,5 +1,7 @@
 package com.jamjam.chat.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.ChatRoomEntity;
 import com.jamjam.chat.domain.entity.ChatRoomParticipantEntity;
@@ -19,6 +21,9 @@ import com.jamjam.chat.presentation.dto.req.SendMessageReq.FileInfo;
 import com.jamjam.global.dto.SliceInfo;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
+import com.jamjam.order.domain.entity.OrderEntity;
+import com.jamjam.order.exception.OrderError;
+import com.jamjam.service.domain.entity.ServiceEntity;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.UserEntity;
 import com.jamjam.user.domain.repository.UserRepository;
@@ -35,11 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,6 +56,7 @@ public class ChatService {
     private final NotificationSender notificationSender;
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
+    private final ChatRoomRepository chatRoomRepository;
 
     @Transactional
     public ChatMessageEntity sendMessage(Long roomId, String senderId, String content) {
@@ -356,5 +358,18 @@ public class ChatService {
     private boolean isDocumentType(String extension) {
         List<String> documentExtensions = List.of("pdf", "doc", "docx", "xls", "xlsx", "zip", "txt");
         return documentExtensions.contains(extension);
+    }
+
+    /*주문자와 제공자 사이의 기존 혹은 새 채팅방 id 반환*/
+    @Transactional
+    public Long getChatRoomId(Long userId, Long providerId) {
+        List<String> userIds = new ArrayList<>();
+        userIds.add(String.valueOf(userId));
+        userIds.add(String.valueOf(providerId));
+
+        return chatRoomRepository
+                .findPrivateChatRoom(userId, providerId)
+                .map(ChatRoomEntity::getId)
+                .orElseGet(() -> createRoom(false, userIds));
     }
 }

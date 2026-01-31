@@ -29,6 +29,7 @@ import com.jamjam.user.domain.entity.UserRole;
 import com.jamjam.user.domain.repository.CreditHistoryRepository;
 import com.jamjam.user.domain.repository.UserRepository;
 import com.jamjam.util.NotificationSender;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ import java.util.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -50,26 +52,10 @@ public class OrderService {
     private final OrderReferenceFileRepository orderReferenceFileRepository;
     private final NotificationSender notificationSender;
     private final CreditHistoryRepository creditHistoryRepository;
-    private final ChatRoomRepository chatRoomRepository;
     private final ChatService chatService;
     private final EventBroadcaster eventBroadcaster;
     private final ObjectMapper objectMapper;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository,
-                        S3Uploader s3Uploader, ServiceRepository serviceRepository,
-                        OrderReferenceFileRepository orderReferenceFileRepository, NotificationSender notificationSender, CreditHistoryRepository creditHistoryRepository, ChatRoomRepository chatRoomRepository, ChatService chatService, EventBroadcaster eventBroadcaster, ObjectMapper objectMapper) {
-        this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
-        this.s3Uploader = s3Uploader;
-        this.serviceRepository = serviceRepository;
-        this.orderReferenceFileRepository = orderReferenceFileRepository;
-        this.notificationSender = notificationSender;
-        this.creditHistoryRepository = creditHistoryRepository;
-        this.chatRoomRepository = chatRoomRepository;
-        this.chatService = chatService;
-        this.eventBroadcaster = eventBroadcaster;
-        this.objectMapper = objectMapper;
-    }
     /*주문 신청*/
     @Transactional
     public void registerService(OrderRegisterRequest request, Long userId, List<MultipartFile> referenceFiles) {
@@ -343,17 +329,6 @@ public class OrderService {
 
         return OrderInfoDTO.from(order);
     }
-    /*주문자와 제공자 사이의 기존 혹은 새 채팅방 id 반환*/
-    public Long getChatRoomId(Long userId, Long providerId) {
-        List<String> userIds = new ArrayList<>();
-        userIds.add(String.valueOf(userId));
-        userIds.add(String.valueOf(providerId));
-
-        return chatRoomRepository
-                .findPrivateChatRoom(userId, providerId)
-                .map(ChatRoomEntity::getId)
-                .orElseGet(() -> chatService.createRoom(false, userIds));
-    }
     public String getContent(ServiceEntity service, OrderEntity order) {
         String content;
         try {
@@ -371,8 +346,8 @@ public class OrderService {
 
         return content;
     }
-    public void sendMessage(Long senderId, Long receiverId, MessageType type, String content) {
-        Long chatRoomId = getChatRoomId(senderId, receiverId);
+    public void sendMessage(Long senderId, Long receiverId,  MessageType type, String content) {
+        Long chatRoomId = chatService.getChatRoomId(senderId, receiverId);
 
         ChatMessageEntity savedMsg = chatService
                 .sendMessage(chatRoomId, String.valueOf(senderId), content, type, null);
