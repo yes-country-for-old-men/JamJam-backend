@@ -108,24 +108,9 @@ public class OrderService {
         log.info("[ORDER] 의뢰서 임시 저장 완료");
 
         // 서비스 제공자에게 의뢰서 송신
-        Long chatRoomId = getChatRoomId(userId, order.getService().getUser().getId());
-        String content;
-        try {
-            Map<String, Object> contentMap = new HashMap<>();
-            contentMap.put("serviceId", service.getId());
-            contentMap.put("serviceName", service.getServiceName());
-            contentMap.put("serviceThumbnail", service.getThumbnail());
-            contentMap.put("orderId", order.getId());
+        String content = getContent(service, order);
 
-            content = objectMapper.writeValueAsString(contentMap);
-        } catch (JsonProcessingException e) {
-            log.error("[ORDER] 메시지 포맷 변환 실패", e);
-            throw new ApiException(OrderError.JSON_PROCESSING_ERROR);
-        }
-
-        ChatMessageEntity savedMsg = chatService
-                .sendMessage(chatRoomId, String.valueOf(userId), content, MessageType.REQUEST_FORM, null);
-        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(userId));
+        sendMessage(userId, order.getServiceProviderId(), MessageType.REQUEST_FORM, content);
     }
     /*주문 결제 요청*/
     @Transactional
@@ -138,11 +123,7 @@ public class OrderService {
         if (!order.getPrice().equals(newPrice)) order.setPrice(newPrice);
 
         // 주문자에게 결제 요청 송신
-        Long chatRoomId = getChatRoomId(userId, order.getClient().getId());
-
-        ChatMessageEntity savedMsg = chatService
-                .sendMessage(chatRoomId, String.valueOf(userId), String.valueOf(request.price()), MessageType.REQUEST_PAYMENT, null);
-        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(userId));
+        sendMessage(userId, order.getClient().getId(), MessageType.REQUEST_PAYMENT, String.valueOf(request.price()));
     }
     /*결제 진행*/
     @Transactional
@@ -160,6 +141,10 @@ public class OrderService {
 
         // 주문 상태 변경
         order.setOrderStatus(OrderStatus.PREPARING);
+
+        // 제공자에게 결제 완료 알림
+        String content = getContent(order.getService(), order);
+        sendMessage(client.getId(), order.getServiceProviderId(), MessageType.PAYMENT_COMPLETED, content);
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
@@ -171,14 +156,21 @@ public class OrderService {
         log.info("주문 상태 변경 완료");
 
         String body;
+        MessageType type;
         if (request.getOrderStatus() == OrderStatus.CANCELLED) {
             refundCreditOnCancellation(order.getClient(), order.getPrice());
             body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 취소되었습니다.";
+            type = MessageType.ORDER_CANCELLED;
         }  else if (request.getOrderStatus() == OrderStatus.WAITING_CONFIRM) {
             body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 작업 완료되었습니다.";
+            type = MessageType.WORK_COMPLETED;
         } else {
             throw new ApiException(OrderError.CANNOT_COMPLETE_ORDER);
         }
+        String content = getContent(order.getService(), order);
+
+        // 주문 상태 변경 주문자에게 알림
+        sendMessage(providerId, order.getClient().getId(), type, content);
 
         notificationSender.sendToUser(
                 order.getClient(),
@@ -201,6 +193,10 @@ public class OrderService {
         log.info("주문 취소 완료");
         refundCreditOnCancellation(order.getClient(), order.getPrice());
 
+        // 주문 취소 제공자에게 알림
+        String content = getContent(order.getService(), order);
+        sendMessage(userId, order.getServiceProviderId(), MessageType.ORDER_CANCELLED, content);
+
         String body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 의뢰인에 의해 취소되었습니다.";
         notificationSender.sendToUser(
                 order.getService().getUser(),
@@ -218,7 +214,7 @@ public class OrderService {
         orderRepository.save(order);
         log.info("주문 구매 확정 처리");
 
-        transferCreditOnConfirmation(order.getService().getUser().getId(), order.getPrice());
+        transferCreditOnConfirmation(order.getServiceProviderId(), order.getPrice());
 
         notificationSender.sendToUser(
                 order.getService().getUser(),
@@ -325,7 +321,7 @@ public class OrderService {
     public OrderEntity verifyProvider(Long userId, Long orderId, OrderError error) {
         OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
 
-        Long orderProviderId = order.getService().getUser().getId();
+        Long orderProviderId = order.getServiceProviderId();
         /*수락하는 user의 권한 확인*/
         if (!userId.equals(orderProviderId)) throw new ApiException(error);
 
@@ -347,6 +343,7 @@ public class OrderService {
 
         return OrderInfoDTO.from(order);
     }
+    /*주문자와 제공자 사이의 기존 혹은 새 채팅방 id 반환*/
     public Long getChatRoomId(Long userId, Long providerId) {
         List<String> userIds = new ArrayList<>();
         userIds.add(String.valueOf(userId));
@@ -356,6 +353,30 @@ public class OrderService {
                 .findPrivateChatRoom(userId, providerId)
                 .map(ChatRoomEntity::getId)
                 .orElseGet(() -> chatService.createRoom(false, userIds));
+    }
+    public String getContent(ServiceEntity service, OrderEntity order) {
+        String content;
+        try {
+            Map<String, Object> contentMap = new HashMap<>();
+            contentMap.put("serviceId", service.getId());
+            contentMap.put("serviceName", service.getServiceName());
+            contentMap.put("serviceThumbnail", service.getThumbnail());
+            contentMap.put("orderId", order != null ? order.getId() : null);
+
+            content = objectMapper.writeValueAsString(contentMap);
+        } catch (JsonProcessingException e) {
+            log.error("[ORDER] 메시지 포맷 변환 실패", e);
+            throw new ApiException(OrderError.JSON_PROCESSING_ERROR);
+        }
+
+        return content;
+    }
+    public void sendMessage(Long senderId, Long receiverId, MessageType type, String content) {
+        Long chatRoomId = getChatRoomId(senderId, receiverId);
+
+        ChatMessageEntity savedMsg = chatService
+                .sendMessage(chatRoomId, String.valueOf(senderId), content, type, null);
+        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(senderId));
     }
 }
 

@@ -99,4 +99,8 @@ public class OrderEntity {
         this.orderStatus = OrderStatus.COMPLETED;
         this.purchaseConfirmedAt = LocalDateTime.now();
     }
+
+    public Long getServiceProviderId() {
+        return this.service.getUser().getId();
+    }
 }
