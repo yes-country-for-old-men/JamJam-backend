@@ -103,6 +103,10 @@ public class OrderService {
     public void requestPayment(Long userId, PaymentReq request) {
         OrderEntity order = verifyProvider(userId, request.orderId(), OrderError.FORBIDDEN_REQUEST_PAYMENT);
 
+        // 주문 상태가 REQUESTED일 때만 결제 요청 가능
+        if (order.getOrderStatus() != OrderStatus.REQUESTED) {
+            throw new ApiException(OrderError.CANNOT_REQUEST_PAYMENT);
+        }
         // 기존 주문 금액과 조율 후 금액이 다른 경우 갱신
         BigDecimal newPrice = BigDecimal.valueOf(request.price());
 
@@ -116,6 +120,10 @@ public class OrderService {
     public void processPayment(Long userId, PaymentReq request) {
         UserEntity client = userRepository.findByIdOrThrow(userId, OrderError.USER_NOT_FOUND);
         OrderEntity order = verifyClient(userId, request.orderId(), OrderError.FORBIDDEN_PROCESS_PAYMENT);
+
+        if (order.getOrderStatus() != OrderStatus.REQUESTED) {
+            throw new ApiException(OrderError.CANNOT_PROCESS_PAYMENT);
+        }
 
         // 주문자 크레딧 차감 (히스토리 저장)
         BigDecimal amount = BigDecimal.valueOf(request.price());
