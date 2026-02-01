@@ -113,7 +113,19 @@ public class OrderService {
         if (!order.getPrice().equals(newPrice)) order.setPrice(newPrice);
 
         // 주문자에게 결제 요청 송신
-        sendMessage(userId, order.getClient().getId(), MessageType.REQUEST_PAYMENT, String.valueOf(request.price()));
+        String content;
+        try {
+            Map<String, Object> contentMap = new HashMap<>();
+            contentMap.put("orderId", order.getId());
+            contentMap.put("price", newPrice);
+
+            content = objectMapper.writeValueAsString(contentMap);
+        } catch (JsonProcessingException e) {
+            log.error("[ORDER] 메시지 포맷 변환 실패", e);
+            throw new ApiException(OrderError.JSON_PROCESSING_ERROR);
+        }
+
+        sendMessage(userId, order.getClient().getId(), MessageType.REQUEST_PAYMENT, content);
     }
     /*결제 진행*/
     @Transactional
