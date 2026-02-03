@@ -85,16 +85,6 @@ public class ChatService {
                     .collect(Collectors.toList());
         }
 
-        ChatMessageEntity msg = ChatMessageEntity.builder()
-                .room(room)
-                .senderId(senderId)
-                .senderName(sender.getNickname())
-                .content(content)
-                .sentAt(LocalDateTime.now())
-                .messageType(messageType != null ? messageType : MessageType.TEXT)
-                .files(files)
-                .build();
-
         /*채팅방 참여자에게 푸시 알림 web 제외*/
         for (ChatRoomParticipantEntity participant : room.getParticipants()) {
             UserEntity receiver = userRepository.findById(Long.valueOf(participant.getUserId()))
@@ -119,6 +109,16 @@ public class ChatService {
                     NotificationType.CHAT
             );
         }
+
+        ChatMessageEntity msg = ChatMessageEntity.builder()
+                .room(room)
+                .senderId(senderId)
+                .senderName(sender.getNickname())
+                .content(content)
+                .sentAt(LocalDateTime.now())
+                .messageType(messageType != null ? messageType : MessageType.TEXT)
+                .files(files)
+                .build();
 
         return msgRepo.save(msg);
     }
@@ -322,6 +322,43 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 
+    /*주문자와 제공자 사이의 기존 혹은 새 채팅방 id 반환*/
+    @Transactional
+    public Long getChatRoomId(Long userId, Long providerId) {
+        List<String> userIds = new ArrayList<>();
+        userIds.add(String.valueOf(userId));
+        userIds.add(String.valueOf(providerId));
+
+        return chatRoomRepository
+                .findPrivateChatRoom(userId, providerId)
+                .map(ChatRoomEntity::getId)
+                .orElseGet(() -> createRoom(false, userIds));
+    }
+
+    /*text 외 메시지 content 수정*/
+    @Transactional
+    public void updatePreviewContent(ChatMessageEntity msg) {
+        if (msg.getMessageType() == MessageType.IMAGE) {
+            msg.setContent("사진을 전송되었습니다.");
+        } else if (msg.getMessageType() == MessageType.FILE) {
+            msg.setContent("파일을 전송되었습니다.");
+        } else if (msg.getMessageType() == MessageType.REQUEST_FORM) {
+            msg.setContent("의뢰서가 전송되었습니다.");
+        } else if (msg.getMessageType() == MessageType.REQUEST_PAYMENT) {
+            msg.setContent("결제 요청이 전송되었습니다.");
+        } else if (msg.getMessageType() == MessageType.PAYMENT_COMPLETED) {
+            msg.setContent("결제가 완료되었습니다.");
+        } else if (msg.getMessageType() == MessageType.ORDER_CANCELLED) {
+            msg.setContent("주문이 취소되었습니다.");
+        } else if (msg.getMessageType() == MessageType.WORK_COMPLETED) {
+            msg.setContent("작업이 완료되었습니다.");
+        } else if (msg.getMessageType() == MessageType.SERVICE_INQUIRY) {
+            msg.setContent("서비스 문의가 전송되었습니다.");
+        }
+
+        msgRepo.save(msg);
+    }
+
     private MessageType validateAndGetMessageType(MultipartFile file) {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
@@ -358,18 +395,5 @@ public class ChatService {
     private boolean isDocumentType(String extension) {
         List<String> documentExtensions = List.of("pdf", "doc", "docx", "xls", "xlsx", "zip", "txt");
         return documentExtensions.contains(extension);
-    }
-
-    /*주문자와 제공자 사이의 기존 혹은 새 채팅방 id 반환*/
-    @Transactional
-    public Long getChatRoomId(Long userId, Long providerId) {
-        List<String> userIds = new ArrayList<>();
-        userIds.add(String.valueOf(userId));
-        userIds.add(String.valueOf(providerId));
-
-        return chatRoomRepository
-                .findPrivateChatRoom(userId, providerId)
-                .map(ChatRoomEntity::getId)
-                .orElseGet(() -> createRoom(false, userIds));
     }
 }
