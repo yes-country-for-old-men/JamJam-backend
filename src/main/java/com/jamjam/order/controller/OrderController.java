@@ -118,13 +118,22 @@ public class OrderController {
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.UPDATE_SUCCESS));
     }
     /*주문 내역*/
-    @GetMapping("/order-list")
+    @GetMapping("/provider/order-list")
     @Operation(summary = "주문 내역")
     public ResponseEntity<ResponseDto<OrderListResponse>> getOrders(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam OrderStatus orderStatus,
             @PageableDefault(sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        OrderListResponse response = orderService.getOrders(customUserDetails, orderStatus, pageable);
+        OrderListResponse response = orderService.getProviderOrders(customUserDetails, orderStatus, pageable);
+
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
+    }
+    @GetMapping("/client/order-list")
+    @Operation(summary = "주문 내역")
+    public ResponseEntity<ResponseDto<OrderListResponse>> getOrders(
+            @CurrentUser CustomUserDetails customUserDetails,
+            @PageableDefault(sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        OrderListResponse response = orderService.getClientOrders(customUserDetails, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
