@@ -253,19 +253,44 @@ public class OrderService {
         saveCreditHistory(price, CreditChangeType.DEPOSIT,
                 "주문 취소로 인한 크레딧 반환", client);
     }
-    /*유저의 주문 상태 별 주문 목록 반환*/
+    /*제공자의 주문 상태 별 주문 목록 반환*/
     @Transactional
-    public OrderListResponse getOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
+    public OrderListResponse getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
-        Page<OrderEntity> entities;
-        if (user.getRole() == UserRole.PROVIDER) {
-            entities = orderRepository.findByProviderIdAndOrderStatus(user.getId(), orderStatus, pageable);
-        } else if (user.getRole() == UserRole.CLIENT) {
-            entities = orderRepository.findByClientIdAndOrderStatus(user.getId(), orderStatus, pageable);
-        } else {
-            throw new ApiException(OrderError.UNKNOWN_USER_ROLE);
+        if (user.getRole() != UserRole.PROVIDER) {
+            throw new ApiException(OrderError.IS_NOT_PROVIDER);
         }
+
+        Page<OrderEntity> entities;
+        log.info("[ORDER] providerId: {} 주문 상태 별 조회", user.getId());
+        entities = orderRepository.findByProviderIdAndOrderStatus(user.getId(), orderStatus, pageable);
+        log.info("[ORDER] providerId: {} oderStatus: {} elementCount: {}", user.getId(), orderStatus, entities.getTotalElements());
+
+        List<OrderSummaryDTO> dtoList = entities.stream()
+                .map(OrderSummaryDTO::from)
+                .toList();
+
+        return OrderListResponse.builder()
+                .orders(dtoList)
+                .currentPage(entities.getNumber())
+                .totalPages(entities.getTotalPages())
+                .hasNext(entities.hasNext())
+                .build();
+    }
+    /*주문자의 주문 목록 반환*/
+    @Transactional
+    public OrderListResponse getClientOrders(CustomUserDetails customUserDetails, Pageable pageable) {
+        UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
+
+        if (user.getRole() != UserRole.CLIENT) {
+            throw new ApiException(OrderError.IS_NOT_CLIENT);
+        }
+
+        Page<OrderEntity> entities;
+        log.info("[ORDER] clientId: {} 주문 상태 별 조회", user.getId());
+        entities = orderRepository.findByClientId(user.getId(), pageable);
+        log.info("[ORDER] clientId: {} elementCount: {}", user.getId(), entities.getTotalElements());
 
         List<OrderSummaryDTO> dtoList = entities.stream()
                 .map(OrderSummaryDTO::from)
@@ -281,7 +306,9 @@ public class OrderService {
     /*유저의 상태 별 주문 갯수 반환*/
     @Transactional
     public OrderCountResponse getOrderCount(CustomUserDetails customUserDetails) {
+        log.info("[ORDER] 주문 내역 조회");
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
+        log.info("[ORDER] userId: {}", user.getId());
 
         int preparing = 0, requested = 0, completed = 0, cancelled = 0;
         List<Object[]> result;
