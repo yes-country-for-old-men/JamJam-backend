@@ -1,15 +1,11 @@
 package com.jamjam.order.controller;
 
-import com.jamjam.chat.domain.entity.ChatMessageEntity;
-import com.jamjam.chat.domain.entity.MessageType;
 import com.jamjam.chat.presentation.dto.req.PaymentReq;
 import com.jamjam.global.annotation.CurrentUser;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.order.domain.entity.OrderStatus;
 import com.jamjam.order.dto.*;
-import com.jamjam.order.exception.OrderError;
-import com.jamjam.order.scheduler.OrderStatusScheduler;
 import com.jamjam.order.service.OrderService;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import retrofit2.http.PartMap;
 
 import java.util.List;
 
@@ -119,21 +114,21 @@ public class OrderController {
     }
     /*주문 내역*/
     @GetMapping("/provider/order-list")
-    @Operation(summary = "주문 내역")
-    public ResponseEntity<ResponseDto<OrderListResponse>> getOrders(
+    @Operation(summary = "provider 주문 내역")
+    public ResponseEntity<ResponseDto<ProviderOrderListResponse>> getOrders(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestParam OrderStatus orderStatus,
             @PageableDefault(sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        OrderListResponse response = orderService.getProviderOrders(customUserDetails, orderStatus, pageable);
+        ProviderOrderListResponse response = orderService.getProviderOrders(customUserDetails, orderStatus, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
     @GetMapping("/client/order-list")
-    @Operation(summary = "주문 내역")
-    public ResponseEntity<ResponseDto<OrderListResponse>> getOrders(
+    @Operation(summary = "client 주문 내역")
+    public ResponseEntity<ResponseDto<ClientOrderListResponse>> getOrders(
             @CurrentUser CustomUserDetails customUserDetails,
             @PageableDefault(sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        OrderListResponse response = orderService.getClientOrders(customUserDetails, pageable);
+        ClientOrderListResponse response = orderService.getClientOrders(customUserDetails, pageable);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }

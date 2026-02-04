@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.chat.application.ChatService;
 import com.jamjam.chat.domain.entity.ChatMessageEntity;
-import com.jamjam.chat.domain.entity.ChatRoomEntity;
 import com.jamjam.chat.domain.entity.MessageType;
-import com.jamjam.chat.domain.repository.ChatRoomRepository;
 import com.jamjam.chat.presentation.dto.req.PaymentReq;
 import com.jamjam.chat.util.EventBroadcaster;
 import com.jamjam.global.exception.ApiException;
@@ -258,7 +256,7 @@ public class OrderService {
     }
     /*제공자의 주문 상태 별 주문 목록 반환*/
     @Transactional
-    public OrderListResponse getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
+    public ProviderOrderListResponse getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
         if (user.getRole() != UserRole.PROVIDER) {
@@ -270,11 +268,11 @@ public class OrderService {
         entities = orderRepository.findByProviderIdAndOrderStatus(user.getId(), orderStatus, pageable);
         log.info("[ORDER] providerId: {} oderStatus: {} elementCount: {}", user.getId(), orderStatus, entities.getTotalElements());
 
-        List<OrderSummaryDTO> dtoList = entities.stream()
-                .map(OrderSummaryDTO::from)
+        List<ProviderOrderSummaryDTO> dtoList = entities.stream()
+                .map(ProviderOrderSummaryDTO::from)
                 .toList();
 
-        return OrderListResponse.builder()
+        return ProviderOrderListResponse.builder()
                 .orders(dtoList)
                 .currentPage(entities.getNumber())
                 .totalPages(entities.getTotalPages())
@@ -283,7 +281,7 @@ public class OrderService {
     }
     /*주문자의 주문 목록 반환*/
     @Transactional
-    public OrderListResponse getClientOrders(CustomUserDetails customUserDetails, Pageable pageable) {
+    public ClientOrderListResponse getClientOrders(CustomUserDetails customUserDetails, Pageable pageable) {
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
         if (user.getRole() != UserRole.CLIENT) {
@@ -295,11 +293,11 @@ public class OrderService {
         entities = orderRepository.findByClientId(user.getId(), pageable);
         log.info("[ORDER] clientId: {} elementCount: {}", user.getId(), entities.getTotalElements());
 
-        List<OrderSummaryDTO> dtoList = entities.stream()
-                .map(OrderSummaryDTO::from)
+        List<ClientOrderSummaryDTO> dtoList = entities.stream()
+                .map(ClientOrderSummaryDTO::from)
                 .toList();
 
-        return OrderListResponse.builder()
+        return ClientOrderListResponse.builder()
                 .orders(dtoList)
                 .currentPage(entities.getNumber())
                 .totalPages(entities.getTotalPages())

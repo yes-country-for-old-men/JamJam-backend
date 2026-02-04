@@ -1,12 +1,12 @@
-package com.jamjam.user.presentation.dto.response;
+package com.jamjam.order.dto;
 
 import lombok.Builder;
 
 import java.util.List;
 
 @Builder
-public record CreditHistoryResponse(
-        List<CreditHistorySummary> histories,
+public record ClientOrderListResponse(
+        List<ClientOrderSummaryDTO> orders,
         Integer currentPage,
         Integer totalPages,
         Boolean hasNext
