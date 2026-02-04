@@ -157,6 +157,10 @@ public class OrderService {
     public void changeStatusOrder(Long providerId, OrderStatusRequest request) {
         OrderEntity order = verifyProvider(providerId, request.getOrderId(), OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
 
+        if (request.getOrderStatus() != OrderStatus.CANCELLED && request.getOrderStatus() != OrderStatus.COMPLETED) {
+            throw new ApiException(OrderError.FORBIDDEN_ORDER_STATUS);
+        }
+
         order.changeStatus(request);
         orderRepository.save(order);
         log.info("주문 상태 변경 완료");
@@ -167,12 +171,11 @@ public class OrderService {
             refundCreditOnCancellation(order.getClient(), order.getPrice());
             body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 취소되었습니다.";
             type = MessageType.ORDER_CANCELLED;
-        }  else if (request.getOrderStatus() == OrderStatus.WAITING_CONFIRM) {
+        }  else {
             body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 작업 완료되었습니다.";
             type = MessageType.WORK_COMPLETED;
-        } else {
-            throw new ApiException(OrderError.CANNOT_COMPLETE_ORDER);
         }
+
         String content = getContent(order.getService(), order);
 
         // 주문 상태 변경 주문자에게 알림
@@ -326,7 +329,7 @@ public class OrderService {
             switch (status) {
                 case REQUESTED -> requested += count;
                 case PREPARING -> preparing += count;
-                case WAITING_CONFIRM, COMPLETED -> completed += count;
+                case COMPLETED -> completed += count;
                 case CANCELLED -> cancelled += count;
             }
         }
