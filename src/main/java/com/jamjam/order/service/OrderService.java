@@ -400,8 +400,6 @@ public class OrderService {
         ChatMessageEntity savedMsg = chatService
                 .sendMessage(chatRoomId, String.valueOf(senderId), content, type, null);
         eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(senderId));
-
-        chatService.updatePreviewContent(savedMsg);
     }
 }
 

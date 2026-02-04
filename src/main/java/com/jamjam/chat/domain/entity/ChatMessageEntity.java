@@ -23,6 +23,7 @@ public class ChatMessageEntity {
     private String senderId;
     private String senderName;
     private String content;
+    private String contentSummary;
     private LocalDateTime sentAt;
 
     @Column(nullable = false, columnDefinition = "varchar(255) default 'TEXT'")

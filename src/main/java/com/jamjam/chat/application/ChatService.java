@@ -31,6 +31,7 @@ import com.jamjam.user.exception.UserError;
 import com.jamjam.util.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.bridge.Message;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -115,6 +116,7 @@ public class ChatService {
                 .senderId(senderId)
                 .senderName(sender.getNickname())
                 .content(content)
+                .contentSummary(getContentSummary(messageType))
                 .sentAt(LocalDateTime.now())
                 .messageType(messageType != null ? messageType : MessageType.TEXT)
                 .files(files)
@@ -223,10 +225,13 @@ public class ChatService {
         int unreadCount = msgRepo.countByRoomIdAndIdGreaterThanAndSenderIdNot(
                 room.getId(), lastReadMessageId, userId);
 
+        String contentSummary = lastMessage.getContentSummary();
+        if (contentSummary == null) contentSummary = lastMessage.getContent();
+
         return ChatRoomListRes.ChatRoomSummary.builder()
                 .id(room.getId())
                 .nickname(opponent != null ? opponent.getNickname() : null)
-                .lastMessage(lastMessage != null ? lastMessage.getContent() : null)
+                .lastMessage(lastMessage != null ? contentSummary : null)
                 .lastMessageTime(lastMessage != null ? lastMessage.getSentAt() : null)
                 .unreadCount(unreadCount)
                 .profileUrl(opponent != null ? opponent.getProfileUrl() : null)
@@ -335,28 +340,30 @@ public class ChatService {
                 .orElseGet(() -> createRoom(false, userIds));
     }
 
-    /*text 외 메시지 content 수정*/
-    @Transactional
-    public void updatePreviewContent(ChatMessageEntity msg) {
-        if (msg.getMessageType() == MessageType.IMAGE) {
-            msg.setContent("사진을 전송되었습니다.");
-        } else if (msg.getMessageType() == MessageType.FILE) {
-            msg.setContent("파일을 전송되었습니다.");
-        } else if (msg.getMessageType() == MessageType.REQUEST_FORM) {
-            msg.setContent("의뢰서가 전송되었습니다.");
-        } else if (msg.getMessageType() == MessageType.REQUEST_PAYMENT) {
-            msg.setContent("결제 요청이 전송되었습니다.");
-        } else if (msg.getMessageType() == MessageType.PAYMENT_COMPLETED) {
-            msg.setContent("결제가 완료되었습니다.");
-        } else if (msg.getMessageType() == MessageType.ORDER_CANCELLED) {
-            msg.setContent("주문이 취소되었습니다.");
-        } else if (msg.getMessageType() == MessageType.WORK_COMPLETED) {
-            msg.setContent("작업이 완료되었습니다.");
-        } else if (msg.getMessageType() == MessageType.SERVICE_INQUIRY) {
-            msg.setContent("서비스 문의가 전송되었습니다.");
+    /*contentSummary 반환*/
+    public String getContentSummary(MessageType type) {
+        String contentSummary;
+        if (type == MessageType.IMAGE) {
+            contentSummary = "사진을 전송되었습니다.";
+        } else if (type == MessageType.FILE) {
+            contentSummary = "파일을 전송되었습니다.";
+        } else if (type == MessageType.REQUEST_FORM) {
+            contentSummary = "의뢰서가 전송되었습니다.";
+        } else if (type == MessageType.REQUEST_PAYMENT) {
+            contentSummary = "결제 요청이 전송되었습니다.";
+        } else if (type == MessageType.PAYMENT_COMPLETED) {
+            contentSummary = "결제가 완료되었습니다.";
+        } else if (type == MessageType.ORDER_CANCELLED) {
+            contentSummary = "주문이 취소되었습니다.";
+        } else if (type == MessageType.WORK_COMPLETED) {
+            contentSummary = "작업이 완료되었습니다.";
+        } else if (type == MessageType.SERVICE_INQUIRY) {
+            contentSummary = "서비스 문의가 전송되었습니다.";
+        } else {
+            contentSummary = null;
         }
 
-        msgRepo.save(msg);
+        return contentSummary;
     }
 
     private MessageType validateAndGetMessageType(MultipartFile file) {
