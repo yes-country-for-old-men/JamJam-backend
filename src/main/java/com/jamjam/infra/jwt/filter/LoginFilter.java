@@ -115,7 +115,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private void issueTokens(HttpServletResponse response,
                              Long userId, String role) throws IOException {
 
-        String accessToken = jwtUtil.generateToken("access", userId, role, 60 * 60 * 1000L);
+        String accessToken = jwtUtil.generateToken("access", userId, role, 60 * 60 * 24 * 1000L);
         String refreshToken = jwtUtil.generateToken("refresh", userId, role, 60 * 60 * 24 * 1000L);
 
         addRefreshEntity(userId, refreshToken);
