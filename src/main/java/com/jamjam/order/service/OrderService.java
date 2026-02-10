@@ -50,9 +50,8 @@ public class OrderService {
     private final OrderReferenceFileRepository orderReferenceFileRepository;
     private final NotificationSender notificationSender;
     private final CreditHistoryRepository creditHistoryRepository;
-    private final ChatService chatService;
-    private final EventBroadcaster eventBroadcaster;
     private final ObjectMapper objectMapper;
+    private final WSNotificationService wsNotificationService;
 
     /*주문 신청*/
     @Transactional
@@ -92,9 +91,9 @@ public class OrderService {
         log.info("[ORDER] 의뢰서 임시 저장 완료");
 
         // 서비스 제공자에게 의뢰서 송신
-        String content = getContent(service, order);
+        String content = wsNotificationService.getContent(service, order);
 
-        sendMessage(userId, order.getServiceProviderId(), MessageType.REQUEST_FORM, content);
+        wsNotificationService.sendMessage(userId, order.getServiceProviderId(), MessageType.REQUEST_FORM, content);
     }
     /*주문 결제 요청*/
     @Transactional
@@ -123,7 +122,7 @@ public class OrderService {
             throw new ApiException(OrderError.JSON_PROCESSING_ERROR);
         }
 
-        sendMessage(userId, order.getClient().getId(), MessageType.REQUEST_PAYMENT, content);
+        wsNotificationService.sendMessage(userId, order.getClient().getId(), MessageType.REQUEST_PAYMENT, content);
     }
     /*결제 진행*/
     @Transactional
@@ -147,8 +146,8 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.PREPARING);
 
         // 제공자에게 결제 완료 알림
-        String content = getContent(order.getService(), order);
-        sendMessage(client.getId(), order.getServiceProviderId(), MessageType.PAYMENT_COMPLETED, content);
+        String content = wsNotificationService.getContent(order.getService(), order);
+        wsNotificationService.sendMessage(client.getId(), order.getServiceProviderId(), MessageType.PAYMENT_COMPLETED, content);
     }
     /*제공자의 주문 상태 변경*/
     @Transactional
@@ -174,10 +173,9 @@ public class OrderService {
             type = MessageType.WORK_COMPLETED;
         }
 
-        String content = getContent(order.getService(), order);
-
         // 주문 상태 변경 주문자에게 알림
-        sendMessage(providerId, order.getClient().getId(), type, content);
+        String content = wsNotificationService.getContent(order.getService(), order);
+        wsNotificationService.sendMessage(providerId, order.getClient().getId(), type, content);
 
         notificationSender.sendToUser(
                 order.getClient(),
@@ -201,8 +199,8 @@ public class OrderService {
         refundCreditOnCancellation(order.getClient(), order.getPrice());
 
         // 주문 취소 제공자에게 알림
-        String content = getContent(order.getService(), order);
-        sendMessage(userId, order.getServiceProviderId(), MessageType.ORDER_CANCELLED, content);
+        String content = wsNotificationService.getContent(order.getService(), order);
+        wsNotificationService.sendMessage(userId, order.getServiceProviderId(), MessageType.ORDER_CANCELLED, content);
 
         String body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 의뢰인에 의해 취소되었습니다.";
         notificationSender.sendToUser(
@@ -222,6 +220,10 @@ public class OrderService {
         log.info("주문 구매 확정 처리");
 
         transferCreditOnConfirmation(order.getServiceProviderId(), order.getPrice());
+
+        // 구매 확정을 판매자에게 알림
+        String content = wsNotificationService.getContent(order.getService(), order);
+        wsNotificationService.sendMessage(userId, order.getServiceProviderId(), MessageType.WORK_COMPLETED, content);
 
         notificationSender.sendToUser(
                 order.getService().getUser(),
@@ -376,30 +378,6 @@ public class OrderService {
         OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
 
         return OrderInfoDTO.from(order);
-    }
-    public String getContent(ServiceEntity service, OrderEntity order) {
-        String content;
-        try {
-            Map<String, Object> contentMap = new HashMap<>();
-            contentMap.put("serviceId", service.getId());
-            contentMap.put("serviceName", service.getServiceName());
-            contentMap.put("serviceThumbnail", service.getThumbnail());
-            contentMap.put("orderId", order != null ? order.getId() : null);
-
-            content = objectMapper.writeValueAsString(contentMap);
-        } catch (JsonProcessingException e) {
-            log.error("[ORDER] 메시지 포맷 변환 실패", e);
-            throw new ApiException(OrderError.JSON_PROCESSING_ERROR);
-        }
-
-        return content;
-    }
-    public void sendMessage(Long senderId, Long receiverId,  MessageType type, String content) {
-        Long chatRoomId = chatService.getChatRoomId(senderId, receiverId);
-
-        ChatMessageEntity savedMsg = chatService
-                .sendMessage(chatRoomId, String.valueOf(senderId), content, type, null);
-        eventBroadcaster.broadcastNewMessage(savedMsg, String.valueOf(senderId));
     }
 }
 

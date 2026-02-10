@@ -1,9 +1,11 @@
 package com.jamjam.order.scheduler;
 
+import com.jamjam.chat.domain.entity.MessageType;
 import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.order.domain.entity.OrderEntity;
 import com.jamjam.order.domain.repository.OrderRepository;
 import com.jamjam.order.service.OrderService;
+import com.jamjam.order.service.WSNotificationService;
 import com.jamjam.util.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ public class OrderStatusScheduler {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final NotificationSender notificationSender;
+    private final WSNotificationService wsNotificationService;
 
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
@@ -39,6 +42,10 @@ public class OrderStatusScheduler {
             Long providerId = order.getService().getUser().getId();
             BigDecimal price = order.getPrice();
             orderService.transferCreditOnConfirmation(providerId, price);
+
+            // 구매 확정을 판매자에게 알림
+            String content = wsNotificationService.getContent(order.getService(), order);
+            wsNotificationService.sendMessage(order.getClient().getId(), order.getServiceProviderId(), MessageType.WORK_COMPLETED, content);
 
             notificationSender.sendToUser(
                     order.getService().getUser(),

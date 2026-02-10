@@ -8,6 +8,7 @@ public enum MessageType {
     REQUEST_PAYMENT,    //결제 요청
     PAYMENT_COMPLETED,  //결제 완료
     ORDER_CANCELLED,    //주문 취소
-    WORK_COMPLETED,    //작업 완료
+    WORK_COMPLETED,     //작업 완료
+    WORK_CONFIRMED,     //주문 확정
     SERVICE_INQUIRY     //서비스 문의
 }
