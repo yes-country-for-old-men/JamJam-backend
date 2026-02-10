@@ -10,7 +10,8 @@ public record ProviderOrderSummaryDTO(
         String title,
         String client,
         LocalDateTime orderedAt,
-        OrderStatus orderStatus
+        OrderStatus orderStatus,
+        Boolean purchaseConfirmed
 ) {
     public static ProviderOrderSummaryDTO from(OrderEntity entity) {
         return new ProviderOrderSummaryDTO(
@@ -18,7 +19,8 @@ public record ProviderOrderSummaryDTO(
                 entity.getTitle(),
                 entity.getClient().getNickname(),
                 entity.getOrderedAt(),
-                entity.getOrderStatus()
+                entity.getOrderStatus(),
+                entity.isPurchaseConfirmed()
         );
     }
 }
