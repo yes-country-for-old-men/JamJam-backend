@@ -97,7 +97,7 @@ public class OrderEntity {
                 throw new ApiException(OrderError.UNKNOWN_STATUS);
         }
     }
-    public void forceComplete() {
+    public void forceConfirmed() {
         this.purchaseConfirmed = true;
         this.purchaseConfirmedAt = LocalDateTime.now();
     }

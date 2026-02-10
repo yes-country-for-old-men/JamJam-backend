@@ -217,7 +217,7 @@ public class OrderService {
     public void confirmPurchase(Long userId, Long orderId) {
         OrderEntity order = verifyClient(userId, orderId, OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
 
-        order.forceComplete();
+        order.forceConfirmed();
         orderRepository.save(order);
         log.info("주문 구매 확정 처리");
 

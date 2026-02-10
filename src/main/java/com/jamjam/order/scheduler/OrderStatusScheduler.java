@@ -30,7 +30,7 @@ public class OrderStatusScheduler {
         List<OrderEntity> orders = orderRepository.findWaitingConfirmOrdersBefore(threeDaysAgo);
 
         for (OrderEntity order : orders) {
-            order.forceComplete();
+            order.forceConfirmed();
         }
         orderRepository.saveAll(orders);
         log.info("자동 완료된 주문 수: {}", orders.size());
