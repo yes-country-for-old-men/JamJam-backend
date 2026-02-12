@@ -45,7 +45,7 @@ public class OrderStatusScheduler {
 
             // 구매 확정을 판매자에게 알림
             String content = wsNotificationService.getContent(order.getService(), order);
-            wsNotificationService.sendMessage(order.getClient().getId(), order.getServiceProviderId(), MessageType.WORK_COMPLETED, content);
+            wsNotificationService.sendMessage(order.getClient().getId(), order.getServiceProviderId(), MessageType.WORK_CONFIRMED, content);
 
             notificationSender.sendToUser(
                     order.getService().getUser(),

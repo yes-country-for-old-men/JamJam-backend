@@ -2,11 +2,8 @@ package com.jamjam.order.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jamjam.chat.application.ChatService;
-import com.jamjam.chat.domain.entity.ChatMessageEntity;
 import com.jamjam.chat.domain.entity.MessageType;
 import com.jamjam.chat.presentation.dto.req.PaymentReq;
-import com.jamjam.chat.util.EventBroadcaster;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.notify.domain.entity.NotificationType;
 import com.jamjam.order.domain.entity.OrderEntity;
@@ -154,13 +151,13 @@ public class OrderService {
     public void changeStatusOrder(Long providerId, OrderStatusRequest request) {
         OrderEntity order = verifyProvider(providerId, request.getOrderId(), OrderError.FORBIDDEN_CHANGE_ORDER_STATUS);
 
-        if (request.getOrderStatus() != OrderStatus.CANCELLED && request.getOrderStatus() != OrderStatus.COMPLETED) {
+        if (request.getOrderStatus() != OrderStatus.CANCELLED && request.getOrderStatus() != OrderStatus.WAITING_CONFIRM) {
             throw new ApiException(OrderError.FORBIDDEN_ORDER_STATUS);
         }
 
         order.changeStatus(request);
         orderRepository.save(order);
-        log.info("주문 상태 변경 완료");
+        log.info("[ORDER] 주문 상태 변경 완료");
 
         String body;
         MessageType type;
@@ -223,7 +220,7 @@ public class OrderService {
 
         // 구매 확정을 판매자에게 알림
         String content = wsNotificationService.getContent(order.getService(), order);
-        wsNotificationService.sendMessage(userId, order.getServiceProviderId(), MessageType.WORK_COMPLETED, content);
+        wsNotificationService.sendMessage(userId, order.getServiceProviderId(), MessageType.WORK_CONFIRMED, content);
 
         notificationSender.sendToUser(
                 order.getService().getUser(),
@@ -313,7 +310,7 @@ public class OrderService {
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
         log.info("[ORDER] userId: {}", user.getId());
 
-        int preparing = 0, requested = 0, completed = 0, cancelled = 0;
+        int preparing = 0, requested = 0, completed = 0, waitingConfirmed = 0, cancelled = 0;
         List<Object[]> result;
 
         if (user.getRole() == UserRole.PROVIDER) {
@@ -330,6 +327,7 @@ public class OrderService {
                 case REQUESTED -> requested += count;
                 case PREPARING -> preparing += count;
                 case COMPLETED -> completed += count;
+                case WAITING_CONFIRM -> waitingConfirmed += count;
                 case CANCELLED -> cancelled += count;
             }
         }
@@ -337,6 +335,7 @@ public class OrderService {
                 .requested(requested)
                 .preparing(preparing)
                 .completed(completed)
+                .waitingConfirmed(waitingConfirmed)
                 .cancelled(cancelled)
                 .build();
     }

@@ -48,8 +48,6 @@ public class OrderEntity {
     private LocalDateTime purchaseConfirmedAt;
     private LocalDateTime canceledAt;
 
-    private boolean purchaseConfirmed = false;
-
     private String cancelReason;
 
     @NotNull
@@ -89,7 +87,7 @@ public class OrderEntity {
             case PREPARING:
                 this.orderStatus = request.getOrderStatus();
                 break;
-            case COMPLETED:
+            case WAITING_CONFIRM:
                 this.orderStatus = request.getOrderStatus();
                 this.serviceCompletedAt = LocalDateTime.now();
                 break;
@@ -98,7 +96,7 @@ public class OrderEntity {
         }
     }
     public void forceConfirmed() {
-        this.purchaseConfirmed = true;
+        this.orderStatus = OrderStatus.COMPLETED;
         this.purchaseConfirmedAt = LocalDateTime.now();
     }
 
