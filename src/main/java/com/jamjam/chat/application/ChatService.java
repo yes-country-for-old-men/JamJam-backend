@@ -357,7 +357,9 @@ public class ChatService {
             contentSummary = "주문이 취소되었습니다.";
         } else if (type == MessageType.WORK_COMPLETED) {
             contentSummary = "작업이 완료되었습니다.";
-        } else if (type == MessageType.SERVICE_INQUIRY) {
+        } else if (type == MessageType.WORK_CONFIRMED) {
+            contentSummary = "주문이 구매 확정되었습니다.";
+        }  else if (type == MessageType.SERVICE_INQUIRY) {
             contentSummary = "서비스 문의가 전송되었습니다.";
         } else {
             contentSummary = null;
