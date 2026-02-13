@@ -22,6 +22,23 @@ public class CoolSmsProvider {
     @Value("${spring.cool-sms.caller-number}")
     private String callerNumber;
 
+    public void sendTemporaryPassword(String phoneNumber, String temporaryPassword) {
+        DefaultMessageService messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
+        Message message = new Message();
+        message.setFrom(callerNumber);
+        message.setTo(phoneNumber);
+        message.setText("[잼잼] 임시 비밀번호: " + temporaryPassword + "\n로그인 후 비밀번호를 변경해주세요.");
+
+        try {
+            messageService.send(message);
+        } catch (NurigoMessageNotReceivedException exception) {
+            System.out.println(exception.getFailedMessageList());
+            throw new ApiException(UserError.SMS_SEND_FAILED);
+        } catch (Exception exception) {
+            throw new ApiException(UserError.SMS_SEND_FAILED);
+        }
+    }
+
     public void sendVerificationCode(String phoneNumber, String verificationCode) throws Exception {
         DefaultMessageService messageService =  NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
         Message message = new Message();

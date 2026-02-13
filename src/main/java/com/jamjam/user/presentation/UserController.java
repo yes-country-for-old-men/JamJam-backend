@@ -160,12 +160,11 @@ public class UserController {
     }
 
     @PostMapping("/reset-password")
-    @Operation(summary = "비밀번호 재설정 (임시 비밀번호 발급)")
-    public ResponseEntity<ResponseDto<ResetPasswordResponse>> resetPassword(
+    @Operation(summary = "비밀번호 재설정 (임시 비밀번호 SMS 발송)")
+    public ResponseEntity<ResponseDto<Void>> resetPassword(
             @RequestBody ResetPasswordRequest request
     ) {
-        return ResponseEntity.ok(ResponseDto.ofSuccess(
-                SuccessMessage.OPERATION_SUCCESS,
-                userService.resetPassword(request)));
+        userService.resetPassword(request);
+        return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS));
     }
 }
