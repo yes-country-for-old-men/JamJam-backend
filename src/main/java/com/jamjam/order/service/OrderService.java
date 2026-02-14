@@ -193,7 +193,6 @@ public class OrderService {
         order.changeStatus(request);
         orderRepository.save(order);
         log.info("주문 취소 완료");
-        refundCreditOnCancellation(order.getClient(), order.getPrice());
 
         // 주문 취소 제공자에게 알림
         String content = wsNotificationService.getContent(order.getService(), order);
