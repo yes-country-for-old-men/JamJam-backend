@@ -132,7 +132,7 @@ public class OrderService {
         }
 
         // 주문자 크레딧 차감 (히스토리 저장)
-        BigDecimal amount = BigDecimal.valueOf(request.price());
+        BigDecimal amount = BigDecimal.valueOf(request.price()).abs().negate();
 
         client.reduceCredit(amount, OrderError.CREDIT_NOT_ENOUGH);
         log.info("[ORDER] userID = {} Credit -{}", userId, amount);
