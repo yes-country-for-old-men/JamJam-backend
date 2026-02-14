@@ -4,6 +4,7 @@ import com.jamjam.global.exception.ApiException;
 import com.jamjam.infra.jwt.application.JwtUtil;
 import com.jamjam.infra.jwt.domain.entity.RefreshEntity;
 import com.jamjam.infra.jwt.domain.repository.RefreshRepository;
+import com.jamjam.infra.sms.provider.CoolSmsProvider;
 import com.jamjam.service.util.S3Uploader;
 import com.jamjam.user.domain.entity.*;
 import com.jamjam.user.domain.repository.CreditHistoryRepository;
@@ -47,6 +48,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final S3Uploader s3Uploader;
     private final CreditHistoryRepository creditHistoryRepository;
+    private final CoolSmsProvider coolSmsProvider;
 
     public UserResponse getUserInfo(Long userId) {
         Optional<UserEntity> userEntityOptional = userRepository.findById(userId);
@@ -287,7 +289,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResetPasswordResponse resetPassword(ResetPasswordRequest request) {
+    public void resetPassword(ResetPasswordRequest request) {
         String purePhoneNumber = removeHyphens(request.phoneNumber());
 
         UserEntity user = userRepository.findByLoginIdAndNameAndBirthAndPhoneNumber(
@@ -300,7 +302,7 @@ public class UserService {
         String temporaryPassword = generateTemporaryPassword();
         user.changePassword(bCryptPasswordEncoder.encode(temporaryPassword));
 
-        return new ResetPasswordResponse(temporaryPassword);
+        coolSmsProvider.sendTemporaryPassword(purePhoneNumber, temporaryPassword);
     }
 
     private String removeHyphens(String phoneNumber) {
