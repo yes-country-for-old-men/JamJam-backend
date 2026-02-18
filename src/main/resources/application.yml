@@ -71,7 +71,8 @@ gemini:
   api:
     key: ${GEMINI_API_KEY}
     base-url: https://generativelanguage.googleapis.com
-    model: gemini-3-pro-image-preview
+    text: gemini-3-pro-preview
+    image: gemini-3-pro-image-preview
 
 server:
   forward-headers-strategy: native
