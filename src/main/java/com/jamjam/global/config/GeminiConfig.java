@@ -35,7 +35,7 @@ public class GeminiConfig {
                 .defaultHeader("x-goog-api-key", apiKey)
                 .clientConnector(
                         new ReactorClientHttpConnector(
-                                HttpClient.create().responseTimeout(Duration.ofSeconds(60))
+                                HttpClient.create().responseTimeout(Duration.ofSeconds(180))
                         )
                 )
                 .build();
