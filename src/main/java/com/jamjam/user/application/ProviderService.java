@@ -174,7 +174,7 @@ public class ProviderService {
         log.info("[getProvider] id={}", id);
         return providerRepository.findById(id)
                 .map(this::mapToResponse)
-                .orElse(null);
+                .orElseThrow(() -> new ApiException(UserError.PROVIDER_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
