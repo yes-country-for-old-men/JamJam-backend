@@ -20,22 +20,25 @@ import java.util.List;
 public class GeminiClient {
 
     private final WebClient geminiWebClient;
-    private final String model;
+    private final String imageModel;
+    private final String textModel;
     private final ObjectMapper objectMapper;
 
     public GeminiClient(
             @Qualifier("geminiWebClient") WebClient geminiWebClient,
-            @Value("${gemini.api.model}") String model,
+            @Value("${gemini.api.image}") String imageModel,
+            @Value("${gemini.api.text}") String textModel,
             ObjectMapper objectMapper) {
         this.geminiWebClient = geminiWebClient;
-        this.model = model;
+        this.imageModel = imageModel;
+        this.textModel = textModel;
         this.objectMapper = objectMapper;
     }
     /* 텍스트 컨텐츠 생성 */
     public JsonNode generateTextContent(String prompt) {
         GeminiDto.GeminiRequest request = buildGeminiRequest(prompt, "TEXT");
 
-        String responseBody = callGeminiApi(request);
+        String responseBody = callGeminiApi(request, "TEXT");
 
         try {
             JsonNode root =  objectMapper.readTree(responseBody);
@@ -52,7 +55,7 @@ public class GeminiClient {
     public JsonNode generateImageContent(String prompt) {
         GeminiDto.GeminiRequest request = buildGeminiRequest(prompt, "IMAGE");
 
-        String responseBody = callGeminiApi(request);
+        String responseBody = callGeminiApi(request, "IMAGE");
 
         try {
             JsonNode root =  objectMapper.readTree(responseBody);
@@ -97,7 +100,14 @@ public class GeminiClient {
                 .build();
     }
     /* Gemini Api 호출 */
-    private String callGeminiApi(GeminiDto.GeminiRequest request) {
+    private String callGeminiApi(GeminiDto.GeminiRequest request, String type) {
+        String model;
+        if (type.equals("TEXT")) {
+            model = textModel;
+        } else {
+            model = imageModel;
+        }
+
         try {
             // TODO: 동기 처리 중, 비동기로 변환 필요
             return geminiWebClient.post()
