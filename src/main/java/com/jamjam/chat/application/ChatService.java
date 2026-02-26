@@ -225,13 +225,16 @@ public class ChatService {
         int unreadCount = msgRepo.countByRoomIdAndIdGreaterThanAndSenderIdNot(
                 room.getId(), lastReadMessageId, userId);
 
-        String contentSummary = lastMessage.getContentSummary();
-        if (contentSummary == null) contentSummary = lastMessage.getContent();
+        String contentSummary = null;
+        if (lastMessage != null) {
+            contentSummary = lastMessage.getContentSummary();
+            if (contentSummary == null) contentSummary = lastMessage.getContent();
+        }
 
         return ChatRoomListRes.ChatRoomSummary.builder()
                 .id(room.getId())
                 .nickname(opponent != null ? opponent.getNickname() : null)
-                .lastMessage(lastMessage != null ? contentSummary : null)
+                .lastMessage(contentSummary)
                 .lastMessageTime(lastMessage != null ? lastMessage.getSentAt() : null)
                 .unreadCount(unreadCount)
                 .profileUrl(opponent != null ? opponent.getProfileUrl() : null)
