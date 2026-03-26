@@ -42,11 +42,13 @@ public class PortOneService {
     }
 
     /*결제 전, 주문 정보 저장*/
+    @Transactional
     public void prepareOrder(CustomUserDetails customUserDetails, PrepareOrderRequest request) {
         Long userId = customUserDetails.getUserId();
         log.info("userId: {}", userId);
-        UserEntity user = userRepository.findById(customUserDetails.getUserId())
-                .orElseThrow(() -> new ApiException(PaymentError.USER_NOT_FOUND));
+        UserEntity user =
+                userRepository.findByIdOrThrow(customUserDetails.getUserId(), PaymentError.USER_NOT_FOUND);
+
         /*사전 결제 내용 저장
         * 결제 상태: 준비*/
         PaymentEntity prePayment = PaymentEntity.builder()
@@ -98,11 +100,12 @@ public class PortOneService {
             payment.changePaymentBySuccess(PaymentStatus.OK, request.getPaymentUid());
             paymentRepository.save(payment);
 
-            UserEntity user = userRepository.findById(customUserDetails.getUserId())
+            UserEntity user = userRepository.findWithLockById(customUserDetails.getUserId())
                     .orElseThrow(() -> new ApiException(PaymentError.USER_NOT_FOUND));
             user.addCredit(orderPrice);
             userRepository.save(user);
             log.info("{} 크레딧 충전 완료", orderPrice);
+
             CreditHistoryEntity chargeHistory = CreditHistoryEntity.builder()
                     .amount(orderPrice)
                     .type(CreditChangeType.DEPOSIT)

@@ -341,9 +341,14 @@ public class OrderService {
                 .cancelled(cancelled)
                 .build();
     }
+    /*주문 상세 정보 반환*/
+    public OrderInfoDTO getOrderDetail(Long orderId) {
+        OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
+
+        return OrderInfoDTO.from(order);
+    }
     /*크레딧 사용 내역 저장*/
-    @Transactional
-    public void saveCreditHistory(BigDecimal price, CreditChangeType type, String reason, UserEntity user) {
+    private void saveCreditHistory(BigDecimal price, CreditChangeType type, String reason, UserEntity user) {
         CreditHistoryEntity creditHistory = CreditHistoryEntity.builder()
                 .amount(price)
                 .type(type)
@@ -355,7 +360,7 @@ public class OrderService {
         log.info("크레딧 내역 저장 완료");
     }
     /*주문에 관련 제공자인지 권한 확인*/
-    public OrderEntity verifyProvider(Long userId, Long orderId, OrderError error) {
+    private OrderEntity verifyProvider(Long userId, Long orderId, OrderError error) {
         OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
 
         Long orderProviderId = order.getServiceProviderId();
@@ -365,7 +370,7 @@ public class OrderService {
         return order;
     }
     /*주문에 관련 구매자인지 권한 확인*/
-    public OrderEntity verifyClient(Long userId, Long orderId, OrderError error) {
+    private OrderEntity verifyClient(Long userId, Long orderId, OrderError error) {
         OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
 
         Long orderClientId = order.getClient().getId();
@@ -373,12 +378,6 @@ public class OrderService {
         if (!userId.equals(orderClientId)) throw new ApiException(error);
 
         return order;
-    }
-    /*주문 상세 정보 반환*/
-    public OrderInfoDTO getOrderDetail(Long orderId) {
-        OrderEntity order = orderRepository.findByIdOrThrow(orderId, OrderError.ORDER_NOT_FOUND);
-
-        return OrderInfoDTO.from(order);
     }
 }
 
