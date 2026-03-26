@@ -124,7 +124,8 @@ public class OrderService {
     /*결제 진행*/
     @Transactional
     public void processPayment(Long userId, PaymentReq request) {
-        UserEntity client = userRepository.findByIdOrThrow(userId, OrderError.USER_NOT_FOUND);
+        UserEntity client = userRepository.findWithLockById(userId)
+                        .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
         OrderEntity order = verifyClient(userId, request.orderId(), OrderError.FORBIDDEN_PROCESS_PAYMENT);
 
         if (order.getOrderStatus() != OrderStatus.REQUESTED) {
@@ -162,7 +163,7 @@ public class OrderService {
         String body;
         MessageType type;
         if (request.getOrderStatus() == OrderStatus.CANCELLED) {
-            refundCreditOnCancellation(order.getClient(), order.getPrice());
+            refundCreditOnCancellation(order.getClient().getId(), order.getPrice());
             body = "\"" + order.getService().getServiceName() + "\" 서비스에 대한 주문이 취소되었습니다.";
             type = MessageType.ORDER_CANCELLED;
         }  else {
@@ -229,9 +230,9 @@ public class OrderService {
         );
     }
     /*구매자 크레딧 제공자에게 전달*/
-    @Transactional
     public void transferCreditOnConfirmation(Long providerId, BigDecimal price) {
-        UserEntity provider = userRepository.findByIdOrThrow(providerId, OrderError.USER_NOT_FOUND);
+        UserEntity provider = userRepository.findWithLockById(providerId)
+                        .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
 
         provider.addCredit(price);
         log.info("provider: {} credit: +{}", provider.getNickname(), price);
@@ -242,8 +243,10 @@ public class OrderService {
                 "서비스 판매로 인한 입금", provider);
     }
     /*주문 취소 시, 크레딧 반환*/
-    @Transactional
-    public void refundCreditOnCancellation(UserEntity client, BigDecimal price) {
+    public void refundCreditOnCancellation(Long clientId, BigDecimal price) {
+        UserEntity client = userRepository.findWithLockById(clientId)
+                        .orElseThrow(() -> new ApiException(OrderError.USER_NOT_FOUND));
+
         client.addCredit(price);
 
         userRepository.save(client);
@@ -253,7 +256,7 @@ public class OrderService {
                 "주문 취소로 인한 크레딧 반환", client);
     }
     /*제공자의 주문 상태 별 주문 목록 반환*/
-    @Transactional
+    @Transactional(readOnly = true)
     public ProviderOrderListResponse getProviderOrders(CustomUserDetails customUserDetails, OrderStatus orderStatus, Pageable pageable) {
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
@@ -278,7 +281,7 @@ public class OrderService {
                 .build();
     }
     /*주문자의 주문 목록 반환*/
-    @Transactional
+    @Transactional(readOnly = true)
     public ClientOrderListResponse getClientOrders(CustomUserDetails customUserDetails, Pageable pageable) {
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
 
@@ -303,7 +306,7 @@ public class OrderService {
                 .build();
     }
     /*유저의 상태 별 주문 갯수 반환*/
-    @Transactional
+    @Transactional(readOnly = true)
     public OrderCountResponse getOrderCount(CustomUserDetails customUserDetails) {
         log.info("[ORDER] 주문 내역 조회");
         UserEntity user = userRepository.findByIdOrThrow(customUserDetails.getUserId(), OrderError.USER_NOT_FOUND);
