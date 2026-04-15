@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jamjam.global.exception.ApiException;
 import com.jamjam.service.dto.gemini.GeminiDto;
 import com.jamjam.service.exception.ServiceError;
+import com.jamjam.service.service.AIClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,8 +18,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 
 @Slf4j
+@Primary
 @Component
-public class GeminiClient {
+public class GeminiClient implements AIClient {
 
     private final WebClient geminiWebClient;
     private final String imageModel;
@@ -35,6 +38,7 @@ public class GeminiClient {
         this.objectMapper = objectMapper;
     }
     /* 텍스트 컨텐츠 생성 */
+    @Override
     public JsonNode generateTextContent(String prompt) {
         GeminiDto.GeminiRequest request = buildGeminiRequest(prompt, "TEXT");
 
@@ -52,6 +56,7 @@ public class GeminiClient {
         }
     }
     /* 이미지 컨텐츠 생성 */
+    @Override
     public JsonNode generateImageContent(String prompt) {
         GeminiDto.GeminiRequest request = buildGeminiRequest(prompt, "IMAGE");
 
@@ -114,13 +119,6 @@ public class GeminiClient {
                     .uri("/v1beta/models/{model}:generateContent", model)
                     .bodyValue(request)
                     .retrieve()
-                    // 4xx, 5xx 에러 발생 시 처리
-//                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-//                            clientResponse.bodyToMono(String.class)
-//                                    .map(body -> new RuntimeException("Gemini 4xx Error: " + body)))
-//                    .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-//                            clientResponse.bodyToMono(String.class)
-//                                    .map(body -> new RuntimeException("Gemini 5xx Error: " + body)))
                     // [디버깅 1] 상태 코드 확인
                     .onStatus(HttpStatusCode::isError, clientResponse -> {
                         log.error("[DEBUG] 2. API 상태 코드 에러 발생: {}", clientResponse.statusCode());

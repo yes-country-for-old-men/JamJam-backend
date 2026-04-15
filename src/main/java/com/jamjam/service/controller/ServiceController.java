@@ -4,10 +4,8 @@ import com.jamjam.global.annotation.CurrentUser;
 import com.jamjam.global.dto.ResponseDto;
 import com.jamjam.global.dto.SuccessMessage;
 import com.jamjam.service.dto.*;
-import com.jamjam.service.service.AiGenerationService;
-import com.jamjam.service.service.GeminiService;
+import com.jamjam.service.service.AIService;
 import com.jamjam.service.service.ServiceService;
-import com.jamjam.service.util.OpenAiClient;
 import com.jamjam.user.application.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +23,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/service")
 public class ServiceController {
-    private final AiGenerationService aiGenerationService;
-    private final GeminiService geminiService;
+    private final AIService aiService;
     private final ServiceService serviceService;
-    private final OpenAiClient openAiClient;
 
-    public ServiceController(AiGenerationService aiGenerationService, GeminiService geminiService,
-                             ServiceService serviceService, OpenAiClient openAiClient) {
-        this.aiGenerationService = aiGenerationService;
-        this.geminiService = geminiService;
+    public ServiceController(AIService aiService, ServiceService serviceService) {
+        this.aiService = aiService;
         this.serviceService = serviceService;
-        this.openAiClient = openAiClient;
     }
 
     /*AI에 서비스 명, 서비스 상세 설명, 카테고리 요청*/
@@ -44,7 +37,7 @@ public class ServiceController {
     public ResponseEntity<ResponseDto<AiServiceResponse>> generateService(
             @CurrentUser CustomUserDetails customUserDetails,
             @RequestBody AiServiceRequest request) {
-        AiServiceResponse response = geminiService.generateService(customUserDetails.getUserId(), request);
+        AiServiceResponse response = aiService.generateService(customUserDetails.getUserId(), request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }
@@ -52,7 +45,7 @@ public class ServiceController {
     @PostMapping("/ai-thumbnail")
     @Operation(summary = "ai 썸네일 생성 요청")
     public ResponseEntity<ResponseDto<AiImageResponse>> testGenerateThumbnail(@RequestBody AiImageRequest request) {
-        AiImageResponse response = geminiService.generateThumbnail(request);
+        AiImageResponse response = aiService.generateThumbnail(request);
 
         return ResponseEntity.ok(ResponseDto.ofSuccess(SuccessMessage.OPERATION_SUCCESS, response));
     }

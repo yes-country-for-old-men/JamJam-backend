@@ -9,20 +9,21 @@ import com.jamjam.service.dto.AiServiceRequest;
 import com.jamjam.service.dto.AiServiceResponse;
 import com.jamjam.service.util.GeminiClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
 @Service
-public class GeminiService {
+public class AIService {
 
-    private final GeminiClient geminiClient;
+    private final AIClient aiClient;
     private final ObjectMapper objectMapper;
     private final PromptService promptService;
 
-    public GeminiService(GeminiClient geminiClient, ObjectMapper objectMapper, PromptService promptService) {
-        this.geminiClient = geminiClient;
+    public AIService(AIClient aiClient, ObjectMapper objectMapper, PromptService promptService) {
+        this.aiClient = aiClient;
         this.objectMapper = objectMapper;
         this.promptService = promptService;
     }
@@ -32,7 +33,7 @@ public class GeminiService {
         String prompt = promptService.buildServicePrompt(userId, request.getDescription());
         log.info("[SERVICE] 서비스 세부내용 프롬프트 생성 완료");
 
-        JsonNode rawText = geminiClient.generateTextContent(prompt);
+        JsonNode rawText = aiClient.generateTextContent(prompt);
 
         List<String> serviceNames = objectMapper.convertValue(
                 rawText.get("service_names"),
@@ -49,7 +50,7 @@ public class GeminiService {
         /* 디자인 요소 추출 */
         String designElementPrompt = promptService.buildDesignElementPrompt(request.getDescription(), request.getServiceName());
 
-        JsonNode rawText = geminiClient.generateTextContent(designElementPrompt);
+        JsonNode rawText = aiClient.generateTextContent(designElementPrompt);
 
         String visualElements = rawText.get("visual_elements").asText();
         String toneStyle = rawText.get("tone_style").asText();
@@ -69,7 +70,7 @@ public class GeminiService {
         }
         log.info("[SERVICE] 썸네일 생성 프롬프트 생성");
 
-        JsonNode inlineData = geminiClient.generateImageContent(thumbnailPrompt);
+        JsonNode inlineData = aiClient.generateImageContent(thumbnailPrompt);
         log.info("[SERVICE] 썸네일 생성 완료");
 
         String thumbnailInfo = "data:image/jpeg;base64," + inlineData.get("data").asText();
